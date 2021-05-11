@@ -47,10 +47,10 @@ InputFiles_Particle={infiles_particle}
 OUTDIR={outdir}
 
 # start running
-python3 $SourceDIR/processMiniNtuples.py -r $InputFiles_Reco -t $InputFiles_Parton -p $InputFiles_Particle -n {name}_$PBS_ARRAYID -o $TMPDIR
+python3 $SourceDIR/processMiniNtuples.py -r $InputFiles_Reco -t $InputFiles_Parton -p $InputFiles_Particle -n {name}_$PBS_ARRAYID -o $OUTDIR
 
 # copy output to the final destination
-cp $TMPDIR/*.root $OUTDIR/.
+#cp $TMPDIR/*.root $OUTDIR/.
 
 # clean up
 cd /tmp
