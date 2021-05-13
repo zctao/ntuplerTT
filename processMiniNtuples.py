@@ -2,8 +2,9 @@ import os
 import time
 import tracemalloc
 
-import numpy as np
 from ROOT import TChain, TFile
+
+from extra_variables import varsExtra
 
 def getTrees(infiles, treename, buildIndex=True):
     # read trees into TChain
@@ -63,7 +64,14 @@ def isEJets(tree):
     # arbitrarily assign it to one
     return tree.eventNumber%2
 
-def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, outputName, truthLevel ='parton', treename='nominal', saveUnmatchedReco=True, saveUnmatchedTruth=True):
+def getSumWeights(tree_sumw):
+    sumw = 0
+    for w in tree_sumw:
+        sumw += w.totalEventsWeighted
+
+    return sumw
+
+def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outputName, truthLevel ='parton', treename='nominal', saveUnmatchedReco=True, saveUnmatchedTruth=True):
 
     ##########
     print("Read input trees and build index")
@@ -84,40 +92,87 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, outputName, truthLevel
         print("Failed to get parton level trees: {}".format(err))
         return
 
+    # Sum weights
+    print("Read sumWeights")
+    try:
+        tree_sumw = getTrees(inputFiles_sumw, 'sumWeights', False)
+    except RuntimeError as err:
+        print("Failed to get sumWeights: {}".format(err))
+        return
+
+    sumWeights = getSumWeights(tree_sumw)
+
     ##########
     # Output trees
     print("Create output trees")
+    #####
+    # reco branches
+    if truthLevel == "parton":
+        reco_prefix_thad = "klfitter_bestPerm_topHad"
+        reco_prefix_tlep = "klfitter_bestPerm_topLep"
+        reco_prefix_ttbar = "klfitter_bestPerm_ttbar"
+    else: # particle level
+        reco_prefix_thad = "PseudoTop_Reco_top_had"
+        reco_prefix_tlep = "PseudoTop_Reco_top_lep"
+        reco_prefix_ttbar = "PseudoTop_Reco_ttbar"
+
+    # truth branches
+    if truthLevel == "parton":
+        truth_prefix_thad = "MC_thad_afterFSR"
+        truth_prefix_tlep = "MC_tlep_afterFSR"
+        truth_prefix_ttbar = "MC_ttbar_afterFSR"
+    else: # particle levels
+        truth_prefix_thad = "PseudoTop_Particle_top_had"
+        truth_prefix_tlep = "PseudoTop_Particle_top_lep"
+        truth_prefix_ttbar = "PseudoTop_Particle_ttbar"
+
+    #####
     # e+jets
     outfile_ej = TFile('{}_{}_ejets.root'.format(outputName, truthLevel), 'recreate')
     print("Create output file: {}".format(outfile_ej.GetName()))
 
-    # extra branches for matching status
-    isMatched_reco_ej = np.empty((1), dtype="int")
-    isMatched_truth_ej = np.empty((1), dtype="int")
+    # add extra branches
+    # reco
+    extra_variables_reco_ej = varsExtra(
+        reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar,
+        compute_energy=True, sum_weights=sumWeights
+    )
 
-    newtree_reco_ej = prepareOutputTree(tree_reco, 'reco', extra_branches=[
-        ("isMatched", isMatched_reco_ej, "isMatched/I")
-        ])
+    newtree_reco_ej = prepareOutputTree(tree_reco, 'reco')
+    extra_variables_reco_ej.set_up_branches(newtree_reco_ej)
 
-    newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel, extra_branches=[
-        ("isMatched", isMatched_truth_ej, "isMatched/I")
-        ])
+    # truth
+    extra_variables_truth_ej = varsExtra(
+        truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
+        compute_energy = truthLevel!="parton"
+    )
 
+    newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel)
+    extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
+
+    #####
     # mu+jets
     outfile_mj = TFile('{}_{}_mjets.root'.format(outputName, truthLevel), 'recreate')
     print("Create output file: {}".format(outfile_mj.GetName()))
 
-    # extra branches for matching status
-    isMatched_reco_mj = np.empty((1), dtype="int")
-    isMatched_truth_mj = np.empty((1), dtype="int")
+    # add extra branches
+    # reco
+    extra_variables_reco_mj = varsExtra(
+        reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar,
+        compute_energy=True, sum_weights=sumWeights
+    )
 
-    newtree_reco_mj = prepareOutputTree(tree_reco, 'reco', extra_branches=[
-        ("isMatched", isMatched_reco_mj, "isMatched/I")
-        ])
+    newtree_reco_mj = prepareOutputTree(tree_reco, 'reco')
+    extra_variables_reco_mj.set_up_branches(newtree_reco_mj)
 
-    newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel, extra_branches=[
-        ("isMatched", isMatched_truth_mj, "isMatched/I")
-        ])
+    # truth
+    extra_variables_truth_mj = varsExtra(
+        truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
+        compute_energy = truthLevel!="parton"
+    )
+
+    newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel)
+    extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
 
     ##########
     print("Iterate through events in reco trees")
@@ -141,19 +196,19 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, outputName, truthLevel
             # write reco events
             isEle = isEJets(tree_reco)
             if isEle:
-                isMatched_reco_ej[0] = 1
+                extra_variables_reco_ej.set_match_flag(1)
                 newtree_reco_ej.Fill()
             else:
-                isMatched_reco_mj[0] = 1
+                extra_variables_reco_mj.set_match_flag(1)
                 newtree_reco_mj.Fill()
 
             # write truth events
             tree_truth.GetEntry(truth_entry)
             if isEle:
-                isMatched_truth_ej[0] = 1
+                extra_variables_truth_ej.set_match_flag(1)
                 newtree_truth_ej.Fill()
             else:
-                isMatched_truth_mj[0] = 1
+                extra_variables_truth_mj.set_match_flag(1)
                 newtree_truth_mj.Fill()
 
     if saveUnmatchedReco:
@@ -165,10 +220,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, outputName, truthLevel
             tree_reco.GetEntry(ireco_unmatched)
             isEle = isEJets(tree_reco)
             if isEle:
-                isMatched_reco_ej[0] = 0
+                extra_variables_reco_ej.set_match_flag(0)
                 newtree_reco_ej.Fill()
             else:
-                isMatched_reco_mj[0] = 0
+                extra_variables_reco_mj.set_match_flag(0)
                 newtree_reco_mj.Fill()
 
     if saveUnmatchedTruth:
@@ -186,10 +241,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, outputName, truthLevel
                 continue
 
             if isEJets(tree_truth):
-                isMatched_truth_ej[0] = 0
+                extra_variables_truth_ej.set_match_flag(0)
                 newtree_truth_ej.Fill()
             else:
-                isMatched_truth_mj[0] = 0
+                extra_variables_truth_mj.set_match_flag(0)
                 newtree_truth_mj.Fill()
 
     # Write and close output files
@@ -270,6 +325,8 @@ if __name__ == "__main__":
                         help="Input root files containing parton level trees")
     parser.add_argument('-p', '--particle-files', nargs='+', type=str,
                         help="Input root files containing particle level trees")
+    parser.add_argument('-w', '--sumweight-files', nargs='+', type=str,
+                        help="Input root files containing sum weights")
     parser.add_argument('-o', '--outdir', default='.',
                         help="Output directory")
     parser.add_argument('-n', '--name', type=str, default='ntuple',
@@ -286,6 +343,7 @@ if __name__ == "__main__":
     inputFiles_reco = getInputFileNames(args.reco_files)
     inputFiles_parton = getInputFileNames(args.parton_files)
     inputFiles_particle = getInputFileNames(args.particle_files)
+    inputFiles_sumw = getInputFileNames(args.sumweight_files)
 
     # output directory
     if not os.path.isdir(args.outdir):
@@ -297,7 +355,7 @@ if __name__ == "__main__":
     if len(inputFiles_parton) > 0:
         print("Match reco and parton level events")
         tstart = time.time()
-        matchAndSplitTrees(inputFiles_reco, inputFiles_parton,
+        matchAndSplitTrees(inputFiles_reco, inputFiles_parton, inputFiles_sumw,
                             outputName = os.path.join(args.outdir, args.name),
                             truthLevel = 'parton',
                             saveUnmatchedReco = True,
@@ -311,7 +369,7 @@ if __name__ == "__main__":
     if len(inputFiles_particle) > 0:
         print("Match reco and particle level events")
         tstart = time.time()
-        matchAndSplitTrees(inputFiles_reco, inputFiles_particle,
+        matchAndSplitTrees(inputFiles_reco, inputFiles_particle, inputFiles_sumw,
                             outputName = os.path.join(args.outdir, args.name),
                             truthLevel = 'particle',
                             saveUnmatchedReco = True,
