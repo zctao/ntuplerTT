@@ -1,4 +1,7 @@
 import numpy as np
+import math
+import ROOT
+from ROOT.Math import PtEtaPhiMVector, XYZVectorF
 
 class varsExtra():
     def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights=None):
@@ -16,22 +19,26 @@ class varsExtra():
         self.compute_energy = compute_energy
 
         # event weight
-        self.normalizedWeight = np.empty((1), dtype="float")
+        self.normalizedWeight = np.empty((1), dtype="float32")
 
         # truth event match flag
         self.isMatched = np.empty((1), dtype="int")
 
         # hadronic top kinematics
-        self.thad_E = np.empty((1), dtype="float")
-        #self.thad_pout = np.empty((1), dtype="float")
+        self.thad_E = np.empty((1), dtype="float32")
+        self.thad_pout = np.empty((1), dtype="float32")
 
         # leptonic top kinematics
-        self.tlep_E = np.empty((1), dtype="float")
-        #self.tlep_pout = np.empty((1), dtype="float")
+        self.tlep_E = np.empty((1), dtype="float32")
+        self.tlep_pout = np.empty((1), dtype="float32")
 
         # ttbar kinematics
-        self.ttbar_E = np.empty((1), dtype="float")
-        #self.ttbar_dphi = np.empty((1), dtype="float")
+        self.ttbar_E = np.empty((1), dtype="float32")
+        self.ttbar_dphi = np.empty((1), dtype="float32")
+        self.ttbar_Ht = np.empty((1), dtype="float32")
+        self.ttbar_chi = np.empty((1), dtype="float32")
+        self.ttbar_ystar = np.empty((1), dtype="float32")
+        self.ttbar_yboost = np.empty((1), dtype="float32")
 
     def set_up_branches(self, tree):
         tree.Branch("isMatched", self.isMatched, "isMatched/I")
@@ -44,5 +51,62 @@ class varsExtra():
             tree.Branch(self.tlep_prefix+"_E", self.tlep_E, self.tlep_prefix+"_E/F")
             tree.Branch(self.ttbar_prefix+"_E", self.ttbar_E, self.ttbar_prefix+"_E/F")
 
+        tree.Branch(self.thad_prefix+"_pout", self.thad_pout, self.thad_prefix+"_pout/F")
+        tree.Branch(self.tlep_prefix+"_pout", self.tlep_pout, self.tlep_prefix+"_pout/F")
+
+        tree.Branch(self.ttbar_prefix+"_dphi", self.ttbar_dphi, self.ttbar_prefix+"_dphi/F")
+        tree.Branch(self.ttbar_prefix+"_Ht", self.ttbar_Ht, self.ttbar_prefix+"_Ht/F")
+        tree.Branch(self.ttbar_prefix+"_chi", self.ttbar_chi, self.ttbar_prefix+"_chi/F")
+        tree.Branch(self.ttbar_prefix+"_ystar", self.ttbar_ystar, self.ttbar_prefix+"_ystar/F")
+        tree.Branch(self.ttbar_prefix+"_yboost", self.ttbar_yboost, self.ttbar_prefix+"_yboost/F")
+
     def set_match_flag(self, ismatched):
         self.isMatched[0] = ismatched
+
+    def write_event(self, event):
+        # normalize event weight
+        if self.sumWeights is not None:
+            self.normalizedWeight[0] = getattr(event,'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+        else:
+            self.normalizedWeight[0] = -99
+
+        # hadronic top
+        th_pt  = getattr(event, self.thad_prefix+'_pt')
+        th_eta = getattr(event, self.thad_prefix+'_eta')
+        th_y   = getattr(event, self.thad_prefix+'_y')
+        th_phi = getattr(event, self.thad_prefix+'_phi')
+        th_m   = getattr(event, self.thad_prefix+'_m')
+        th_p4  = PtEtaPhiMVector(th_pt, th_eta, th_phi, th_m)
+
+        if self.compute_energy:
+            self.thad_E[0] = th_p4.E()
+
+        # leptonic top
+        tl_pt  = getattr(event, self.tlep_prefix+'_pt')
+        tl_eta = getattr(event, self.tlep_prefix+'_eta')
+        tl_y   = getattr(event, self.tlep_prefix+'_y')
+        tl_phi = getattr(event, self.tlep_prefix+'_phi')
+        tl_m   = getattr(event, self.tlep_prefix+'_m')
+        tl_p4  = PtEtaPhiMVector(tl_pt, tl_eta, tl_phi, tl_m)
+
+        if self.compute_energy:
+            self.tlep_E[0] = tl_p4.E()
+
+        # ttbar
+        tt_pt  = getattr(event, self.ttbar_prefix+'_pt')
+        tt_eta = getattr(event, self.ttbar_prefix+'_eta')
+        tt_phi = getattr(event, self.ttbar_prefix+'_phi')
+        tt_m   = getattr(event, self.ttbar_prefix+'_m')
+        tt_p4  = PtEtaPhiMVector(tt_pt, tt_eta, tt_phi, tt_m)
+
+        if self.compute_energy:
+            self.ttbar_E[0] = tt_p4.E()
+
+        self.ttbar_dphi[0] = abs(ROOT.VecOps.DeltaPhi(th_phi, tl_phi))
+        self.ttbar_Ht[0] = th_pt + tl_pt
+        self.ttbar_ystar[0] = (th_y - tl_y) / 2.
+        self.ttbar_yboost[0] = (th_y + tl_y) / 2.
+        self.ttbar_chi[0] = math.exp( abs(th_y - tl_y) )
+
+        self.thad_pout[0] = tl_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(th_p4.Vect())
+        self.tlep_pout[0] = th_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(tl_p4.Vect())

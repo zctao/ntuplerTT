@@ -101,6 +101,7 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
         return
 
     sumWeights = getSumWeights(tree_sumw)
+    print("sum weights = ", sumWeights)
 
     ##########
     # Output trees
@@ -197,18 +198,22 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
             isEle = isEJets(tree_reco)
             if isEle:
                 extra_variables_reco_ej.set_match_flag(1)
+                extra_variables_reco_ej.write_event(tree_reco)
                 newtree_reco_ej.Fill()
             else:
                 extra_variables_reco_mj.set_match_flag(1)
+                extra_variables_reco_mj.write_event(tree_reco)
                 newtree_reco_mj.Fill()
 
             # write truth events
             tree_truth.GetEntry(truth_entry)
             if isEle:
                 extra_variables_truth_ej.set_match_flag(1)
+                extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
             else:
                 extra_variables_truth_mj.set_match_flag(1)
+                extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
 
     if saveUnmatchedReco:
@@ -217,13 +222,17 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
         for ievt, ireco_unmatched in enumerate(unmatched_reco_entries):
             if not ievt%10000:
                 print("processing unmatched reco event {}".format(ievt))
+
             tree_reco.GetEntry(ireco_unmatched)
+
             isEle = isEJets(tree_reco)
             if isEle:
                 extra_variables_reco_ej.set_match_flag(0)
+                extra_variables_reco_ej.write_event(tree_reco)
                 newtree_reco_ej.Fill()
             else:
                 extra_variables_reco_mj.set_match_flag(0)
+                extra_variables_reco_mj.write_event(tree_reco)
                 newtree_reco_mj.Fill()
 
     if saveUnmatchedTruth:
@@ -235,6 +244,7 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
 
             tree_truth.GetEntry(j)
             reco_entry = tree_reco.GetEntryNumberWithIndex(tree_truth.runNumber, tree_truth.eventNumber)
+
             if reco_entry >= 0:
                 # found matched reco event.
                 # skip since it has already been written.
@@ -242,9 +252,11 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
 
             if isEJets(tree_truth):
                 extra_variables_truth_ej.set_match_flag(0)
+                extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
             else:
                 extra_variables_truth_mj.set_match_flag(0)
+                extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
 
     # Write and close output files
@@ -291,6 +303,8 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
 
 def getInputFileNames(input_list):
     rootFiles = []
+    if input_list is None:
+        return rootFiles
 
     for fp in input_list:
         if not os.path.isfile(fp):
