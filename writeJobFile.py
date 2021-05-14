@@ -42,12 +42,13 @@ echo "Work directory: $TMPDIR"
 InputFiles_Reco={infiles_reco}
 InputFiles_Parton={infiles_parton}
 InputFiles_Particle={infiles_particle}
+InputFiles_SumW={infiles_sumw}
 
 # output directory
 OUTDIR={outdir}
 
 # start running
-python3 $SourceDIR/processMiniNtuples.py -r $InputFiles_Reco -t $InputFiles_Parton -p $InputFiles_Particle -n {name}_$PBS_ARRAYID -o $OUTDIR
+python3 $SourceDIR/processMiniNtuples.py -r $InputFiles_Reco -t $InputFiles_Parton -p $InputFiles_Particle -w $InputFiles_SumW -n {name}_$PBS_ARRAYID -o $OUTDIR
 
 # copy output to the final destination
 #cp $TMPDIR/*.root $OUTDIR/.
@@ -127,6 +128,7 @@ infilelists = writeInputFileLists(args.sample, args.njobs, args.datadir, args.ou
 vdict['infiles_reco'] = infilelists[0].format("$PBS_ARRAYID")
 vdict['infiles_parton'] = infilelists[1].format("$PBS_ARRAYID")
 vdict['infiles_particle'] = infilelists[2].format("$PBS_ARRAYID")
+vdict['infiles_sumw'] = infilelists[3].format("$PBS_ARRAYID")
 
 foutname = os.path.join(args.outdir, args.filename)
 fjobfile = open(foutname, 'w')
