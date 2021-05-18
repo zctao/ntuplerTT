@@ -34,39 +34,59 @@ cuts = "isMatched"
 
 if args.truth_tree == 'parton':
     branches_reco = {
-        ('thad','pt') : 'klfitter_bestPerm_topHad_pt',
-        ('thad','eta') : 'klfitter_bestPerm_topHad_eta',
-        ('thad','y') : 'klfitter_bestPerm_topHad_y',
-        ('thad','phi') : 'klfitter_bestPerm_topHad_phi',
-        ('thad','m') : 'klfitter_bestPerm_topHad_m',
-        ('tlep','pt') : 'klfitter_bestPerm_topLep_pt',
-        ('tlep','eta') : 'klfitter_bestPerm_topLep_eta',
-        ('tlep','y') : 'klfitter_bestPerm_topLep_y',
-        ('tlep','phi') : 'klfitter_bestPerm_topLep_phi',
-        ('tlep','m') : 'klfitter_bestPerm_topLep_m',
-        ('ttbar','pt') : 'klfitter_bestPerm_ttbar_pt',
-        ('ttbar','eta') : 'klfitter_bestPerm_ttbar_eta',
-        ('ttbar','y') : 'klfitter_bestPerm_ttbar_y',
-        ('ttbar','phi') : 'klfitter_bestPerm_ttbar_phi',
-        ('ttbar','m') : 'klfitter_bestPerm_ttbar_m'
+        ('thad', 'pt')     : 'klfitter_bestPerm_topHad_pt',
+        ('thad', 'eta')    : 'klfitter_bestPerm_topHad_eta',
+        ('thad', 'y')      : 'klfitter_bestPerm_topHad_y',
+        ('thad', 'phi')    : 'klfitter_bestPerm_topHad_phi',
+        ('thad', 'm')      : 'klfitter_bestPerm_topHad_m',
+        ('thad', 'E')      : 'klfitter_bestPerm_topHad_E',
+        ('thad', 'pout')   : 'klfitter_bestPerm_topHad_pout',
+        ('tlep', 'pt')     : 'klfitter_bestPerm_topLep_pt',
+        ('tlep', 'eta')    : 'klfitter_bestPerm_topLep_eta',
+        ('tlep', 'y')      : 'klfitter_bestPerm_topLep_y',
+        ('tlep', 'phi')    : 'klfitter_bestPerm_topLep_phi',
+        ('tlep', 'm')      : 'klfitter_bestPerm_topLep_m',
+        ('tlep', 'E')      : 'klfitter_bestPerm_topLep_E',
+        ('tlep', 'pout')   : 'klfitter_bestPerm_topLep_pout',
+        ('ttbar','pt')     : 'klfitter_bestPerm_ttbar_pt',
+        ('ttbar','eta')    : 'klfitter_bestPerm_ttbar_eta',
+        ('ttbar','y')      : 'klfitter_bestPerm_ttbar_y',
+        ('ttbar','phi')    : 'klfitter_bestPerm_ttbar_phi',
+        ('ttbar','m')      : 'klfitter_bestPerm_ttbar_m',
+        ('ttbar','E')      : 'klfitter_bestPerm_ttbar_E',
+        ('ttbar','dphi')   : 'klfitter_bestPerm_ttbar_dphi',
+        ('ttbar','Ht')     : 'klfitter_bestPerm_ttbar_Ht',
+        ('ttbar','chi')    : 'klfitter_bestPerm_ttbar_chi',
+        ('ttbar','ystar')  : 'klfitter_bestPerm_ttbar_ystar',
+        ('ttbar','yboost') : 'klfitter_bestPerm_ttbar_yboost'
     }
 
     branches_truth = {
-        ('thad','pt') : 'MC_thad_afterFSR_pt/1000',
-        ('thad','eta') : 'MC_thad_afterFSR_eta',
-        ('thad','y') : 'MC_thad_afterFSR_y',
-        ('thad','phi') : 'MC_thad_afterFSR_phi',
-        ('thad','m') : 'MC_thad_afterFSR_m/1000',
-        ('tlep','pt') : 'MC_tlep_afterFSR_pt/1000',
-        ('tlep','eta') : 'MC_tlep_afterFSR_eta',
-        ('tlep','y') : 'MC_tlep_afterFSR_y',
-        ('tlep','phi') : 'MC_tlep_afterFSR_phi',
-        ('tlep','m') : 'MC_tlep_afterFSR_m/1000',
-        ('ttbar','pt') : 'MC_ttbar_afterFSR_pt/1000',
-        ('ttbar','eta') : 'MC_ttbar_afterFSR_eta',
-        ('ttbar','y') : 'MC_ttbar_afterFSR_y',
-        ('ttbar','phi') : 'MC_ttbar_afterFSR_phi',
-        ('ttbar','m') : 'MC_ttbar_afterFSR_m/1000'
+        ('thad','pt')      : 'MC_thad_afterFSR_pt/1000',
+        ('thad','eta')     : 'MC_thad_afterFSR_eta',
+        ('thad','y')       : 'MC_thad_afterFSR_y',
+        ('thad','phi')     : 'MC_thad_afterFSR_phi',
+        ('thad','m')       : 'MC_thad_afterFSR_m/1000',
+        ('thad','E')       : 'MC_thad_afterFSR_E/1000',
+        ('thad','pout')    : 'MC_thad_afterFSR_pout/1000',
+        ('tlep','pt')      : 'MC_tlep_afterFSR_pt/1000',
+        ('tlep','eta')     : 'MC_tlep_afterFSR_eta',
+        ('tlep','y')       : 'MC_tlep_afterFSR_y',
+        ('tlep','phi')     : 'MC_tlep_afterFSR_phi',
+        ('tlep','m')       : 'MC_tlep_afterFSR_m/1000',
+        ('tlep','E')       : 'MC_tlep_afterFSR_E/1000',
+        ('tlep','pout')    : 'MC_tlep_afterFSR_pout/1000',
+        ('ttbar','pt')     : 'MC_ttbar_afterFSR_pt/1000',
+        ('ttbar','eta')    : 'MC_ttbar_afterFSR_eta',
+        ('ttbar','y')      : 'MC_ttbar_afterFSR_y',
+        ('ttbar','phi')    : 'MC_ttbar_afterFSR_phi',
+        ('ttbar','m')      : 'MC_ttbar_afterFSR_m/1000',
+        ('ttbar','E')      : 'MC_ttbar_afterFSR_E/1000',
+        ('ttbar','dphi')   : 'MC_ttbar_afterFSR_dphi',
+        ('ttbar','Ht')     : 'MC_ttbar_afterFSR_Ht/1000',
+        ('ttbar','chi')    : 'MC_ttbar_afterFSR_chi',
+        ('ttbar','ystar')  : 'MC_ttbar_afterFSR_ystar',
+        ('ttbar','yboost') : 'MC_ttbar_afterFSR_yboost'
     }
 
     cuts += "&&klfitter_logLikelihood>-52"
@@ -75,39 +95,59 @@ if args.truth_tree == 'parton':
 
 elif args.truth_tree == 'particle':
     branches_reco = {
-        ('thad','pt') : 'PseudoTop_Reco_top_had_pt',
-        ('thad','eta') : 'PseudoTop_Reco_top_had_eta',
-        ('thad','y') : 'PseudoTop_Reco_top_had_y',
-        ('thad','phi') : 'PseudoTop_Reco_top_had_phi',
-        ('thad','m') : 'PseudoTop_Reco_top_had_m',
-        ('tlep','pt') : 'PseudoTop_Reco_top_lep_pt',
-        ('tlep','eta') : 'PseudoTop_Reco_top_lep_eta',
-        ('tlep','y') : 'PseudoTop_Reco_top_lep_y',
-        ('tlep','phi') : 'PseudoTop_Reco_top_lep_phi',
-        ('tlep','m') : 'PseudoTop_Reco_top_lep_m',
-        ('ttbar','pt') : 'PseudoTop_Reco_ttbar_pt',
-        ('ttbar','eta') : 'PseudoTop_Reco_ttbar_eta',
-        ('ttbar','y') : 'PseudoTop_Reco_ttbar_y',
-        ('ttbar','phi') : 'PseudoTop_Reco_ttbar_phi',
-        ('ttbar','m') : 'PseudoTop_Reco_ttbar_m'
+        ('thad','pt')      : 'PseudoTop_Reco_top_had_pt',
+        ('thad','eta')     : 'PseudoTop_Reco_top_had_eta',
+        ('thad','y')       : 'PseudoTop_Reco_top_had_y',
+        ('thad','phi')     : 'PseudoTop_Reco_top_had_phi',
+        ('thad','m')       : 'PseudoTop_Reco_top_had_m',
+        ('thad','E')       : 'PseudoTop_Reco_top_had_E',
+        ('thad','pout')    : 'PseudoTop_Reco_top_had_pout',
+        ('tlep','pt')      : 'PseudoTop_Reco_top_lep_pt',
+        ('tlep','eta')     : 'PseudoTop_Reco_top_lep_eta',
+        ('tlep','y')       : 'PseudoTop_Reco_top_lep_y',
+        ('tlep','phi')     : 'PseudoTop_Reco_top_lep_phi',
+        ('tlep','m')       : 'PseudoTop_Reco_top_lep_m',
+        ('tlep','E')       : 'PseudoTop_Reco_top_lep_E',
+        ('tlep','pout')    : 'PseudoTop_Reco_top_lep_pout',
+        ('ttbar','pt')     : 'PseudoTop_Reco_ttbar_pt',
+        ('ttbar','eta')    : 'PseudoTop_Reco_ttbar_eta',
+        ('ttbar','y')      : 'PseudoTop_Reco_ttbar_y',
+        ('ttbar','phi')    : 'PseudoTop_Reco_ttbar_phi',
+        ('ttbar','m')      : 'PseudoTop_Reco_ttbar_m',
+        ('ttbar','E')      : 'PseudoTop_Reco_ttbar_E',
+        ('ttbar','dphi')   : 'PseudoTop_Reco_ttbar_dphi',
+        ('ttbar','Ht')     : 'PseudoTop_Reco_ttbar_Ht',
+        ('ttbar','chi')    : 'PseudoTop_Reco_ttbar_chi',
+        ('ttbar','ystar')  : 'PseudoTop_Reco_ttbar_ystar',
+        ('ttbar','yboost') : 'PseudoTop_Reco_ttbar_yboost'
     }
 
     branches_truth = {
-        ('thad','pt') : 'PseudoTop_Particle_top_had_pt',
-        ('thad','eta') : 'PseudoTop_Particle_top_had_eta',
-        ('thad','y') : 'PseudoTop_Particle_top_had_y',
-        ('thad','phi') : 'PseudoTop_Particle_top_had_phi',
-        ('thad','m') : 'PseudoTop_Particle_top_had_m',
-        ('tlep','pt') : 'PseudoTop_Particle_top_lep_pt',
-        ('tlep','eta') : 'PseudoTop_Particle_top_lep_eta',
-        ('tlep','y') : 'PseudoTop_Particle_top_lep_y',
-        ('tlep','phi') : 'PseudoTop_Particle_top_lep_phi',
-        ('tlep','m') : 'PseudoTop_Particle_top_lep_m',
-        ('ttbar','pt') : 'PseudoTop_Particle_ttbar_pt',
-        ('ttbar','eta') : 'PseudoTop_Particle_ttbar_eta',
-        ('ttbar','y') : 'PseudoTop_Particle_ttbar_y',
-        ('ttbar','phi') : 'PseudoTop_Particle_ttbar_phi',
-        ('ttbar','m') : 'PseudoTop_Particle_ttbar_m'
+        ('thad','pt')      : 'PseudoTop_Particle_top_had_pt',
+        ('thad','eta')     : 'PseudoTop_Particle_top_had_eta',
+        ('thad','y')       : 'PseudoTop_Particle_top_had_y',
+        ('thad','phi')     : 'PseudoTop_Particle_top_had_phi',
+        ('thad','m')       : 'PseudoTop_Particle_top_had_m',
+        ('thad','E')       : 'PseudoTop_Particle_top_had_E',
+        ('thad','pout')    : 'PseudoTop_Particle_top_had_pout',
+        ('tlep','pt')      : 'PseudoTop_Particle_top_lep_pt',
+        ('tlep','eta')     : 'PseudoTop_Particle_top_lep_eta',
+        ('tlep','y')       : 'PseudoTop_Particle_top_lep_y',
+        ('tlep','phi')     : 'PseudoTop_Particle_top_lep_phi',
+        ('tlep','m')       : 'PseudoTop_Particle_top_lep_m',
+        ('tlep','E')       : 'PseudoTop_Particle_top_lep_E',
+        ('tlep','pout')    : 'PseudoTop_Particle_top_lep_pout',
+        ('ttbar','pt')     : 'PseudoTop_Particle_ttbar_pt',
+        ('ttbar','eta')    : 'PseudoTop_Particle_ttbar_eta',
+        ('ttbar','y')      : 'PseudoTop_Particle_ttbar_y',
+        ('ttbar','phi')    : 'PseudoTop_Particle_ttbar_phi',
+        ('ttbar','m')      : 'PseudoTop_Particle_ttbar_m',
+        ('ttbar','E')      : 'PseudoTop_Particle_ttbar_E',
+        ('ttbar','dphi')   : 'PseudoTop_Particle_ttbar_dphi',
+        ('ttbar','Ht')     : 'PseudoTop_Particle_ttbar_Ht',
+        ('ttbar','chi')    : 'PseudoTop_Particle_ttbar_chi',
+        ('ttbar','ystar')  : 'PseudoTop_Particle_ttbar_ystar',
+        ('ttbar','yboost') : 'PseudoTop_Particle_ttbar_yboost'
     }
 
 foutroot = TFile.Open(args.output+'.root', 'recreate')
@@ -115,9 +155,12 @@ foutroot = TFile.Open(args.output+'.root', 'recreate')
 histnames = []
 
 for t in ['tlep', 'thad', 'ttbar']:
-    for v in ['pt', 'eta', 'y', 'phi', 'm']:
-        breco = branches_reco[(t, v)]
-        btruth = branches_truth[(t,v)]
+    for v in ['pt', 'eta', 'y', 'phi', 'm', 'E', 'pout', 'dphi', 'Ht', 'chi', 'ystar', 'yboost']:
+        breco = branches_reco.get((t, v))
+        btruth = branches_truth.get((t,v))
+
+        if breco is None and btruth is None:
+            continue
 
         hname = "h_"+t+"_"+v
         histnames.append(hname)
