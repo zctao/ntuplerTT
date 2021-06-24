@@ -7,3 +7,5 @@ lcgVersion=LCG_98python3_ATLAS_10
 arch=x86_64-centos7-gcc8-opt
 
 source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh ${lcgVersion} ${arch}
+
+export PYTHONPATH=$SourceDIR/python:$SourceDIR:$PYTHONPATH
