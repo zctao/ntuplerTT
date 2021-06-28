@@ -1,9 +1,6 @@
 import os
 import time
-import tracemalloc
-
 from ROOT import TChain, TFile
-
 from extra_variables import varsExtra
 
 def getTrees(infiles, treename, buildIndex=True):
@@ -36,8 +33,11 @@ def prepareOutputTree(input_tree, new_name, extra_branches=[]):
 
     return newtree
 
-def isEJets(tree):
-    if hasattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid'):
+def passSelection_ejets(tree):
+    if hasattr(tree, 'passed_resolved_ejets_4j2b'):
+        # reco or particle level tree
+        return tree.passed_resolved_ejets_4j2b
+    elif hasattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid'):
         # parton tree
         decayIDs = [abs(getattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid')),
                     abs(getattr(tree, 'MC_Wdecay2_from_tbar_afterFSR_pdgid')),
@@ -45,24 +45,32 @@ def isEJets(tree):
                     abs(getattr(tree, 'MC_Wdecay2_from_t_afterFSR_pdgid'))]
         if 11 in decayIDs:
             return True
-        elif 13 in decayIDs:
-            return False
         else:
-            # arbitrarily assign it to a category
-            return tree.eventNumber%2
-
+            return False
+    # for backward compatibility with old ntuple files
     elif hasattr(tree, 'lep_pdgid'):
-        if abs(tree.lep_pdgid) == 11:
-            return True
-        elif abs(tree.lep_pdgid) == 13:
-            return False
-        else:
-            # arbitrarily assign it to a category
-            return tree.eventNumber%2
+        return abs(tree.lep_pdgid) == 11
+    return False
 
-    # cannot decide which category this event is
-    # arbitrarily assign it to one
-    return tree.eventNumber%2
+def passSelection_mjets(tree):
+    if hasattr(tree, 'passed_resolved_mujets_4j2b'):
+        # reco or particle level tree
+        return tree.passed_resolved_mujets_4j2b
+    elif hasattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid'):
+        # parton tree
+        decayIDs = [abs(getattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay2_from_tbar_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay1_from_t_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay2_from_t_afterFSR_pdgid'))]
+        if 13 in decayIDs:
+            return True
+        else:
+            return False
+    # for backward compatibility with old ntuple files
+    elif hasattr(tree, 'lep_pdgid'):
+        return abs(tree.lep_pdgid) == 13
+    else:
+        return False
 
 def getSumWeights(tree_sumw):
     sumw = 0
@@ -71,7 +79,10 @@ def getSumWeights(tree_sumw):
 
     return sumw
 
-def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outputName, truthLevel ='parton', treename='nominal', saveUnmatchedReco=True, saveUnmatchedTruth=True):
+def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
+                       outputName, truthLevel ='parton', treename='nominal',
+                       saveUnmatchedReco=True, saveUnmatchedTruth=True,
+                       maxevents=None):
 
     ##########
     print("Read input trees and build index")
@@ -180,6 +191,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
     unmatched_reco_entries = []
 
     for i in range(tree_reco.GetEntries()):
+        if maxevents is not None:
+            if i > maxevents:
+                break
+
         if not i%10000:
             print("processing event #{}".format(i))
         tree_reco.GetEntry(i)
@@ -195,23 +210,27 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
         else:
             # found matched event
             # write reco events
-            isEle = isEJets(tree_reco)
-            if isEle:
+            passEJets = passSelection_ejets(tree_reco)
+            passMJets = passSelection_mjets(tree_reco)
+            # should pass one and only one of the selections
+            assert( bool(passEJets) ^ bool(passMJets) )
+
+            if passEJets:
                 extra_variables_reco_ej.set_match_flag(1)
                 extra_variables_reco_ej.write_event(tree_reco)
                 newtree_reco_ej.Fill()
-            else:
+            if passMJets:
                 extra_variables_reco_mj.set_match_flag(1)
                 extra_variables_reco_mj.write_event(tree_reco)
                 newtree_reco_mj.Fill()
 
             # write truth events
             tree_truth.GetEntry(truth_entry)
-            if isEle:
+            if passEJets:
                 extra_variables_truth_ej.set_match_flag(1)
                 extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
-            else:
+            if passMJets:
                 extra_variables_truth_mj.set_match_flag(1)
                 extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
@@ -220,17 +239,23 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
         # append unmatched reco events
         print("Append unmatched reco events")
         for ievt, ireco_unmatched in enumerate(unmatched_reco_entries):
+            if maxevents is not None:
+                if i > maxevents:
+                    break
+
             if not ievt%10000:
                 print("processing unmatched reco event {}".format(ievt))
 
             tree_reco.GetEntry(ireco_unmatched)
 
-            isEle = isEJets(tree_reco)
-            if isEle:
+            passEJets = passSelection_ejets(tree_reco)
+            passMJets = passSelection_mjets(tree_reco)
+            assert( bool(passEJets) ^ bool(passMJets) )
+            if passEJets:
                 extra_variables_reco_ej.set_match_flag(0)
                 extra_variables_reco_ej.write_event(tree_reco)
                 newtree_reco_ej.Fill()
-            else:
+            if passMJets:
                 extra_variables_reco_mj.set_match_flag(0)
                 extra_variables_reco_mj.write_event(tree_reco)
                 newtree_reco_mj.Fill()
@@ -239,6 +264,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
         # append unmatched truth events
         print("Append unmatched {} events".format(truthLevel))
         for j in range(tree_truth.GetEntries()):
+            if maxevents is not None:
+                if i > maxevents:
+                    break
+
             if not j%10000:
                 print("processing {} event {}".format(truthLevel, j))
 
@@ -250,11 +279,11 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
                 # skip since it has already been written.
                 continue
 
-            if isEJets(tree_truth):
+            if passSelection_ejets(tree_truth):
                 extra_variables_truth_ej.set_match_flag(0)
                 extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
-            else:
+            if passSelection_mjets(tree_truth):
                 extra_variables_truth_mj.set_match_flag(0)
                 extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
@@ -266,48 +295,13 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw, outpu
     outfile_mj.Write()
     outfile_mj.Close()
 
-########
-#import uproot
-#import numpy as np
-#import time
-
-#def buildEventIndex(events):
-#    # TODO: better methods?
-#    tstart = time.time()
-#
-#    eventIDs = events.arrays(['runNumber', 'eventNumber'])
-#    indexHash = {(evtid['runNumber'], evtid['eventNumber']) : i for i, evtid in enumerate(eventIDs)}
-#
-#    tdone = time.time()
-#    print("Building index took {:.2f} seconds".format(tdone-tstart))
-#
-#    return indexHash
-#
-#def processMiniNtuples_uproot(inputFiles_reco, inputFiles_truth, inputFiles_PL,
-#                                outputname, treename = 'nominal'):
-#    # WIP
-#    ##########
-#    print("Read input trees")
-#    # for now
-#    print("Reco level")
-#    events_reco = uproot.open(inputFiles_reco[0]+":"treename)
-#    indexMap_reco = buildEventIndex(events_reco)
-#
-#    print("Parton level")
-#    events_truth = uproot.open(inputFiles_truth[0]+":"+treename)
-#    indexMap_truth = buildEventIndex(events_truth)
-#
-#    print("Particle level")
-#    events_PL = uproot.open(inputFiles_PL[0]+":"+treename)
-#    indexMap_PL = buildEventIndex(events_PL)
-
-def getInputFileNames(input_list):
+def getInputFileNames(input_list, check_file=True):
     rootFiles = []
     if input_list is None:
         return rootFiles
 
     for fp in input_list:
-        if not os.path.isfile(fp):
+        if check_file and not os.path.isfile(fp):
             print(fp, "is not a valid file. Skip!")
             continue
 
@@ -320,76 +314,10 @@ def getInputFileNames(input_list):
             with open(fp) as f:
                 lines = f.readlines()
             lines = [l.rstrip() for l in lines]
-            files = getInputFileNames(lines)
+            files = getInputFileNames(lines, check_file=False)
             rootFiles += files
         else:
             print("Don't know how to handle input file". fp)
             continue
 
     return rootFiles
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-r', '--reco-files', required=True, nargs='+', type=str,
-                        help="Input root files containing reco trees")
-    parser.add_argument('-t', '--parton-files', nargs='+', type=str,
-                        help="Input root files containing parton level trees")
-    parser.add_argument('-p', '--particle-files', nargs='+', type=str,
-                        help="Input root files containing particle level trees")
-    parser.add_argument('-w', '--sumweight-files', nargs='+', type=str,
-                        help="Input root files containing sum weights")
-    parser.add_argument('-o', '--outdir', default='.',
-                        help="Output directory")
-    parser.add_argument('-n', '--name', type=str, default='ntuple',
-                        help="Suffix of the output file names")
-
-    args = parser.parse_args()
-
-    # check input files
-    if len(args.parton_files)==0 and len(args.particle_files)==0:
-        print("Neither parton or particle level truth trees are provided!")
-        print("Do nothing")
-        exit()
-
-    inputFiles_reco = getInputFileNames(args.reco_files)
-    inputFiles_parton = getInputFileNames(args.parton_files)
-    inputFiles_particle = getInputFileNames(args.particle_files)
-    inputFiles_sumw = getInputFileNames(args.sumweight_files)
-
-    # output directory
-    if not os.path.isdir(args.outdir):
-        print("Create output directory: {}".format(args.outdir))
-        os.makedirs(args.outdir)
-
-    tracemalloc.start()
-
-    if len(inputFiles_parton) > 0:
-        print("Match reco and parton level events")
-        tstart = time.time()
-        matchAndSplitTrees(inputFiles_reco, inputFiles_parton, inputFiles_sumw,
-                            outputName = os.path.join(args.outdir, args.name),
-                            truthLevel = 'parton',
-                            saveUnmatchedReco = True,
-                            saveUnmatchedTruth = False)
-        tdone = time.time()
-        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
-
-        mcurrent, mpeak = tracemalloc.get_traced_memory()
-        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
-
-    if len(inputFiles_particle) > 0:
-        print("Match reco and particle level events")
-        tstart = time.time()
-        matchAndSplitTrees(inputFiles_reco, inputFiles_particle, inputFiles_sumw,
-                            outputName = os.path.join(args.outdir, args.name),
-                            truthLevel = 'particle',
-                            saveUnmatchedReco = True,
-                            saveUnmatchedTruth = True)
-        tdone = time.time()
-        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
-
-        mcurrent, mpeak = tracemalloc.get_traced_memory()
-        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
