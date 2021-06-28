@@ -1,7 +1,8 @@
 import numpy as np
 import math
 import ROOT
-from ROOT.Math import PtEtaPhiMVector, XYZVectorF
+#from ROOT.Math import PtEtaPhiMVector, XYZVectorF
+from ROOT import TLorentzVector, TVector3
 
 class varsExtra():
     def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights=None):
@@ -76,7 +77,9 @@ class varsExtra():
         th_y   = getattr(event, self.thad_prefix+'_y')
         th_phi = getattr(event, self.thad_prefix+'_phi')
         th_m   = getattr(event, self.thad_prefix+'_m')
-        th_p4  = PtEtaPhiMVector(th_pt, th_eta, th_phi, th_m)
+        #th_p4  = PtEtaPhiMVector(th_pt, th_eta, th_phi, th_m)
+        th_p4 = TLorentzVector()
+        th_p4.SetPtEtaPhiM(th_pt, th_eta, th_phi, th_m)
 
         if self.compute_energy:
             self.thad_E[0] = th_p4.E()
@@ -87,7 +90,9 @@ class varsExtra():
         tl_y   = getattr(event, self.tlep_prefix+'_y')
         tl_phi = getattr(event, self.tlep_prefix+'_phi')
         tl_m   = getattr(event, self.tlep_prefix+'_m')
-        tl_p4  = PtEtaPhiMVector(tl_pt, tl_eta, tl_phi, tl_m)
+        #tl_p4  = PtEtaPhiMVector(tl_pt, tl_eta, tl_phi, tl_m)
+        tl_p4 = TLorentzVector()
+        tl_p4.SetPtEtaPhiM(tl_pt, tl_eta, tl_phi, tl_m)
 
         if self.compute_energy:
             self.tlep_E[0] = tl_p4.E()
@@ -97,7 +102,9 @@ class varsExtra():
         tt_eta = getattr(event, self.ttbar_prefix+'_eta')
         tt_phi = getattr(event, self.ttbar_prefix+'_phi')
         tt_m   = getattr(event, self.ttbar_prefix+'_m')
-        tt_p4  = PtEtaPhiMVector(tt_pt, tt_eta, tt_phi, tt_m)
+        #tt_p4  = PtEtaPhiMVector(tt_pt, tt_eta, tt_phi, tt_m)
+        tt_p4 = TLorentzVector()
+        tt_p4.SetPtEtaPhiM(tt_pt, tt_eta, tt_phi, tt_m)
 
         if self.compute_energy:
             self.ttbar_E[0] = tt_p4.E()
@@ -108,5 +115,7 @@ class varsExtra():
         self.ttbar_yboost[0] = (th_y + tl_y) / 2.
         self.ttbar_chi[0] = math.exp( abs(th_y - tl_y) )
 
-        self.thad_pout[0] = tl_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(th_p4.Vect())
-        self.tlep_pout[0] = th_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(tl_p4.Vect())
+        #self.thad_pout[0] = tl_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(th_p4.Vect())
+        #self.tlep_pout[0] = th_p4.Vect().Unit().Cross(XYZVectorF(0,0,1)).Dot(tl_p4.Vect())
+        self.thad_pout[0] = tl_p4.Vect().Unit().Cross(TVector3(0,0,1)).Dot(th_p4.Vect())
+        self.tlep_pout[0] = th_p4.Vect().Unit().Cross(TVector3(0,0,1)).Dot(tl_p4.Vect())
