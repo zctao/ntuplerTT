@@ -26,7 +26,8 @@ parser.add_argument('-n', '--name', type=str, default='ntuple',
 args = parser.parse_args()
 
 # check input files
-if len(args.parton_files)==0 and len(args.particle_files)==0:
+#if len(args.parton_files)==0 and len(args.particle_files)==0:
+if args.parton_files is None and args.particle_files is None:
     print("Neither parton or particle level truth trees are provided!")
     print("Do nothing")
     exit()

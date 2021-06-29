@@ -25,6 +25,9 @@ class varsExtra():
         # truth event match flag
         self.isMatched = np.empty((1), dtype="int")
 
+        # dummy event indicator
+        self.isDummy = np.empty((1), dtype="int")
+
         # hadronic top kinematics
         self.thad_E = np.empty((1), dtype="float32")
         self.thad_pout = np.empty((1), dtype="float32")
@@ -43,6 +46,7 @@ class varsExtra():
 
     def set_up_branches(self, tree):
         tree.Branch("isMatched", self.isMatched, "isMatched/I")
+        tree.Branch("isDummy", self.isDummy, "isDummy/I")
 
         if self.sumWeights is not None:
             tree.Branch("normedWeight", self.normalizedWeight, "normedWeight/F")
@@ -63,6 +67,9 @@ class varsExtra():
 
     def set_match_flag(self, ismatched):
         self.isMatched[0] = ismatched
+
+    def set_dummy_flag(self, isdummy):
+        self.isDummy[0] = isdummy
 
     def write_event(self, event):
         # normalize event weight
