@@ -132,7 +132,8 @@ def writeDataFileLists(dataset_config,
     njobs:          int; number of jobs to divide the data files into
 
     Return
-    A dictionary of data list file paths
+    A dictionary of data list file paths.
+    Keys: 'tt', 'tt_truth', 'tt_PL', 'sumWeights'
     """
 
     if not isinstance(subcampaigns, list):

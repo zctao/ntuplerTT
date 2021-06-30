@@ -348,7 +348,7 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
 
 def getInputFileNames(input_list, check_file=True):
     rootFiles = []
-    if input_list is None:
+    if input_list is None or input_list==[]:
         return rootFiles
 
     for fp in input_list:
