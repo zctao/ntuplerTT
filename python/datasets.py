@@ -165,12 +165,14 @@ def writeDataFileLists(dataset_config,
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
 
-    fnames = dict()
+    fnames_template = dict()
     for s in suffix:
-        fnames[s] = [os.path.join(outdir, 'filelist_'+sample_name+'_'+s+'_{}.txt').format(i) for i in range(njobs)]
+        fnames_template[s] = os.path.join(outdir, 'filelist_'+sample_name+'_'+s+'_{}.txt')
 
+    fnames = dict()
     foutputs = dict()
     for s in suffix:
+        fnames[s] = [fnames_template[s].format(0)]
         foutputs[s] = open( fnames[s][0], 'w')
         print("Create file {}".format(fnames[s][0]))
 
@@ -193,8 +195,9 @@ def writeDataFileLists(dataset_config,
             # close the current output files and create new ones
             for s in foutputs:
                 foutputs[s].close()
-                foutputs[s] = open( fnames[s][ijob], 'w')
-                print("Create file {}".format(fnames[s][ijob]))
+                fnames[s].append(fnames_template[s].format(ijob))
+                foutputs[s] = open( fnames[s][-1], 'w')
+                print("Create file {}".format(fnames[s][-1]))
 
         # write to the output files
         foutputs['tt'].write(freco+'\n')
@@ -207,6 +210,9 @@ def writeDataFileLists(dataset_config,
     # close files
     for s in foutputs:
         foutputs[s].close()
+
+    if ijob+1 < njobs:
+        print("Warning: not enough data files to split into {} jobs".format(njobs))
 
     # return a dictionary of the file names
     return fnames

@@ -64,7 +64,7 @@ InputFiles_SumW={infiles_sumw}
 OUTDIR={outdir}
 
 # start running
-python3 $SourceDIR/processMiniNtuples.py -n {name}_$PBS_ARRAYID -o $OUTDIR -r $InputFiles_Reco -w $InputFiles_SumW -t $InputFiles_Parton -p $InputFiles_Particle
+python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_$PBS_ARRAYID -o $OUTDIR -r $InputFiles_Reco -w $InputFiles_SumW -t $InputFiles_Parton -p $InputFiles_Particle
 
 # clean up
 cd /tmp
@@ -96,6 +96,10 @@ datalists = writeDataFileLists(args.dataset_config, args.sample,
 
 assert(datalists['tt'] != [])
 vdict['infiles_reco'] = datalists['tt'][0].replace('_tt_0.txt', '_tt_${PBS_ARRAYID}.txt')
+actual_njobs = len(datalists['tt'])
+if actual_njobs != args.njobs:
+    print("The actual number of jobs is set to {}".format(actual_njobs))
+    vdict['njobs'] = actual_njobs - 1
 
 # FIXME: check if datalists['tt_truth'] or datalists['tt_PL'] is empty
 vdict['infiles_parton'] = datalists['tt_truth'][0].replace('_tt_truth_0.txt', '_tt_truth_${PBS_ARRAYID}.txt')
