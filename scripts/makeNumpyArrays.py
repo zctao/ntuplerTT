@@ -120,7 +120,7 @@ def makeNumpyArrays(**parsed_args):
     arrays_all = rfn.merge_arrays([arrays_reco, arrays_truth], flatten=True)
 
     # write to disk
-    print('Writing arrays to disk ...')
+    print("Writing arrays to file {} ...".format(parsed_args['output_name']))
     np.savez(parsed_args['output_name'], arrays_all)
     print('... done!')
 
