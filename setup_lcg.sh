@@ -1,5 +1,8 @@
 #!/bin/bash
 
+hostname=$(uname -n)
+echo $hostname
+
 lcgVersion=LCG_100
 arch=x86_64-centos7-gcc8-opt
 source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh ${lcgVersion} ${arch}
