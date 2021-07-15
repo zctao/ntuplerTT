@@ -98,15 +98,15 @@ OUTDIR={outdir}/npz
 
 # parton level
 # e+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py $inFileNamePrefix_parton_ejets -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_$PBS_ARRAYID_parton_ejets.npz
+python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_parton_ejets.root -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_"$PBS_ARRAYID"_parton_ejets.npz
 # mu+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py $inFileNamePrefix_parton_mjets -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_$PBS_ARRAYID_parton_mjets.npz
+python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_parton_mjets.root -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_"$PBS_ARRAYID"_parton_mjets.npz
 
 # particle level
 # e+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py $inFileNamePrefix_particle_ejets -t particle -p {padding} -o $OUTDIR/{name}_$PBS_ARRAYID_particle_ejets.npz
+python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_particle_ejets.root -t particle -p {padding} -o $OUTDIR/{name}_"$PBS_ARRAYID"_particle_ejets.npz
 # mu+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py $inFileNamePrefix_particle_mjets -t particle -p {padding} -o $OUTDIR/{name}_$PBS_ARRAYID_particle_mjets.npz
+python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_particle_mjets.root -t particle -p {padding} -o $OUTDIR/{name}_"$PBS_ARRAYID"_particle_mjets.npz
 
 # clean up
 cd /tmp
