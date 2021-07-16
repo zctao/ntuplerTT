@@ -77,7 +77,7 @@ def listFiles_rucio(dids, localSite='CA-SFU-T2_LOCALGROUPDISK', getLocalPath=Fal
 
             if getLocalPath:
                 try:
-                    file_path = subprocess.check_output(['getLocalDataPath', 'echo', file_path]).strip('\n')
+                    file_path = subprocess.check_output(['getLocalDataPath', 'echo', file_path]).decode('utf-8').strip('\n')
                 except:
                     print("Failed to get local file paths")
         else:
@@ -93,12 +93,13 @@ def listFiles_rucio(dids, localSite='CA-SFU-T2_LOCALGROUPDISK', getLocalPath=Fal
 
     return filelist, sizelist
 
-def listDataFiles(dids, local_directory=None):
+def listDataFiles(dids, local_directory=None, host=''):
     """ List data file paths and sizes given DIDs
     ______
     Arguments
     dids: str or a list of str; dataset identifiers
     local_directory: str of a list of str; if provided, look for files in this directory
+    host: str; hostname
 
     Return
     A list of str for data file paths, a list int for file sizes in bytes
@@ -109,7 +110,8 @@ def listDataFiles(dids, local_directory=None):
     else:
         # use rucio client API
         # special case on CC Cedar and data files can be accessed directly from local disks
-        get_local = 'cedar.computecanada.ca' in os.getenv('HOSTNAME')
+        #get_local = 'cedar.computecanada.ca' in os.getenv('HOSTNAME')
+        get_local = "cedar" in host
         try:
             return listFiles_rucio(dids,getLocalPath=get_local)
         except Exception as e:
@@ -120,7 +122,8 @@ def writeDataFileLists(dataset_config,
                        sample_name,
                        subcampaigns=['mc16a', 'mc16d', 'mc16e'],
                        outdir = '.',
-                       njobs=1):
+                       njobs=1,
+                       host=''):
     """ List input file names to be processed to txt files
     These txt files can be used as inputs to the processMiniNtuples.py
     ______
@@ -130,6 +133,7 @@ def writeDataFileLists(dataset_config,
     subcampaigns:   list of str; subcampaign names, secondary key to the dataset config
     outdir:         str; output directory for the file lists
     njobs:          int; number of jobs to divide the data files into
+    host:           str; hostname
 
     Return
     A dictionary of data list file paths.
@@ -157,7 +161,8 @@ def writeDataFileLists(dataset_config,
         data = datasets[sample_name][era]
         for s in suffix:
             lists = listDataFiles(data.rstrip('_')+'_'+s+'.root',
-                                  local_directory = datasets.get('directory'))
+                                  local_directory = datasets.get('directory'),
+                                  host=host)
             datafiles[s] += lists[0]
             filesizes[s] += lists[1]
 
