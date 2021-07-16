@@ -1,9 +1,9 @@
 #!/bin/bash
+lcgVersion=${1:-LCG_100}
 
 hostname=$(uname -n)
 echo $hostname
 
-lcgVersion=LCG_100
 arch=x86_64-centos7-gcc8-opt
 
 if command -v lsetup &> /dev/null
