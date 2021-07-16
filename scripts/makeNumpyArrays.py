@@ -1,4 +1,5 @@
 #!/user/bin/env python3
+import os
 import time
 import tracemalloc
 import numpy as np
@@ -120,6 +121,11 @@ def makeNumpyArrays(**parsed_args):
     arrays_all = rfn.merge_arrays([arrays_reco, arrays_truth], flatten=True)
 
     # write to disk
+    outdir = os.path.dirname(parsed_args['output_name'])
+    if not os.path.isdir(outdir):
+        print("Create output directory: {}".format(outdir))
+        os.makedirs(outdir)
+
     print("Writing arrays to file {} ...".format(parsed_args['output_name']))
     np.savez(parsed_args['output_name'], arrays_all)
     print('... done!')
