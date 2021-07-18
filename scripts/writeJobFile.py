@@ -47,7 +47,7 @@ template_env_lcg = """
 echo HOSTNAME=$HOSTNAME
 
 # set up environment
-source {ntupler_dir}/setup_lcg.sh
+source {ntupler_dir}/setup_lcg.sh LCG_100
 echo "SourceDIR = $SourceDIR"
 
 WorkDIR=#TMP#/$USER/$(date +'%Y%m%d%H%M%S')
