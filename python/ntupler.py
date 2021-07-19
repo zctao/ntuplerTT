@@ -224,7 +224,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
             passEJets = passSelection_ejets(tree_reco)
             passMJets = passSelection_mjets(tree_reco)
             # should pass one and only one of the selections
-            assert( bool(passEJets) ^ bool(passMJets) )
+            #assert( bool(passEJets) ^ bool(passMJets) )
+            if not ( bool(passEJets) ^ bool(passMJets) ):
+                print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
+                continue
 
             if passEJets:
                 extra_variables_reco_ej.set_match_flag(1)
@@ -265,7 +268,11 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
 
             passEJets = passSelection_ejets(tree_reco)
             passMJets = passSelection_mjets(tree_reco)
-            assert( bool(passEJets) ^ bool(passMJets) )
+            #assert( bool(passEJets) ^ bool(passMJets) )
+            if not ( bool(passEJets) ^ bool(passMJets) ):
+                print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
+                continue
+
             if passEJets:
                 extra_variables_reco_ej.set_match_flag(0)
                 extra_variables_reco_ej.set_dummy_flag(0)
