@@ -5,6 +5,7 @@ import tracemalloc
 import numpy as np
 import numpy.lib.recfunctions as rfn
 import uproot
+from datasets import getInputFileNames
 
 def MeVtoGeV(array):
     """
@@ -36,8 +37,10 @@ def makeNumpyArrays(**parsed_args):
     treename_reco = 'reco'
     treename_truth = parsed_args['truth_level']
 
-    intrees_reco = [fname+':'+treename_reco for fname in parsed_args['input_files']]
-    intrees_truth = [fname+':'+treename_truth for fname in parsed_args['input_files']]
+    infile_list = getInputFileNames(parsed_args['input_files'])
+
+    intrees_reco = [fname+':'+treename_reco for fname in infile_list]
+    intrees_truth = [fname+':'+treename_truth for fname in infile_list]
 
     # need uproot4
     assert(uproot.__version__ > "4.0.0")

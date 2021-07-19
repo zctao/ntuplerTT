@@ -1,11 +1,9 @@
 """
 Utilities to handle datasets
 """
-
 import os
 import subprocess
 import yaml
-import rucio.client
 
 def read_config(config_filepath):
     f = open(config_filepath, 'r')
@@ -63,6 +61,7 @@ def listFiles_rucio(dids, localSite='CA-SFU-T2_LOCALGROUPDISK', getLocalPath=Fal
     filelist, sizelist = [], []
 
     # Rucio client
+    import rucio.client
     rc = rucio.client.Client()
 
     # get dataset replicas
@@ -224,3 +223,30 @@ def writeDataFileLists(dataset_config,
 
     # return a dictionary of the file names
     return fnames
+
+def getInputFileNames(input_list, check_file=True):
+    rootFiles = []
+    if input_list is None or input_list==[]:
+        return rootFiles
+
+    for fp in input_list:
+        if check_file and not os.path.isfile(fp):
+            print(fp, "is not a valid file. Skip!")
+            continue
+
+        # check extension
+        ext = os.path.splitext(fp)[-1].lower()
+        if ext == ".root":
+            rootFiles.append(fp)
+        elif ext == ".txt":
+            # read the list of root files in the txt
+            with open(fp) as f:
+                lines = f.readlines()
+            lines = [l.rstrip() for l in lines]
+            files = getInputFileNames(lines, check_file=False)
+            rootFiles += files
+        else:
+            print("Don't know how to handle input file". fp)
+            continue
+
+    return rootFiles

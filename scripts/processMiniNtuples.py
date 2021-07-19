@@ -4,7 +4,8 @@ import os
 import time
 import tracemalloc
 
-from ntupler import getInputFileNames, matchAndSplitTrees
+from ntupler import matchAndSplitTrees
+from datasets import getInputFileNames
 
 import argparse
 
