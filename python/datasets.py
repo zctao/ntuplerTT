@@ -196,7 +196,7 @@ def writeDataFileLists(dataset_config,
         i_sumw = os.path.basename(fsumw).split('.')[-3]
         assert(i_reco == i_truth and i_truth == i_PL and i_PL == i_sumw)
 
-        if current_size > total_size / njobs:
+        if current_size >= total_size / njobs:
             ijob += 1
             current_size = 0
             # close the current output files and create new ones

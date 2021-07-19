@@ -85,31 +85,6 @@ if [ $? -ne 0 ]; then
 fi
 """
 
-template_nparray = """
-inFileNamePrefix={outdir}/{name}_#ARRAYID#
-OUTDIR={outdir}/npz
-
-# parton level
-# e+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_parton_ejets.root -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_#ARRAYID#_parton_ejets.npz
-# mu+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_parton_mjets.root -t parton -p {padding} -l {llcut} -o $OUTDIR/{name}_#ARRAYID#_parton_mjets.npz
-
-# particle level
-# e+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_particle_ejets.root -t particle -p {padding} -o $OUTDIR/{name}_#ARRAYID#_particle_ejets.npz
-# mu+jets
-python3 $SourceDIR/scripts/makeNumpyArrays.py "$inFileNamePrefix"_particle_mjets.root -t particle -p {padding} -o $OUTDIR/{name}_#ARRAYID#_particle_mjets.npz
-
-# clean up
-cd ..
-rm -rf $WorkDIR
-
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-"""
-
 def writeJobFile_flashy(pars_dict, filename):
     # PBS jobs on atlas-t3-ubc.westgrid.ca
     # $PBS_ARRAYID, $PBS_JOBID, /tmp
@@ -126,22 +101,6 @@ def writeJobFile_flashy(pars_dict, filename):
 
     print("To submit the job to cluster:")
     print("qsub -l walltime=<hh:mm:ss>", filename)
-
-    ####
-    # convert root tree to numpy array
-    jobscripts_np = template_header_pbs + template_env_lcg + template_nparray
-    jobscripts_np = jobscripts_np.format(**pars_dict)
-    jobscripts_np = jobscripts_np.replace('#ARRAYID#', '${PBS_ARRAYID}')
-    jobscripts_np = jobscripts_np.replace('#TMP#', '/tmp')
-
-    filename_np = filename.replace('.sh', '_toNumpy.sh')
-    print("Create job file:", filename_np)
-    fjobfile_np = open(filename_np, 'w')
-    fjobfile_np.write(jobscripts_np)
-    fjobfile_np.close()
-
-    print("To submit the job to cluster:")
-    print("qsub -l walltime=<hh:mm:ss>", filename_np)
 
 def writeJobFile_cedar(pars_dict, filename):
     # Slurm jobs on cedar.computecanada.ca
@@ -176,29 +135,6 @@ def writeJobFile_cedar(pars_dict, filename):
     print("To submit the job to cluster:")
     print("sbatch --export=None --time=<hh:mm:ss>", filename)
 
-    ####
-    # convert root tree to numpy array
-    runscript_np = template_env_lcg + template_nparray
-    runscript_np = runscript_np.format(**pars_dict)
-    runscript_np = "array_id=${1}\n" + runscript_np
-    runscript_np = runscript_np.replace('#ARRAYID#', '${array_id}')
-    runscript_np = runscript_np.replace('#TMP#', '${SLURM_TMPDIR}')
-    # save run script
-    filename_np = filename.replace('.sh', '_toNumpy.sh')
-    fname_run_np = filename_np.replace('submitJob', 'runJob')
-    print("Create run script file:", fname_run_np)
-    frunfile_np = open(fname_run_np, 'w')
-    frunfile_np.write(runscript_np)
-    frunfile_np.close()
-
-    print("Create job file:", filename_np)
-    fjobfile_np = open(filename_np, 'w')
-    fjobfile_np.write(template_jobfile.replace("RUNPLACEHOLDER", "source {} {}".format(fname_run_np, "${SLURM_ARRAY_TASK_ID}")))
-    fjobfile_np.close()
-
-    print("To submit the job to cluster:")
-    print("sbatch --export=None --time=<hh:mm:ss>", filename_np)
-
 if __name__ == "__main__":
 
     import argparse
@@ -215,17 +151,13 @@ if __name__ == "__main__":
                         help="MC production subcampaign")
     parser.add_argument('-n', '--njobs', type=int, default=-1,
                         help="Number of jobs to run. If non-positive, set the number of jobs such that there is one input file per job")
-    parser.add_argument('-s', '--submit-dir', type=str,
+    parser.add_argument('--submit-dir', type=str,
                         help="Directory to write job scripts and input lists. If none, set to outdir")
     parser.add_argument('-g', '--grid-proxy', default="$HOME/x509up_u$(id -u)",
                         help="Grid proxy for accessing files via xrootd")
-    parser.add_argument('-p', '--padding', type=float, default=-99.,
-                        help="Value to pad dummy events")
-    parser.add_argument('-k', '--klfitter-ll', type=float, default=-52.,
-                        help="Cut on KLFitter log likelihood")
     parser.add_argument('-e', '--email', type=str,
                         default="os.getenv('USER')+'@phas.ubc.ca'")
-    parser.add_argument('-t', '--host', choices=['flashy', 'cedar'],
+    parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
 
@@ -242,8 +174,6 @@ if __name__ == "__main__":
         'njobarray' : args.njobs - 1,
         'email' : eval(args.email),
         'proxy' : args.grid_proxy,
-        'padding' : args.padding,
-        'llcut' : args.klfitter_ll,
         'name' : 'mntuple_'+args.sample
     }
 
@@ -263,7 +193,7 @@ if __name__ == "__main__":
     datalists = writeDataFileLists(args.dataset_config, args.sample,
                                    args.subcampaigns,
                                    os.path.join(args.submit_dir, 'inputs'),
-                                   args.njobs, args.host)
+                                   args.njobs, args.site)
 
     actual_njobs = len(datalists['tt'])
     assert(actual_njobs != 0)
@@ -288,7 +218,7 @@ if __name__ == "__main__":
 
     ########
     # write job file
-    if args.host == 'cedar':
+    if args.site == 'cedar':
         writeJobFile_cedar(params_dict, foutname)
     else:
         writeJobFile_flashy(params_dict, foutname)
