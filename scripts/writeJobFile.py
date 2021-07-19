@@ -160,6 +160,8 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help="Suppress some printouts")
 
     args = parser.parse_args()
 
@@ -193,7 +195,7 @@ if __name__ == "__main__":
     datalists = writeDataFileLists(args.dataset_config, args.sample,
                                    args.subcampaigns,
                                    os.path.join(args.submit_dir, 'inputs'),
-                                   args.njobs, args.site)
+                                   args.njobs, args.site, args.quiet)
 
     actual_njobs = len(datalists['tt'])
     assert(actual_njobs != 0)
@@ -234,7 +236,8 @@ if __name__ == "__main__":
             continue
         for ch in channels:
             fname_list = os.path.join(params_dict['outdir'], 'ntuplelist_{}_{}.txt'.format(tl, ch))
-            print("Create ntuple list:", fname_list)
+            if not args.quiet:
+                print("Create ntuple list:", fname_list)
             flist = open(fname_list, 'w')
             for j in range(actual_njobs):
                 output_ntuple = os.path.join(params_dict['outdir'], params_dict['name']+'_{}_{}_{}.root'.format(j, tl, ch))

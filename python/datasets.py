@@ -122,7 +122,8 @@ def writeDataFileLists(dataset_config,
                        subcampaigns=['mc16a', 'mc16d', 'mc16e'],
                        outdir = '.',
                        njobs=1,
-                       host=''):
+                       host='',
+                       quiet=False):
     """ List input file names to be processed to txt files
     These txt files can be used as inputs to the processMiniNtuples.py
     ______
@@ -133,6 +134,7 @@ def writeDataFileLists(dataset_config,
     outdir:         str; output directory for the file lists
     njobs:          int; number of jobs to divide the data files into
     host:           str; hostname
+    quiet:          bool; less verbose
 
     Return
     A dictionary of data list file paths.
@@ -181,7 +183,8 @@ def writeDataFileLists(dataset_config,
     for s in suffix:
         fnames[s] = [fnames_template[s].format(0)]
         foutputs[s] = open( fnames[s][0], 'w')
-        print("Create file {}".format(fnames[s][0]))
+        if not quiet:
+            print("Create file {}".format(fnames[s][0]))
 
     # iterate over the file list and split files into lists based on size
     total_size = sum(filesizes['tt'])
@@ -204,7 +207,8 @@ def writeDataFileLists(dataset_config,
                 foutputs[s].close()
                 fnames[s].append(fnames_template[s].format(ijob))
                 foutputs[s] = open( fnames[s][-1], 'w')
-                print("Create file {}".format(fnames[s][-1]))
+                if not quiet:
+                    print("Create file {}".format(fnames[s][-1]))
 
         # write to the output files
         foutputs['tt'].write(freco+'\n')

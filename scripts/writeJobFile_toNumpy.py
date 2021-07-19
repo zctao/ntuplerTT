@@ -102,6 +102,8 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help="Suppress some printouts")
 
     args = parser.parse_args()
 
@@ -167,6 +169,8 @@ if __name__ == "__main__":
     fname_inputs = os.path.join(args.output_dir, 'inputs', fnamebase)
 
     for i, filelist in enumerate(infilelists):
+        if not args.quiet:
+            print("Create file:", fname_inputs.format(i))
         finputs = open(fname_inputs.format(i), 'w')
         for fn in filelist:
             finputs.write(fn+'\n')
