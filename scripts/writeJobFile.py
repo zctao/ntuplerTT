@@ -292,3 +292,21 @@ if __name__ == "__main__":
         writeJobFile_cedar(params_dict, foutname)
     else:
         writeJobFile_flashy(params_dict, foutname)
+
+    # write ntuple file lists
+    truthLevels = ['parton', 'particle']
+    channels = ['ejets', 'mjets']
+
+    for tl in truthLevels:
+        if datalists['tt_truth'] == [] and tl == 'parton':
+            continue
+        if datalists['tt_PL'] == [] and tl == 'particle':
+            continue
+        for ch in channels:
+            fname_list = os.path.join(params_dict['outdir'], 'ntuplelist_{}_{}.txt'.format(tl, ch))
+            print("Create ntuple list:", fname_list)
+            flist = open(fname_list, 'w')
+            for j in range(actual_njobs):
+                output_ntuple = os.path.join(params_dict['outdir'], params_dict['name']+'_{}_{}_{}.root'.format(j, tl, ch))
+                flist.write(output_ntuple+'\n')
+            flist.close()
