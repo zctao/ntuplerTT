@@ -1,14 +1,20 @@
 import os
 import time
 import numpy as np
-from ROOT import TChain, TFile
+from ROOT import TChain, TTree, TFile
 from extra_variables import varsExtra
 
 def getTrees(infiles, treename, buildIndex=True):
-    # read trees into TChain
-    tree = TChain(treename)
-    for infile in infiles:
-        tree.Add(infile)
+    if len(infiles) == 1:
+        rf = TFile.Open(infiles[0])
+        tree = rf.Get(treename)
+        tree.SetDirectory(0)
+        rf.Close()
+    else:
+        # read trees into TChain
+        tree = TChain(treename)
+        for infile in infiles:
+            tree.Add(infile)
 
     # build index
     if buildIndex:
