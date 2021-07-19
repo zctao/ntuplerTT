@@ -2,7 +2,7 @@ import os
 from datasets import getInputFileNames
 
 template_header_pbs = """#!/bin/bash
-#PBS -t 0-{njobarray}
+#PBS -t 0-{njobarray}%{maxtasks}
 #PBS -o {outdir}/$PBS_JOBID.out
 #PBS -j oe
 #PBS -m abe
@@ -18,7 +18,7 @@ if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 """
 
 template_header_slurm = """
-#SBATCH --array=0-{njobarray}
+#SBATCH --array=0-{njobarray}%{maxtasks}
 #SBATCH --output={outdir}/%A_%a.out
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user={email}
@@ -102,6 +102,8 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
+    parser.add_argument('-m', '--max-tasks', type=int, default=8,
+                        help="Max number of active tasks at any one time")
     parser.add_argument('-q', '--quiet', action='store_true',
                         help="Suppress some printouts")
 
@@ -121,7 +123,8 @@ if __name__ == "__main__":
         'njobarray' : args.njobs - 1,
         'email' : eval(args.email),
         'padding' : args.padding,
-        'llcut' : args.klfitter_ll
+        'llcut' : args.klfitter_ll,
+        'maxtasks': args.max_tasks
     }
 
     ######
