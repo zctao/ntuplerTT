@@ -4,29 +4,16 @@ import numpy as np
 from ROOT import TChain, TTree, TFile
 from extra_variables import varsExtra
 
-def getTrees(infiles, treename, buildIndex=True):
-    if len(infiles) == 1:
-        rf = TFile.Open(infiles[0])
-        tree = rf.Get(treename)
-        tree.SetDirectory(0)
-        rf.Close()
+def buildTreeIndex(tree):
+    tstart = time.time()
+    status = tree.BuildIndex('runNumber', 'eventNumber')
+    tdone = time.time()
+
+    # A return code less than 0 indicates failure.
+    if status < 0:
+        raise RuntimeError("Could not build index for tree {}".format(treename))
     else:
-        # read trees into TChain
-        tree = TChain(treename)
-        for infile in infiles:
-            tree.Add(infile)
-
-    # build index
-    if buildIndex:
-        tstart = time.time()
-        status = tree.BuildIndex('runNumber', 'eventNumber')
-        tdone = time.time()
-
-        # A return code less than 0 indicates failure.
-        if status < 0:
-            raise RuntimeError("Could not build index for tree {}".format(treename))
-        else:
-            print("Building index took {:.2f} seconds".format(tdone-tstart))
+        print("Building index took {:.2f} seconds".format(tdone-tstart))
 
     return tree
 
@@ -79,10 +66,14 @@ def passSelection_mjets(tree):
     else:
         return False
 
-def getSumWeights(tree_sumw):
+def getSumWeights(infiles_sumw):
+    tree_sumw = TChain('sumWeights')
+    for fsumw in infiles_sumw:
+        tree_sumw.Add(fsumw)
+
     sumw = 0
-    for w in tree_sumw:
-        sumw += w.totalEventsWeighted
+    for evt in tree_sumw:
+        sumw += evt.totalEventsWeighted
 
     return sumw
 
@@ -95,34 +86,35 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
     print("Read input trees and build index")
     # Reco
     print("Reco level")
+    tree_reco = TChain(treename)
+    for infile_reco in inputFiles_reco:
+        tree_reco.Add(infile_reco)
+    nevents_reco = tree_reco.GetEntries()
+    print("Number of events in the reco tree: {}".format(nevents_reco))
+
     try:
-        tree_reco = getTrees(inputFiles_reco, treename, True)
-        nevents_reco = tree_reco.GetEntries()
-        print("Number of events in the reco tree: {}".format(nevents_reco))
+        buildTreeIndex(tree_reco)
     except RuntimeError as err:
-        #tree_reco = None
-        print("Failed to get reco level trees: {}".format(err))
+        print("Failed to build index for reco level trees: {}".format(err))
         return
 
     # MC truth level
     print(truthLevel.capitalize()+" level")
+    tree_truth = TChain(treename)
+    for infile_truth in inputFiles_truth:
+        tree_truth.Add(infile_truth)
+    nevents_truth = tree_truth.GetEntries()
+    print("Number of events in the truth tree: {}".format(nevents_truth))
+
     try:
-        tree_truth = getTrees(inputFiles_truth, treename, True)
-        nevents_truth = tree_truth.GetEntries()
-        print("Number of events in the truth tree: {}".format(nevents_truth))
+        buildTreeIndex(tree_truth)
     except RuntimeError as err:
-        print("Failed to get parton level trees: {}".format(err))
+        print("Failed to build index for truth level trees: {}".format(err))
         return
 
     # Sum weights
     print("Read sumWeights")
-    try:
-        tree_sumw = getTrees(inputFiles_sumw, 'sumWeights', False)
-    except RuntimeError as err:
-        print("Failed to get sumWeights: {}".format(err))
-        return
-
-    sumWeights = getSumWeights(tree_sumw)
+    sumWeights = getSumWeights(inputFiles_sumw)
     print("sum weights = ", sumWeights)
 
     ##########
