@@ -140,6 +140,9 @@ def writeDataFileLists(dataset_config,
     Keys: 'tt', 'tt_truth', 'tt_PL', 'sumWeights'
     """
 
+    if njobs <= 0:
+        njobs = 99999 # a large enough number so one file per job
+
     if not isinstance(subcampaigns, list):
         subcampaigns = [subcampaigns]
 
@@ -216,8 +219,8 @@ def writeDataFileLists(dataset_config,
     for s in foutputs:
         foutputs[s].close()
 
-    if ijob+1 < njobs:
-        print("Warning: not enough data files to split into {} jobs".format(njobs))
+    #if ijob+1 < njobs:
+    #    print("Warning: not enough data files to split into {} jobs".format(njobs))
 
     # return a dictionary of the file names
     return fnames

@@ -213,8 +213,8 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--subcampaigns',
                         choices=['mc16a', 'mc16d', 'mc16e'], default='mc16e',
                         help="MC production subcampaign")
-    parser.add_argument('-n', '--njobs', type=int, default=1,
-                        help="Number of jobs to run")
+    parser.add_argument('-n', '--njobs', type=int, default=-1,
+                        help="Number of jobs to run. If non-positive, set the number of jobs such that there is one input file per job")
     parser.add_argument('-s', '--submit-dir', type=str,
                         help="Directory to write job scripts and input lists. If none, set to outdir")
     parser.add_argument('-g', '--grid-proxy', default="$HOME/x509up_u$(id -u)",
