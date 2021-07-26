@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 from datasets import getInputFileNames
 
 template_header_pbs = """#!/bin/bash
@@ -22,7 +24,7 @@ template_header_slurm = """
 #SBATCH --output={outdir}/%A_%a.out
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user={email}
-#SBATCH --mem=4G
+#SBATCH --mem=8G
 """
 
 template_env_lcg = """
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
-    parser.add_argument('-m', '--max-tasks', type=int, default=8,
+    parser.add_argument('-m', '--max-tasks', type=int, default=2,
                         help="Max number of active tasks at any one time")
     parser.add_argument('-q', '--quiet', action='store_true',
                         help="Suppress some printouts")
