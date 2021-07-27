@@ -141,8 +141,14 @@ if __name__ == "__main__":
     ntuple_files = getInputFileNames([args.ntuple_list], check_file=False)
 
     # extract ntuple name prefix
-    # .../<prefix>_0_....root
-    name_prefix = os.path.basename(ntuple_files[0]).split('0')[0].rstrip('_')
+    # .../<prefix>_<digits>_....root
+    fnameindex = None
+    for x in os.path.basename(ntuple_files[0]).split('_'):
+        if x.isdigit():
+            fnameindex = x
+            break
+    assert(fnameindex is not None)
+    name_prefix = os.path.basename(ntuple_files[0]).split(fnameindex)[0].rstrip('_')
     params_dict['name'] = name_prefix
 
     # truth level
