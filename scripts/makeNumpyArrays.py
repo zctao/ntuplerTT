@@ -86,11 +86,22 @@ def makeNumpyArrays(**parsed_args):
     arrays_reco = MeVtoGeV(arrays_reco)
     arrays_truth = MeVtoGeV(arrays_truth)
 
+    # special cases
+    # some branches of matched parton level MC events contain value nan or inf
+    # e.g. 'MC_tbar_afterFSR_y'
+    # mark isDummy==1 for these MC truth events
+    if parsed_args['truth_level'] == 'parton':
+        sel_nan = np.isnan(arrays_truth['MC_thad_afterFSR_y'])
+        arrays_truth['isDummy'][sel_nan] = 1
+
     if parsed_args['matched_only']:
         # only store reoc and truth events that are matched to each other
         print("Only take truth matched event")
-        arrays_reco = arrays_reco[arrays_reco['isMatched']==1]
-        arrays_truth = arrays_truth[arrays_truth['isMatched']==1]
+        good_reco = np.logical_and(arrays_reco['isMatched']==1, arrays_reco['isDummy']==0)
+        arrays_reco = arrays_reco[good_reco]
+
+        good_truth = np.logical_and(arrays_truth['isMatched']==1, arrays_truth['isDummy']==0)
+        arrays_truth = arrays_truth[good_truth]
     else:
         # pad unmatched dummy events with dummy value
         print("Pad dummy events with value {}".format(parsed_args['pad_value']))
@@ -125,7 +136,7 @@ def makeNumpyArrays(**parsed_args):
 
     # write to disk
     outdir = os.path.dirname(parsed_args['output_name'])
-    if not os.path.isdir(outdir):
+    if outdir and not os.path.isdir(outdir):
         print("Create output directory: {}".format(outdir))
         os.makedirs(outdir)
 
