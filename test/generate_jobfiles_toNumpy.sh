@@ -1,10 +1,13 @@
 #!/bin/bash
 site=${1:-flashy}
+outdir=${2:-}
 
-# global parameters
-outdir=/home/ztao/data/batch_output/NtupleTT/latest
-if [[ $site == "cedar" ]]; then
-    outdir=/home/ztao/work/batch_output/NtupleTT/latest
+if [ -z "$outdir" ]; then
+    if [[ $site == "cedar" ]]; then
+        outdir=/home/ztao/work/batch_output/NtupleTT/latest
+    else
+        outdir=/home/ztao/data/batch_output/NtupleTT/latest
+    fi
 fi
 
 klfitter_LLcut=-50

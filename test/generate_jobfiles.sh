@@ -1,12 +1,15 @@
 #!/bin/bash
 site=${1:-flashy}
+outdir=${2:-}
+dataset_config=${3:-configs/datasets/datasets_ttdiffxs361v8_mini362v1_klf.yaml}
 
-outdir=/home/ztao/data/batch_output/NtupleTT/latest
-if [[ $site == "cedar" ]]; then
-    outdir=/home/ztao/work/batch_output/NtupleTT/latest
+if [ -z "$outdir" ]; then
+    if [[ $site == "cedar" ]]; then
+        outdir=/home/ztao/work/batch_output/NtupleTT/latest
+    else
+        outdir=/home/ztao/data/batch_output/NtupleTT/latest
+    fi
 fi
-
-dataset_config=configs/datasets/datasets_ttdiffxs361v8_mini362v1_klf.yaml
 
 generate_files() {
     sample="$1"
