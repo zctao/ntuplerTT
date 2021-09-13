@@ -27,16 +27,47 @@ def prepareOutputTree(input_tree, new_name, extra_branches=[]):
 
     return newtree
 
+def getWdecayIDs(tree_parton, ievent=None):
+    if ievent is not None:
+        tree_parton.GetEntry(ievent)
+
+    if not hasattr('MC_Wdecay1_from_tbar_afterFSR_pdgid'):
+        print("Cannot find branches for W decay products.")
+        return []
+    else:
+        decayIDs = [abs(getattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay2_from_tbar_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay1_from_t_afterFSR_pdgid')),
+                    abs(getattr(tree, 'MC_Wdecay2_from_t_afterFSR_pdgid'))]
+        return decayIDs
+
+def isSemiLeptonicTTbar(tree_parton, ievent=None):
+    if ievent is not None:
+        tree_parton.GetEntry(ievent)
+
+    # check if a parton level event is semileptonic ttbar
+    tbar_wdecay1_pdgid = tree_parton.MC_Wdecay1_from_tbar_afterFSR_pdgid
+    tbarIsHadronic = abs(tbar_wdecay1_pdgid) in [1, 2, 3, 4, 5, 6]
+
+    t_wdecay1_pdgid = tree_parton.MC_Wdecay1_from_t_afterFSR_pdgid
+    tIsHadronic = abs(t_wdecay1_pdgid) in [1, 2, 3, 4, 5, 6]
+
+    # Note:
+    # This seletion also get rid of the truth events that have nan or inf for
+    # some branches e.g. MC_thad_afterFSR_y, MC_ttbar_afterFSR_E
+    # The W decay products on the hadronic leg in such events are all zeros
+    # Need to investigate the upstream ntuple production
+
+    return bool(tbarIsHadronic) ^ bool(tIsHadronic)
+
 def passSelection_ejets(tree):
     if hasattr(tree, 'passed_resolved_ejets_4j2b'):
         # reco or particle level tree
         return tree.passed_resolved_ejets_4j2b
     elif hasattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid'):
         # parton tree
-        decayIDs = [abs(getattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay2_from_tbar_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay1_from_t_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay2_from_t_afterFSR_pdgid'))]
+        decayIDs = getWdecayIDs(tree)
+
         if 11 in decayIDs:
             return True
         else:
@@ -52,10 +83,8 @@ def passSelection_mjets(tree):
         return tree.passed_resolved_mujets_4j2b
     elif hasattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid'):
         # parton tree
-        decayIDs = [abs(getattr(tree, 'MC_Wdecay1_from_tbar_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay2_from_tbar_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay1_from_t_afterFSR_pdgid')),
-                    abs(getattr(tree, 'MC_Wdecay2_from_t_afterFSR_pdgid'))]
+        decayIDs = getWdecayIDs(tree)
+
         if 13 in decayIDs:
             return True
         else:
@@ -211,6 +240,7 @@ def matchAndSplitTrees(
 
     ##########
     print("Iterate through events in reco trees")
+    matched_reco_entries = []
     unmatched_reco_entries = []
 
     for i in range(tree_reco.GetEntries()):
@@ -222,9 +252,15 @@ def matchAndSplitTrees(
             print("processing event #{}".format(i))
         tree_reco.GetEntry(i)
 
-        # event selections
+        # reco-level selections
         passEJets = passSelection_ejets(tree_reco)
         passMJets = passSelection_mjets(tree_reco)
+
+        # add additional selections here
+
+        passSel = passEJets or passMJets
+        if not passSel:
+            continue
 
         # sanity check: should pass one and only one of the selections
         if not ( bool(passEJets) ^ bool(passMJets) ):
@@ -237,11 +273,26 @@ def matchAndSplitTrees(
             # try to get the truth level event that matches this reco event
             eventID = (tree_reco.runNumber, tree_reco.eventNumber)
             truth_entry = tree_truth.GetEntryNumberWithIndex(*eventID)
+            tree_truth.GetEntry(truth_entry)
+
             if truth_entry >= 0:
                 # found matched truth event
                 isTruthMatched = True
+                # check if the truth event is indeed semi-leptonic ttbar
+                #if truthLevel=='parton' and hasattr(tree_reco, 'isTruthSemileptonic'):
+                #    isTruthMatched = tree_reco.isTruthSemileptonic
+                # instead of trusting tree_reco.isTruthSemileptonic, checking
+                # tree_truth ourselves
+                if truthLevel=='parton':
+                    isTruthMatched = isSemiLeptonicTTbar(tree_truth)
+                elif truthLevel=='particle' and hasattr(tree_reco, 'passedPL'):
+                    isTruthMatched = tree_reco.passedPL
+
+            if isTruthMatched:
+                matched_reco_entries.append(i)
             else:
                 # no matched truth event found
+                # or the matched truth event is not semileptonic ttbar
                 unmatched_reco_entries.append(i)
                 # skip for now
                 continue
@@ -261,7 +312,7 @@ def matchAndSplitTrees(
 
         if tree_truth is not None:
             # write matched truth event
-            tree_truth.GetEntry(truth_entry)
+            #assert(isTruthMatched)
             if passEJets:
                 extra_variables_truth_ej.set_match_flag(1)
                 extra_variables_truth_ej.set_dummy_flag(0)
@@ -272,6 +323,7 @@ def matchAndSplitTrees(
                 extra_variables_truth_mj.set_dummy_flag(0)
                 extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
+
     # end of tree_reco loop
 
     if saveUnmatchedReco and tree_truth is not None:
@@ -287,6 +339,7 @@ def matchAndSplitTrees(
 
             tree_reco.GetEntry(ireco_unmatched)
 
+            # all events in unmatched_reco_entries should pass reco selections
             passEJets = passSelection_ejets(tree_reco)
             passMJets = passSelection_mjets(tree_reco)
 
@@ -336,9 +389,21 @@ def matchAndSplitTrees(
                 print("processing {} event {}".format(truthLevel, j))
 
             tree_truth.GetEntry(j)
+
+            # truth-level selections
+            passTruthSel = False
+            if truthLevel=='parton':
+                passTruthSel = isSemiLeptonicTTbar(tree_truth)
+            elif truthLevel=='particle':
+                passTruthSel = tree_truth.passedPL
+
+            if not passTruthSel:
+                continue
+
+            # try getting the matched reco event
             reco_entry = tree_reco.GetEntryNumberWithIndex(tree_truth.runNumber, tree_truth.eventNumber)
 
-            if reco_entry >= 0:
+            if reco_entry in matched_reco_entries:
                 # found matched reco event.
                 # skip since it has already been written.
                 continue
