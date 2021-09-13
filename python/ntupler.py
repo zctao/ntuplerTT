@@ -99,12 +99,6 @@ def matchAndSplitTrees(
     nevents_reco = tree_reco.GetEntries()
     print("Number of events in the reco tree: {}".format(nevents_reco))
 
-    try:
-        buildTreeIndex(tree_reco)
-    except RuntimeError as err:
-        print("Failed to build index for reco level trees: {}".format(err))
-        return
-
     # MC truth level
     if inputFiles_truth:
         print(truthLevel.capitalize()+" level")
@@ -324,6 +318,13 @@ def matchAndSplitTrees(
                 newtree_truth_mj.Fill()
 
     if saveUnmatchedTruth and tree_truth is not None:
+        # build reco tree index
+        try:
+            buildTreeIndex(tree_reco)
+        except RuntimeError as err:
+            print("Failed to build index for reco level trees: {}".format(err))
+            return
+
         # append unmatched truth events
         print("Append unmatched {} events".format(truthLevel))
         for j in range(tree_truth.GetEntries()):
