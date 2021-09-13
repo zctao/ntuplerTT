@@ -23,6 +23,8 @@ parser.add_argument('-o', '--outdir', default='.',
                     help="Output directory")
 parser.add_argument('-n', '--name', type=str, default='ntuple',
                     help="Suffix of the output file names")
+parser.add_argument('-m', '--maxevents', type=int,
+                    help="Max number of events to process")
 
 args = parser.parse_args()
 
@@ -47,7 +49,8 @@ if len(inputFiles_parton) == 0 and len(inputFiles_particle) == 0:
     tstart = time.time()
     matchAndSplitTrees(
         os.path.join(args.outdir, args.name),
-        inputFiles_reco, inputFiles_sumw = inputFiles_sumw
+        inputFiles_reco, inputFiles_sumw = inputFiles_sumw,
+        maxevents = args.maxevents
     )
 else:
     if len(inputFiles_parton) > 0:
@@ -58,7 +61,8 @@ else:
             inputFiles_reco, inputFiles_parton, inputFiles_sumw,
             truthLevel = 'parton',
             saveUnmatchedReco = True,
-            saveUnmatchedTruth = False
+            saveUnmatchedTruth = False,
+            maxevents = args.maxevents
         )
         tdone = time.time()
         print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
@@ -74,7 +78,8 @@ else:
             inputFiles_reco, inputFiles_particle, inputFiles_sumw,
             truthLevel = 'particle',
             saveUnmatchedReco = True,
-            saveUnmatchedTruth = True
+            saveUnmatchedTruth = True,
+            maxevents = args.maxevents
         )
         tdone = time.time()
         print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
