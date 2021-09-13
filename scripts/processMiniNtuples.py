@@ -50,6 +50,7 @@ if len(inputFiles_parton) == 0 and len(inputFiles_particle) == 0:
     matchAndSplitTrees(
         os.path.join(args.outdir, args.name),
         inputFiles_reco, inputFiles_sumw = inputFiles_sumw,
+        recoAlgo = 'klfitter',
         maxevents = args.maxevents
     )
 else:
@@ -59,6 +60,7 @@ else:
         matchAndSplitTrees(
             os.path.join(args.outdir, args.name),
             inputFiles_reco, inputFiles_parton, inputFiles_sumw,
+            recoAlgo = 'klfitter',
             truthLevel = 'parton',
             saveUnmatchedReco = True,
             saveUnmatchedTruth = False,
@@ -76,6 +78,7 @@ else:
         matchAndSplitTrees(
             os.path.join(args.outdir, args.name),
             inputFiles_reco, inputFiles_particle, inputFiles_sumw,
+            recoAlgo = 'pseudotop',
             truthLevel = 'particle',
             saveUnmatchedReco = True,
             saveUnmatchedTruth = True,

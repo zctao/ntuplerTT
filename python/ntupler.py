@@ -82,7 +82,9 @@ def matchAndSplitTrees(
         inputFiles_reco,
         inputFiles_truth=[],
         inputFiles_sumw=[],
-        truthLevel ='parton', treename='nominal',
+        recoAlgo = 'klfitter', # ttbar reconstruction algorithm
+        truthLevel ='parton',
+        treename='nominal',
         saveUnmatchedReco=True, saveUnmatchedTruth=True,
         maxevents=None
     ):
@@ -133,14 +135,19 @@ def matchAndSplitTrees(
     print("Create output trees")
     #####
     # reco branches
-    if truthLevel == "parton":
+    if recoAlgo.lower() == 'klfitter':
+        # KLFitter
         reco_prefix_thad = "klfitter_bestPerm_topHad"
         reco_prefix_tlep = "klfitter_bestPerm_topLep"
         reco_prefix_ttbar = "klfitter_bestPerm_ttbar"
-    else: # particle level
+    elif recoAlgo.lower() == 'pseudotop':
+        # PseudoTop
         reco_prefix_thad = "PseudoTop_Reco_top_had"
         reco_prefix_tlep = "PseudoTop_Reco_top_lep"
         reco_prefix_ttbar = "PseudoTop_Reco_ttbar"
+    else:
+        print("Unknown top reconstruction algorithm: {}".format(recoAlgo))
+        return
 
     # truth branches
     if truthLevel == "parton":
