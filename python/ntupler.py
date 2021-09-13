@@ -77,10 +77,15 @@ def getSumWeights(infiles_sumw):
 
     return sumw
 
-def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
-                       outputName, truthLevel ='parton', treename='nominal',
-                       saveUnmatchedReco=True, saveUnmatchedTruth=True,
-                       maxevents=None):
+def matchAndSplitTrees(
+        outputName,
+        inputFiles_reco,
+        inputFiles_truth=[],
+        inputFiles_sumw=[],
+        truthLevel ='parton', treename='nominal',
+        saveUnmatchedReco=True, saveUnmatchedTruth=True,
+        maxevents=None
+    ):
 
     ##########
     print("Read input trees and build index")
@@ -99,23 +104,29 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
         return
 
     # MC truth level
-    print(truthLevel.capitalize()+" level")
-    tree_truth = TChain(treename)
-    for infile_truth in inputFiles_truth:
-        tree_truth.Add(infile_truth)
-    nevents_truth = tree_truth.GetEntries()
-    print("Number of events in the truth tree: {}".format(nevents_truth))
+    if inputFiles_truth:
+        print(truthLevel.capitalize()+" level")
+        tree_truth = TChain(treename)
+        for infile_truth in inputFiles_truth:
+            tree_truth.Add(infile_truth)
+        nevents_truth = tree_truth.GetEntries()
+        print("Number of events in the truth tree: {}".format(nevents_truth))
 
-    try:
-        buildTreeIndex(tree_truth)
-    except RuntimeError as err:
-        print("Failed to build index for truth level trees: {}".format(err))
-        return
+        try:
+            buildTreeIndex(tree_truth)
+        except RuntimeError as err:
+            print("Failed to build index for truth level trees: {}".format(err))
+            return
+    else:
+        tree_truth = None
 
     # Sum weights
-    print("Read sumWeights")
-    sumWeights = getSumWeights(inputFiles_sumw)
-    print("sum weights = ", sumWeights)
+    if inputFiles_sumw:
+        print("Read sumWeights")
+        sumWeights = getSumWeights(inputFiles_sumw)
+        print("sum weights = ", sumWeights)
+    else:
+        sumWeights = None
 
     ##########
     # Output trees
@@ -157,13 +168,17 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
     extra_variables_reco_ej.set_up_branches(newtree_reco_ej)
 
     # truth
-    extra_variables_truth_ej = varsExtra(
-        truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
-        compute_energy = truthLevel!="parton"
-    )
+    if tree_truth is not None:
+        extra_variables_truth_ej = varsExtra(
+            truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
+            compute_energy = truthLevel!="parton"
+        )
 
-    newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel)
-    extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
+        newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel)
+        extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
+    else:
+        extra_variables_truth_ej = None
+        newtree_truth_ej = None
 
     #####
     # mu+jets
@@ -181,13 +196,17 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
     extra_variables_reco_mj.set_up_branches(newtree_reco_mj)
 
     # truth
-    extra_variables_truth_mj = varsExtra(
-        truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
-        compute_energy = truthLevel!="parton"
-    )
+    if tree_truth is not None:
+        extra_variables_truth_mj = varsExtra(
+            truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
+            compute_energy = truthLevel!="parton"
+        )
 
-    newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel)
-    extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
+        newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel)
+        extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
+    else:
+        extra_variables_truth_mj = None
+        newtree_truth_mj = None
 
     ##########
     print("Iterate through events in reco trees")
@@ -202,50 +221,59 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
             print("processing event #{}".format(i))
         tree_reco.GetEntry(i)
 
-        eventID = (tree_reco.runNumber, tree_reco.eventNumber)
+        # event selections
+        passEJets = passSelection_ejets(tree_reco)
+        passMJets = passSelection_mjets(tree_reco)
+
+        # sanity check: should pass one and only one of the selections
+        if not ( bool(passEJets) ^ bool(passMJets) ):
+            print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
+            continue
 
         ####
-        # try matching truth level events
-        truth_entry = tree_truth.GetEntryNumberWithIndex(*eventID)
-        if truth_entry < 0:
-            # found no matched event
-            unmatched_reco_entries.append(i)
-        else:
-            # found matched event
-            # write reco events
-            passEJets = passSelection_ejets(tree_reco)
-            passMJets = passSelection_mjets(tree_reco)
-            # should pass one and only one of the selections
-            #assert( bool(passEJets) ^ bool(passMJets) )
-            if not ( bool(passEJets) ^ bool(passMJets) ):
-                print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
+        isTruthMatched = False
+        if tree_truth is not None:
+            # try to get the truth level event that matches this reco event
+            eventID = (tree_reco.runNumber, tree_reco.eventNumber)
+            truth_entry = tree_truth.GetEntryNumberWithIndex(*eventID)
+            if truth_entry >= 0:
+                # found matched truth event
+                isTruthMatched = True
+            else:
+                # no matched truth event found
+                unmatched_reco_entries.append(i)
+                # skip for now
                 continue
 
-            if passEJets:
-                extra_variables_reco_ej.set_match_flag(1)
-                extra_variables_reco_ej.set_dummy_flag(0)
-                extra_variables_reco_ej.write_event(tree_reco)
-                newtree_reco_ej.Fill()
-            if passMJets:
-                extra_variables_reco_mj.set_match_flag(1)
-                extra_variables_reco_mj.set_dummy_flag(0)
-                extra_variables_reco_mj.write_event(tree_reco)
-                newtree_reco_mj.Fill()
+        # write reco events
+        # fill the new trees
+        if passEJets:
+            extra_variables_reco_ej.set_match_flag(isTruthMatched)
+            extra_variables_reco_ej.set_dummy_flag(0)
+            extra_variables_reco_ej.write_event(tree_reco)
+            newtree_reco_ej.Fill()
+        elif passMJets:
+            extra_variables_reco_mj.set_match_flag(isTruthMatched)
+            extra_variables_reco_mj.set_dummy_flag(0)
+            extra_variables_reco_mj.write_event(tree_reco)
+            newtree_reco_mj.Fill()
 
-            # write truth events
+        if tree_truth is not None:
+            # write matched truth event
             tree_truth.GetEntry(truth_entry)
             if passEJets:
                 extra_variables_truth_ej.set_match_flag(1)
                 extra_variables_truth_ej.set_dummy_flag(0)
                 extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
-            if passMJets:
+            elif passMJets:
                 extra_variables_truth_mj.set_match_flag(1)
                 extra_variables_truth_mj.set_dummy_flag(0)
                 extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
+    # end of tree_reco loop
 
-    if saveUnmatchedReco:
+    if saveUnmatchedReco and tree_truth is not None:
         # append unmatched reco events
         print("Append unmatched reco events")
         for ievt, ireco_unmatched in enumerate(unmatched_reco_entries):
@@ -260,17 +288,13 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
 
             passEJets = passSelection_ejets(tree_reco)
             passMJets = passSelection_mjets(tree_reco)
-            #assert( bool(passEJets) ^ bool(passMJets) )
-            if not ( bool(passEJets) ^ bool(passMJets) ):
-                print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
-                continue
 
             if passEJets:
                 extra_variables_reco_ej.set_match_flag(0)
                 extra_variables_reco_ej.set_dummy_flag(0)
                 extra_variables_reco_ej.write_event(tree_reco)
                 newtree_reco_ej.Fill()
-            if passMJets:
+            elif passMJets:
                 extra_variables_reco_mj.set_match_flag(0)
                 extra_variables_reco_mj.set_dummy_flag(0)
                 extra_variables_reco_mj.write_event(tree_reco)
@@ -286,13 +310,13 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
                 extra_variables_truth_ej.set_dummy_flag(1)
                 extra_variables_truth_ej.write_event(tree_truth)
                 newtree_truth_ej.Fill()
-            if passMJets:
+            elif passMJets:
                 extra_variables_truth_mj.set_match_flag(0)
                 extra_variables_truth_mj.set_dummy_flag(1)
                 extra_variables_truth_mj.write_event(tree_truth)
                 newtree_truth_mj.Fill()
 
-    if saveUnmatchedTruth:
+    if saveUnmatchedTruth and tree_truth is not None:
         # append unmatched truth events
         print("Append unmatched {} events".format(truthLevel))
         for j in range(tree_truth.GetEntries()):
@@ -341,8 +365,10 @@ def matchAndSplitTrees(inputFiles_reco, inputFiles_truth, inputFiles_sumw,
                 newtree_reco_mj.Fill()
 
     # new reco and truth trees should be of the same length
-    assert(newtree_reco_ej.GetEntries() == newtree_truth_ej.GetEntries())
-    assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
+    if newtree_truth_ej is not None:
+        assert(newtree_reco_ej.GetEntries() == newtree_truth_ej.GetEntries())
+    if newtree_truth_mj is not None:
+        assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
 
     # Write and close output files
     outfile_ej.Write()

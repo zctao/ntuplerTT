@@ -26,13 +26,7 @@ parser.add_argument('-n', '--name', type=str, default='ntuple',
 
 args = parser.parse_args()
 
-# check input files
-#if len(args.parton_files)==0 and len(args.particle_files)==0:
-if args.parton_files is None and args.particle_files is None:
-    print("Neither parton or particle level truth trees are provided!")
-    print("Do nothing")
-    exit()
-
+# get input files
 inputFiles_reco = getInputFileNames(args.reco_files)
 inputFiles_parton = getInputFileNames(args.parton_files)
 inputFiles_particle = getInputFileNames(args.particle_files)
@@ -43,32 +37,47 @@ if not os.path.isdir(args.outdir):
     print("Create output directory: {}".format(args.outdir))
     os.makedirs(args.outdir)
 
+assert(len(inputFiles_reco) > 0)
+
 tracemalloc.start()
 
-if len(inputFiles_parton) > 0:
-    print("Match reco and parton level events")
+if len(inputFiles_parton) == 0 and len(inputFiles_particle) == 0:
+    # reco only
+    print("Process reco events only")
     tstart = time.time()
-    matchAndSplitTrees(inputFiles_reco, inputFiles_parton, inputFiles_sumw,
-                        outputName = os.path.join(args.outdir, args.name),
-                        truthLevel = 'parton',
-                        saveUnmatchedReco = True,
-                        saveUnmatchedTruth = False)
-    tdone = time.time()
-    print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
+    matchAndSplitTrees(
+        os.path.join(args.outdir, args.name),
+        inputFiles_reco, inputFiles_sumw = inputFiles_sumw
+    )
+else:
+    if len(inputFiles_parton) > 0:
+        print("Match reco and parton level events")
+        tstart = time.time()
+        matchAndSplitTrees(
+            os.path.join(args.outdir, args.name),
+            inputFiles_reco, inputFiles_parton, inputFiles_sumw,
+            truthLevel = 'parton',
+            saveUnmatchedReco = True,
+            saveUnmatchedTruth = False
+        )
+        tdone = time.time()
+        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
 
-    mcurrent, mpeak = tracemalloc.get_traced_memory()
-    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
+        mcurrent, mpeak = tracemalloc.get_traced_memory()
+        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
 
-if len(inputFiles_particle) > 0:
-    print("Match reco and particle level events")
-    tstart = time.time()
-    matchAndSplitTrees(inputFiles_reco, inputFiles_particle, inputFiles_sumw,
-                        outputName = os.path.join(args.outdir, args.name),
-                        truthLevel = 'particle',
-                        saveUnmatchedReco = True,
-                        saveUnmatchedTruth = True)
-    tdone = time.time()
-    print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
+    if len(inputFiles_particle) > 0:
+        print("Match reco and particle level events")
+        tstart = time.time()
+        matchAndSplitTrees(
+            os.path.join(args.outdir, args.name),
+            inputFiles_reco, inputFiles_particle, inputFiles_sumw,
+            truthLevel = 'particle',
+            saveUnmatchedReco = True,
+            saveUnmatchedTruth = True
+        )
+        tdone = time.time()
+        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
 
-    mcurrent, mpeak = tracemalloc.get_traced_memory()
-    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
+        mcurrent, mpeak = tracemalloc.get_traced_memory()
+        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
