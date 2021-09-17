@@ -253,10 +253,10 @@ def matchAndSplitTrees(
         tree_reco.GetEntry(i)
 
         # reco-level selections
+        # add additional selections here
+
         passEJets = passSelection_ejets(tree_reco)
         passMJets = passSelection_mjets(tree_reco)
-
-        # add additional selections here
 
         passSel = passEJets or passMJets
         if not passSel:
@@ -267,110 +267,73 @@ def matchAndSplitTrees(
             print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
             continue
 
-        ####
+        # point to the extra variables and output trees for the right channel
+        if passEJets:
+            extra_vars_reco = extra_variables_reco_ej
+            extra_vars_truth = extra_variables_truth_ej
+            newtree_reco = newtree_reco_ej
+            newtree_truth = newtree_truth_ej
+        else: # passMJets
+            extra_vars_reco = extra_variables_reco_mj
+            extra_vars_truth = extra_variables_truth_mj
+            newtree_reco = newtree_reco_mj
+            newtree_truth = newtree_truth_mj
+
+        # try to find the matched event in truth tree
         isTruthMatched = False
+
         if tree_truth is not None:
-            # try to get the truth level event that matches this reco event
             eventID = (tree_reco.runNumber, tree_reco.eventNumber)
             truth_entry = tree_truth.GetEntryNumberWithIndex(*eventID)
             tree_truth.GetEntry(truth_entry)
 
             if truth_entry >= 0:
-                # found matched truth event
-                isTruthMatched = True
-                # check if the truth event is indeed semi-leptonic ttbar
-                #if truthLevel=='parton' and hasattr(tree_reco, 'isTruthSemileptonic'):
-                #    isTruthMatched = tree_reco.isTruthSemileptonic
-                # instead of trusting tree_reco.isTruthSemileptonic, checking
-                # tree_truth ourselves
-                if truthLevel=='parton':
+                # found a matched truth-level event
+                # check if the matched event satisfies truth-level requirements
+                if truthLevel == 'parton':
+                    # check if it is semi-leptonic ttbar
+                    #isTruthMatched = tree_reco.isTruthSemileptonic
+                    # instead of trusting the flag in tree_reco, check tree_truth
                     isTruthMatched = isSemiLeptonicTTbar(tree_truth)
-                elif truthLevel=='particle' and hasattr(tree_reco, 'passedPL'):
-                    isTruthMatched = tree_reco.passedPL
+                elif truthLevel == 'particle':
+                    # check if passing the particle level selections
+                    isTruthMatched = tree_truth.passedPL
 
             if isTruthMatched:
                 matched_reco_entries.append(i)
+
+                extra_vars_truth.write_event(tree_truth)
+                extra_vars_truth.set_dummy_flag(0)
+                extra_vars_truth.set_match_flag(1)
             else:
-                # no matched truth event found
-                # or the matched truth event is not semileptonic ttbar
+                # no matched truth event or the truth event fails selections
                 unmatched_reco_entries.append(i)
-                # skip for now
-                continue
 
-        # write reco events
-        # fill the new trees
-        if passEJets:
-            extra_variables_reco_ej.set_match_flag(isTruthMatched)
-            extra_variables_reco_ej.set_dummy_flag(0)
-            extra_variables_reco_ej.write_event(tree_reco)
-            newtree_reco_ej.Fill()
-        elif passMJets:
-            extra_variables_reco_mj.set_match_flag(isTruthMatched)
-            extra_variables_reco_mj.set_dummy_flag(0)
-            extra_variables_reco_mj.write_event(tree_reco)
-            newtree_reco_mj.Fill()
+                extra_vars_truth.write_event(tree_truth)
+                extra_vars_truth.set_dummy_flag(1)
+                extra_vars_truth.set_match_flag(0)
 
-        if tree_truth is not None:
-            # write matched truth event
-            #assert(isTruthMatched)
-            if passEJets:
-                extra_variables_truth_ej.set_match_flag(1)
-                extra_variables_truth_ej.set_dummy_flag(0)
-                extra_variables_truth_ej.write_event(tree_truth)
-                newtree_truth_ej.Fill()
-            elif passMJets:
-                extra_variables_truth_mj.set_match_flag(1)
-                extra_variables_truth_mj.set_dummy_flag(0)
-                extra_variables_truth_mj.write_event(tree_truth)
-                newtree_truth_mj.Fill()
+        extra_vars_reco.write_event(tree_reco)
+        extra_vars_reco.set_dummy_flag(0)
+        extra_vars_reco.set_match_flag(isTruthMatched)
+
+        # fill the new tree
+        if tree_truth is None:
+            # truth matching not possible, just fill the new reco tree
+            newtree_reco.Fill()
+        else:
+            if isTruthMatched or saveUnmatchedReco:
+                # fill the new reco and truth tree
+                newtree_reco.Fill()
+                newtree_truth.Fill()
 
     # end of tree_reco loop
 
-    if saveUnmatchedReco and tree_truth is not None:
-        # append unmatched reco events
-        print("Append unmatched reco events")
-        for ievt, ireco_unmatched in enumerate(unmatched_reco_entries):
-            if maxevents is not None:
-                if ievt > maxevents:
-                    break
-
-            if not ievt%10000:
-                print("processing unmatched reco event {}".format(ievt))
-
-            tree_reco.GetEntry(ireco_unmatched)
-
-            # all events in unmatched_reco_entries should pass reco selections
-            passEJets = passSelection_ejets(tree_reco)
-            passMJets = passSelection_mjets(tree_reco)
-
-            if passEJets:
-                extra_variables_reco_ej.set_match_flag(0)
-                extra_variables_reco_ej.set_dummy_flag(0)
-                extra_variables_reco_ej.write_event(tree_reco)
-                newtree_reco_ej.Fill()
-            elif passMJets:
-                extra_variables_reco_mj.set_match_flag(0)
-                extra_variables_reco_mj.set_dummy_flag(0)
-                extra_variables_reco_mj.write_event(tree_reco)
-                newtree_reco_mj.Fill()
-
-            # fill truth tree with dummy events
-            # get a random event from the truth tree
-            #itruth = np.random.randint(0,nevents_truth-1) # too slow
-            itruth = -1
-            tree_truth.GetEntry(itruth)
-            if passEJets:
-                extra_variables_truth_ej.set_match_flag(0)
-                extra_variables_truth_ej.set_dummy_flag(1)
-                extra_variables_truth_ej.write_event(tree_truth)
-                newtree_truth_ej.Fill()
-            elif passMJets:
-                extra_variables_truth_mj.set_match_flag(0)
-                extra_variables_truth_mj.set_dummy_flag(1)
-                extra_variables_truth_mj.write_event(tree_truth)
-                newtree_truth_mj.Fill()
-
+    ##########
+    # truth tree
     if saveUnmatchedTruth and tree_truth is not None:
+        print("Iterate through events in truth trees")
+
         # build reco tree index
         try:
             buildTreeIndex(tree_reco)
@@ -410,32 +373,35 @@ def matchAndSplitTrees(
 
             passEJets = passSelection_ejets(tree_truth)
             passMJets = passSelection_mjets(tree_truth)
+
             if passEJets:
-                extra_variables_truth_ej.set_match_flag(0)
-                extra_variables_truth_ej.set_dummy_flag(0)
-                extra_variables_truth_ej.write_event(tree_truth)
-                newtree_truth_ej.Fill()
-            elif passMJets:
-                extra_variables_truth_mj.set_match_flag(0)
-                extra_variables_truth_mj.set_dummy_flag(0)
-                extra_variables_truth_mj.write_event(tree_truth)
-                newtree_truth_mj.Fill()
+                extra_vars_reco = extra_variables_reco_ej
+                extra_vars_truth = extra_variables_truth_ej
+                newtree_reco = newtree_reco_ej
+                newtree_truth = newtree_truth_ej
+            else: # passMJets
+                extra_vars_reco = extra_variables_reco_mj
+                extra_vars_truth = extra_variables_truth_mj
+                newtree_reco = newtree_reco_mj
+                newtree_truth = newtree_truth_mj
+
+            extra_vars_truth.write_event(tree_truth)
+            extra_vars_truth.set_match_flag(0)
+            extra_vars_truth.set_dummy_flag(0)
+            newtree_truth.Fill()
 
             # fill reco tree with dummy events
             # get a random event from the reco tree
             #ireco = np.random.randint(0, nevents_reco-1) # too slow
             ireco = -1
             tree_reco.GetEntry(ireco)
-            if passEJets:
-                extra_variables_reco_ej.set_match_flag(0)
-                extra_variables_reco_ej.set_dummy_flag(1)
-                extra_variables_reco_ej.write_event(tree_reco)
-                newtree_reco_ej.Fill()
-            elif passMJets:
-                extra_variables_reco_mj.set_match_flag(0)
-                extra_variables_reco_mj.set_dummy_flag(1)
-                extra_variables_reco_mj.write_event(tree_reco)
-                newtree_reco_mj.Fill()
+
+            extra_vars_reco.write_event(tree_reco)
+            extra_vars_reco.set_match_flag(0)
+            extra_vars_reco.set_dummy_flag(1)
+            newtree_reco.Fill()
+
+    # end of tree_truth loop
 
     # new reco and truth trees should be of the same length
     if newtree_truth_ej is not None:
