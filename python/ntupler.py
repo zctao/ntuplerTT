@@ -364,6 +364,23 @@ def matchAndSplitTrees(
 
     # end of tree_reco loop
 
+    if not saveUnmatchedTruth:
+        # The output files for new trees can be closed
+        outfile_ej.Write()
+        outfile_ej.Close()
+
+        outfile_mj.Write()
+        outfile_mj.Close()
+
+    # compute acceptance corrections and write to the output file
+    print("Compute acceptance correction factors")
+    acc.compute_factors()
+    acc_ejets.compute_factors()
+    acc_mjets.compute_factors()
+
+    outfile_acc.Write()
+    outfile_acc.Close()
+
     ##########
     # truth tree
     #if saveUnmatchedTruth and tree_truth is not None:
@@ -449,28 +466,24 @@ def matchAndSplitTrees(
     # end of tree_truth loop
 
     # new reco and truth trees should be of the same length
-    if newtree_truth_ej is not None:
-        assert(newtree_reco_ej.GetEntries() == newtree_truth_ej.GetEntries())
-    if newtree_truth_mj is not None:
-        assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
+    #if newtree_truth_ej is not None:
+    #    assert(newtree_reco_ej.GetEntries() == newtree_truth_ej.GetEntries())
+    #if newtree_truth_mj is not None:
+    #    assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
 
-    # compute acceptance and efficiency
-    acc.compute_factors()
-    acc_ejets.compute_factors()
-    acc_mjets.compute_factors()
+    # compute efficiency corrections and write to the output file
+    print("Compute efficiency correction factors")
     eff.compute_factors()
     eff_ejets.compute_factors()
     eff_mjets.compute_factors()
 
-    # Write and close output files
-    outfile_ej.Write()
-    outfile_ej.Close()
-
-    outfile_mj.Write()
-    outfile_mj.Close()
-
-    outfile_acc.Write()
-    outfile_acc.Close()
-
     outfile_eff.Write()
     outfile_eff.Close()
+
+    # Write and close output files
+    if saveUnmatchedTruth:
+        outfile_ej.Write()
+        outfile_ej.Close()
+
+        outfile_mj.Write()
+        outfile_mj.Close()
