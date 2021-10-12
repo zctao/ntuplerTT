@@ -107,6 +107,38 @@ def getSumWeights(infiles_sumw):
 
     return sumw
 
+def getPrefixReco(recoAlgo):
+    # prefix of variable names
+    if recoAlgo.lower() == 'klfitter':
+        # KLFitter
+        prefix_thad = "klfitter_bestPerm_topHad"
+        prefix_tlep = "klfitter_bestPerm_topLep"
+        prefix_ttbar = "klfitter_bestPerm_ttbar"
+    elif recoAlgo.lower() == 'pseudotop':
+        # PseudoTop
+        prefix_thad = "PseudoTop_Reco_top_had"
+        prefix_tlep = "PseudoTop_Reco_top_lep"
+        prefix_ttbar = "PseudoTop_Reco_ttbar"
+    else:
+        raise RuntimeError(f"Unknown top reconstruction algorithm {recoAlgo}")
+
+    return prefix_thad, prefix_tlep, prefix_ttbar
+
+def getPrefixTruth(truthLevel):
+    # prefix of variable names
+    if truthLevel == "parton":
+        prefix_thad = "MC_thad_afterFSR"
+        prefix_tlep = "MC_tlep_afterFSR"
+        prefix_ttbar = "MC_ttbar_afterFSR"
+    elif truthLevel == "particle":
+        prefix_thad = "PseudoTop_Particle_top_had"
+        prefix_tlep = "PseudoTop_Particle_top_lep"
+        prefix_ttbar = "PseudoTop_Particle_ttbar"
+    else:
+        raise RuntimeError(f"Unknown truth level {truthLevel}")
+
+    return prefix_thad, prefix_tlep, prefix_ttbar
+
 def matchAndSplitTrees(
         outputName,
         inputFiles_reco,
@@ -157,55 +189,29 @@ def matchAndSplitTrees(
     ##########
     # Output trees
     print("Create output trees")
-    #####
-    # reco branches
-    if recoAlgo.lower() == 'klfitter':
-        # KLFitter
-        reco_prefix_thad = "klfitter_bestPerm_topHad"
-        reco_prefix_tlep = "klfitter_bestPerm_topLep"
-        reco_prefix_ttbar = "klfitter_bestPerm_ttbar"
-    elif recoAlgo.lower() == 'pseudotop':
-        # PseudoTop
-        reco_prefix_thad = "PseudoTop_Reco_top_had"
-        reco_prefix_tlep = "PseudoTop_Reco_top_lep"
-        reco_prefix_ttbar = "PseudoTop_Reco_ttbar"
-    else:
-        print("Unknown top reconstruction algorithm: {}".format(recoAlgo))
-        return
-
-    # truth branches
-    if truthLevel == "parton":
-        truth_prefix_thad = "MC_thad_afterFSR"
-        truth_prefix_tlep = "MC_tlep_afterFSR"
-        truth_prefix_ttbar = "MC_ttbar_afterFSR"
-    else: # particle levels
-        truth_prefix_thad = "PseudoTop_Particle_top_had"
-        truth_prefix_tlep = "PseudoTop_Particle_top_lep"
-        truth_prefix_ttbar = "PseudoTop_Particle_ttbar"
 
     #####
     # e+jets
     outfile_ej = TFile('{}_{}_ejets.root'.format(outputName, truthLevel), 'recreate')
     print("Create output file: {}".format(outfile_ej.GetName()))
 
-    # add extra branches
     # reco
-    extra_variables_reco_ej = varsExtra(
-        reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar,
-        compute_energy=True, sum_weights=sumWeights
-    )
-
     newtree_reco_ej = prepareOutputTree(tree_reco, 'reco')
+
+    # add extra branches
+    extra_variables_reco_ej = varsExtra(
+        *getPrefixReco(recoAlgo), compute_energy=True, sum_weights=sumWeights
+        )
     extra_variables_reco_ej.set_up_branches(newtree_reco_ej)
 
     # truth
     if tree_truth is not None:
-        extra_variables_truth_ej = varsExtra(
-            truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
-            compute_energy = truthLevel!="parton"
-        )
-
         newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel)
+
+        # add extra branches
+        extra_variables_truth_ej = varsExtra(
+            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton"
+            )
         extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
     else:
         extra_variables_truth_ej = None
@@ -216,24 +222,23 @@ def matchAndSplitTrees(
     outfile_mj = TFile('{}_{}_mjets.root'.format(outputName, truthLevel), 'recreate')
     print("Create output file: {}".format(outfile_mj.GetName()))
 
-    # add extra branches
     # reco
-    extra_variables_reco_mj = varsExtra(
-        reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar,
-        compute_energy=True, sum_weights=sumWeights
-    )
-
     newtree_reco_mj = prepareOutputTree(tree_reco, 'reco')
+
+    # add extra branches
+    extra_variables_reco_mj = varsExtra(
+        *getPrefixReco(recoAlgo), compute_energy=True, sum_weights=sumWeights
+        )
     extra_variables_reco_mj.set_up_branches(newtree_reco_mj)
 
     # truth
     if tree_truth is not None:
-        extra_variables_truth_mj = varsExtra(
-            truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar,
-            compute_energy = truthLevel!="parton"
-        )
-
         newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel)
+
+        # add extra branches
+        extra_variables_truth_mj = varsExtra(
+            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton"
+            )
         extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
     else:
         extra_variables_truth_mj = None
@@ -243,16 +248,16 @@ def matchAndSplitTrees(
     # For acceptance correction factors
     outfile_acc = TFile('{}_{}_acc.root'.format(outputName, truthLevel), 'recreate')
     wname = 'totalWeight_nominal'
-    acc = CorrectionFactors('acc', reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar, wname)
-    acc_ejets = CorrectionFactors('acc_ejets', reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar, wname)
-    acc_mjets = CorrectionFactors('acc_mjets', reco_prefix_thad, reco_prefix_tlep, reco_prefix_ttbar, wname)
+    acc = CorrectionFactors('acc', *getPrefixReco(recoAlgo), wname)
+    acc_ejets = CorrectionFactors('acc_ejets', *getPrefixReco(recoAlgo), wname)
+    acc_mjets = CorrectionFactors('acc_mjets', *getPrefixReco(recoAlgo), wname)
 
     # For efficiency correction factors
     outfile_eff = TFile('{}_{}_eff.root'.format(outputName, truthLevel), 'recreate')
     wname_mc = 'weight_mc'
-    eff = CorrectionFactors('eff', truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar, wname_mc)
-    eff_ejets = CorrectionFactors('eff_ejets', truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar, wname_mc)
-    eff_mjets = CorrectionFactors('eff_mjets', truth_prefix_thad, truth_prefix_tlep, truth_prefix_ttbar, wname_mc)
+    eff = CorrectionFactors('eff', *getPrefixTruth(truthLevel), wname_mc)
+    eff_ejets = CorrectionFactors('eff_ejets', *getPrefixTruth(truthLevel), wname_mc)
+    eff_mjets = CorrectionFactors('eff_mjets', *getPrefixTruth(truthLevel), wname_mc)
 
     ##########
     print("Iterate through events in reco trees")
