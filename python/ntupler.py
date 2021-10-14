@@ -179,8 +179,6 @@ def matchAndSplitTrees(
 
     ##########
     print("Iterate through events in reco trees")
-    matched_reco_entries = []
-    unmatched_reco_entries = []
 
     tstart = time.time()
 
@@ -238,15 +236,11 @@ def matchAndSplitTrees(
                     isTruthMatched = sel.passPLSelections(tree_truth)
 
             if isTruthMatched:
-                matched_reco_entries.append(i)
-
                 extra_vars_truth.write_event(tree_truth)
                 extra_vars_truth.set_dummy_flag(0)
                 extra_vars_truth.set_match_flag(1)
             else:
                 # no matched truth event or the truth event fails selections
-                unmatched_reco_entries.append(i)
-
                 extra_vars_truth.write_event(tree_truth)
                 extra_vars_truth.set_dummy_flag(1)
                 extra_vars_truth.set_match_flag(0)
@@ -307,10 +301,15 @@ def matchAndSplitTrees(
             # try getting the matched reco event
             reco_entry = tree_reco.GetEntryNumberWithIndex(tree_truth.runNumber, tree_truth.eventNumber)
 
-            if reco_entry in matched_reco_entries:
-                # found matched reco event.
-                # skip since it has already been written.
-                continue
+            if reco_entry >= 0:
+                # found a matched reco-level event
+                tree_reco.GetEntry(reco_entry)
+
+                # check if it passed the reco-level selection
+                if sel.passRecoSelections(tree_reco, recoAlgo):
+                    # this event has already been included in the reco tree loop
+                    # skip
+                    continue
 
             passEJets = sel.passTruthSelections_ejets(tree_truth)
             passMJets = sel.passTruthSelections_mjets(tree_truth)
@@ -333,19 +332,18 @@ def matchAndSplitTrees(
             extra_vars_truth.set_match_flag(0)
             extra_vars_truth.set_dummy_flag(0)
 
-            if saveUnmatchedTruth:
-                newtree_truth.Fill()
+            newtree_truth.Fill()
 
-                # fill reco tree with dummy events
-                # get a random event from the reco tree
-                #ireco = np.random.randint(0, nevents_reco-1) # too slow
-                ireco = -1
-                tree_reco.GetEntry(ireco)
+            # fill reco tree with dummy events
+            # get a random event from the reco tree
+            #ireco = np.random.randint(0, nevents_reco-1) # too slow
+            ireco = -1
+            tree_reco.GetEntry(ireco)
 
-                extra_vars_reco.write_event(tree_reco)
-                extra_vars_reco.set_match_flag(0)
-                extra_vars_reco.set_dummy_flag(1)
-                newtree_reco.Fill()
+            extra_vars_reco.write_event(tree_reco)
+            extra_vars_reco.set_match_flag(0)
+            extra_vars_reco.set_dummy_flag(1)
+            newtree_reco.Fill()
 
         # end of tree_truth loop
 
