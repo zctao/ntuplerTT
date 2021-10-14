@@ -74,7 +74,7 @@ OUTDIR={outdir}
 echo OUTDIR=$OUTDIR
 
 # start running
-python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_#ARRAYID# -o $OUTDIR -r $InputFiles_Reco -w $InputFiles_SumW -t $InputFiles_Parton -p $InputFiles_Particle
+python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_#ARRAYID# -o $OUTDIR -r $InputFiles_Reco -w $InputFiles_SumW -t $InputFiles_Parton -p $InputFiles_Particle {extra_args}
 
 # clean up
 cd ..
@@ -179,7 +179,8 @@ if __name__ == "__main__":
         'email' : eval(args.email),
         'proxy' : args.grid_proxy,
         'name' : 'mntuple_'+args.sample,
-        'maxtasks': args.max_tasks
+        'maxtasks' : args.max_tasks,
+        'extra_args' : ''
     }
 
     ########
@@ -215,6 +216,12 @@ if __name__ == "__main__":
     params_dict['infiles_particle'] = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
 
     params_dict['infiles_sumw'] = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
+
+    ########
+    # additional arguments for running processMiniNtuples.py if needed
+    if args.sample == 'ttbar': # nominal ttbar sample
+        # compute acceptance and efficiency corrections
+        params_dict['extra_args'] = "-c"
 
     ########
     # output job file name
