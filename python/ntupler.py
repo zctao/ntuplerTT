@@ -3,7 +3,6 @@ import time
 import numpy as np
 from ROOT import TChain, TTree, TFile
 from extra_variables import varsExtra
-from acceptance import CorrectionFactors
 import selections as sel
 
 def buildTreeIndex(tree):
@@ -177,21 +176,6 @@ def matchAndSplitTrees(
         extra_variables_truth_mj = None
         newtree_truth_mj = None
 
-    #####
-    # For acceptance correction factors
-    outfile_acc = TFile('{}_{}_acc.root'.format(outputName, truthLevel), 'recreate')
-    wname = 'totalWeight_nominal'
-    acc = CorrectionFactors('acc', *getPrefixReco(recoAlgo), wname)
-    acc_ejets = CorrectionFactors('acc_ejets', *getPrefixReco(recoAlgo), wname)
-    acc_mjets = CorrectionFactors('acc_mjets', *getPrefixReco(recoAlgo), wname)
-
-    # For efficiency correction factors
-    outfile_eff = TFile('{}_{}_eff.root'.format(outputName, truthLevel), 'recreate')
-    wname_mc = 'weight_mc'
-    eff = CorrectionFactors('eff', *getPrefixTruth(truthLevel), wname_mc)
-    eff_ejets = CorrectionFactors('eff_ejets', *getPrefixTruth(truthLevel), wname_mc)
-    eff_mjets = CorrectionFactors('eff_mjets', *getPrefixTruth(truthLevel), wname_mc)
-
     ##########
     print("Iterate through events in reco trees")
     matched_reco_entries = []
@@ -224,15 +208,11 @@ def matchAndSplitTrees(
             extra_vars_truth = extra_variables_truth_ej
             newtree_reco = newtree_reco_ej
             newtree_truth = newtree_truth_ej
-            acc_ch = acc_ejets
-            eff_ch = eff_ejets
         else: # passMJets
             extra_vars_reco = extra_variables_reco_mj
             extra_vars_truth = extra_variables_truth_mj
             newtree_reco = newtree_reco_mj
             newtree_truth = newtree_truth_mj
-            acc_ch = acc_mjets
-            eff_ch = eff_mjets
 
         # try to find the matched event in truth tree
         isTruthMatched = False
@@ -282,44 +262,11 @@ def matchAndSplitTrees(
                 newtree_reco.Fill()
                 newtree_truth.Fill()
 
-        # fill the histograms for acceptance and efficiency corrections
-        if tree_truth is not None:
-            acc.fill_denominator(tree_reco, extra_vars_reco)
-            acc_ch.fill_denominator(tree_reco, extra_vars_reco)
-
-            if isTruthMatched:
-                acc.fill_numerator(tree_reco, extra_vars_reco)
-                acc_ch.fill_numerator(tree_reco, extra_vars_reco)
-
-                eff.fill_numerator(tree_truth, extra_vars_truth)
-                eff_ch.fill_numerator(tree_truth, extra_vars_truth)
-
-                eff.fill_denominator(tree_truth, extra_vars_truth)
-                eff_ch.fill_denominator(tree_truth, extra_vars_truth)
-
     # end of tree_reco loop
-
-    if not saveUnmatchedTruth:
-        # The output files for new trees can be closed
-        outfile_ej.Write()
-        outfile_ej.Close()
-
-        outfile_mj.Write()
-        outfile_mj.Close()
-
-    # compute acceptance corrections and write to the output file
-    print("Compute acceptance correction factors")
-    acc.compute_factors()
-    acc_ejets.compute_factors()
-    acc_mjets.compute_factors()
-
-    outfile_acc.Write()
-    outfile_acc.Close()
 
     ##########
     # truth tree
-    #if saveUnmatchedTruth and tree_truth is not None:
-    if tree_truth is not None:
+    if saveUnmatchedTruth and tree_truth is not None:
         print("Iterate through events in truth trees")
 
         # build reco tree index
@@ -366,13 +313,11 @@ def matchAndSplitTrees(
                 extra_vars_truth = extra_variables_truth_ej
                 newtree_reco = newtree_reco_ej
                 newtree_truth = newtree_truth_ej
-                eff_ch = eff_ejets
             elif passMJets:
                 extra_vars_reco = extra_variables_reco_mj
                 extra_vars_truth = extra_variables_truth_mj
                 newtree_reco = newtree_reco_mj
                 newtree_truth = newtree_truth_mj
-                eff_ch = eff_mjets
             else:
                 # do not know tau decay products, skip for now
                 continue
@@ -380,9 +325,6 @@ def matchAndSplitTrees(
             extra_vars_truth.write_event(tree_truth)
             extra_vars_truth.set_match_flag(0)
             extra_vars_truth.set_dummy_flag(0)
-
-            eff.fill_denominator(tree_truth, extra_vars_truth)
-            eff_ch.fill_denominator(tree_truth, extra_vars_truth)
 
             if saveUnmatchedTruth:
                 newtree_truth.Fill()
@@ -406,19 +348,9 @@ def matchAndSplitTrees(
     #if newtree_truth_mj is not None:
     #    assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
 
-    # compute efficiency corrections and write to the output file
-    print("Compute efficiency correction factors")
-    eff.compute_factors()
-    eff_ejets.compute_factors()
-    eff_mjets.compute_factors()
-
-    outfile_eff.Write()
-    outfile_eff.Close()
-
     # Write and close output files
-    if saveUnmatchedTruth:
-        outfile_ej.Write()
-        outfile_ej.Close()
+    outfile_ej.Write()
+    outfile_ej.Close()
 
-        outfile_mj.Write()
-        outfile_mj.Close()
+    outfile_mj.Write()
+    outfile_mj.Close()
