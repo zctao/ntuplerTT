@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-import time
 import tracemalloc
 
 from ntupler import matchAndSplitTrees
 from datasets import getInputFileNames
+from acceptance import computeAccEffCorrections
 
 import argparse
 
@@ -25,6 +25,8 @@ parser.add_argument('-n', '--name', type=str, default='ntuple',
                     help="Suffix of the output file names")
 parser.add_argument('-m', '--maxevents', type=int,
                     help="Max number of events to process")
+parser.add_argument('-c', '--compute-corrections', action='store_true',
+                    help="Compute acceptance and efficiency correction factors")
 
 args = parser.parse_args()
 
@@ -43,49 +45,70 @@ assert(len(inputFiles_reco) > 0)
 
 tracemalloc.start()
 
+######
 if len(inputFiles_parton) == 0 and len(inputFiles_particle) == 0:
     # reco only
     print("Process reco events only")
-    tstart = time.time()
     matchAndSplitTrees(
         os.path.join(args.outdir, args.name),
-        inputFiles_reco, inputFiles_sumw = inputFiles_sumw,
+        inputFiles_reco,
+        inputFiles_sumw = inputFiles_sumw,
         recoAlgo = 'klfitter',
         maxevents = args.maxevents
     )
-else:
-    if len(inputFiles_parton) > 0:
-        print("Match reco and parton level events")
-        tstart = time.time()
-        matchAndSplitTrees(
+
+######
+if len(inputFiles_parton) > 0:
+    # reco and parton level
+    print("Match reco and parton level events")
+    matchAndSplitTrees(
+        os.path.join(args.outdir, args.name),
+        inputFiles_reco, inputFiles_parton, inputFiles_sumw,
+        recoAlgo = 'klfitter',
+        truthLevel = 'parton',
+        saveUnmatchedReco = True,
+        saveUnmatchedTruth = False,
+        maxevents = args.maxevents
+    )
+
+    mcurrent, mpeak = tracemalloc.get_traced_memory()
+    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
+
+    if args.compute_corrections:
+        computeAccEffCorrections(
             os.path.join(args.outdir, args.name),
-            inputFiles_reco, inputFiles_parton, inputFiles_sumw,
+            inputFiles_reco, inputFiles_parton,
             recoAlgo = 'klfitter',
-            truthLevel = 'parton',
-            saveUnmatchedReco = True,
-            saveUnmatchedTruth = False,
-            maxevents = args.maxevents
+            truthLevel = 'parton'
         )
-        tdone = time.time()
-        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
 
         mcurrent, mpeak = tracemalloc.get_traced_memory()
         print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
 
-    if len(inputFiles_particle) > 0:
-        print("Match reco and particle level events")
-        tstart = time.time()
-        matchAndSplitTrees(
+######
+if len(inputFiles_particle) > 0:
+    # reco and particle level
+    print("Match reco and particle level events")
+    matchAndSplitTrees(
+        os.path.join(args.outdir, args.name),
+        inputFiles_reco, inputFiles_particle, inputFiles_sumw,
+        recoAlgo = 'pseudotop',
+        truthLevel = 'particle',
+        saveUnmatchedReco = True,
+        saveUnmatchedTruth = True,
+        maxevents = args.maxevents
+    )
+
+    mcurrent, mpeak = tracemalloc.get_traced_memory()
+    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
+
+    if args.compute_corrections:
+        computeAccEffCorrections(
             os.path.join(args.outdir, args.name),
-            inputFiles_reco, inputFiles_particle, inputFiles_sumw,
+            inputFiles_reco, inputFiles_particle,
             recoAlgo = 'pseudotop',
-            truthLevel = 'particle',
-            saveUnmatchedReco = True,
-            saveUnmatchedTruth = True,
-            maxevents = args.maxevents
+            truthLevel = 'particle'
         )
-        tdone = time.time()
-        print("matchAndSplitTrees took {:.2f} seconds".format(tdone - tstart))
 
         mcurrent, mpeak = tracemalloc.get_traced_memory()
         print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
