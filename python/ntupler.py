@@ -12,9 +12,9 @@ def buildTreeIndex(tree):
 
     # A return code less than 0 indicates failure.
     if status < 0:
-        raise RuntimeError("Could not build index for tree {}".format(treename))
+        raise RuntimeError(f"Could not build index for tree {treename}")
     else:
-        print("Building index took {:.2f} seconds".format(tdone-tstart))
+        print(f"Building index took {tdone-tstart:.2f} seconds")
 
     return tree
 
@@ -82,6 +82,7 @@ def matchAndSplitTrees(
         saveUnmatchedReco=True, saveUnmatchedTruth=True,
         maxevents=None
     ):
+    print("Start processing mini-ntuples")
 
     ##########
     print("Read input trees and build index")
@@ -91,7 +92,7 @@ def matchAndSplitTrees(
     for infile_reco in inputFiles_reco:
         tree_reco.Add(infile_reco)
     nevents_reco = tree_reco.GetEntries()
-    print("Number of events in the reco tree: {}".format(nevents_reco))
+    print(f"Number of events in the reco tree: {nevents_reco}")
 
     # MC truth level
     if inputFiles_truth:
@@ -100,12 +101,12 @@ def matchAndSplitTrees(
         for infile_truth in inputFiles_truth:
             tree_truth.Add(infile_truth)
         nevents_truth = tree_truth.GetEntries()
-        print("Number of events in the truth tree: {}".format(nevents_truth))
+        print(f"Number of events in the truth tree: {nevents_truth}")
 
         try:
             buildTreeIndex(tree_truth)
         except RuntimeError as err:
-            print("Failed to build index for truth level trees: {}".format(err))
+            print(f"Failed to build index for truth level trees: {err}")
             return
     else:
         tree_truth = None
@@ -124,8 +125,8 @@ def matchAndSplitTrees(
 
     #####
     # e+jets
-    outfile_ej = TFile('{}_{}_ejets.root'.format(outputName, truthLevel), 'recreate')
-    print("Create output file: {}".format(outfile_ej.GetName()))
+    outfile_ej = TFile(f"{outputName}_{truthLevel}_ejets.root", 'recreate')
+    print(f"Create output file: {outfile_ej.GetName()}")
 
     # reco
     newtree_reco_ej = prepareOutputTree(tree_reco, 'reco')
@@ -151,8 +152,8 @@ def matchAndSplitTrees(
 
     #####
     # mu+jets
-    outfile_mj = TFile('{}_{}_mjets.root'.format(outputName, truthLevel), 'recreate')
-    print("Create output file: {}".format(outfile_mj.GetName()))
+    outfile_mj = TFile(f"{outputName}_{truthLevel}_mjets.root", 'recreate')
+    print(f"Create output file: {outfile_mj.GetName()}")
 
     # reco
     newtree_reco_mj = prepareOutputTree(tree_reco, 'reco')
@@ -181,13 +182,15 @@ def matchAndSplitTrees(
     matched_reco_entries = []
     unmatched_reco_entries = []
 
-    for i in range(tree_reco.GetEntries()):
+    tstart = time.time()
+
+    for i in range(nevents_reco):
         if maxevents is not None:
             if i > maxevents:
                 break
 
         if not i%10000:
-            print("processing event #{}".format(i))
+            print(f"processing event #{i}")
         tree_reco.GetEntry(i)
 
         # reco-level selections
@@ -199,7 +202,7 @@ def matchAndSplitTrees(
 
         # sanity check: should pass one and only one of the selections
         if not ( bool(passEJets) ^ bool(passMJets) ):
-            print("WARNING! event {}: passEJets = {} passMJets = {}".format(i, passEJets, passMJets))
+            print(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
             continue
 
         # point to the extra variables and output trees for the right channel
@@ -264,6 +267,9 @@ def matchAndSplitTrees(
 
     # end of tree_reco loop
 
+    tdone = time.time()
+    print(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
+
     ##########
     # truth tree
     if saveUnmatchedTruth and tree_truth is not None:
@@ -273,17 +279,18 @@ def matchAndSplitTrees(
         try:
             buildTreeIndex(tree_reco)
         except RuntimeError as err:
-            print("Failed to build index for reco level trees: {}".format(err))
+            print(f"Failed to build index for reco level trees: {err}")
             return
 
         # append unmatched truth events
-        for j in range(tree_truth.GetEntries()):
+        tstart = time.time()
+        for j in range(nevents_truth):
             if maxevents is not None:
                 if j > maxevents:
                     break
 
             if not j%10000:
-                print("processing {} event {}".format(truthLevel, j))
+                print(f"processing {truthLevel} event {j}")
 
             tree_truth.GetEntry(j)
 
@@ -340,7 +347,10 @@ def matchAndSplitTrees(
                 extra_vars_reco.set_dummy_flag(1)
                 newtree_reco.Fill()
 
-    # end of tree_truth loop
+        # end of tree_truth loop
+
+        tdone = time.time()
+        print(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
 
     # new reco and truth trees should be of the same length
     #if newtree_truth_ej is not None:

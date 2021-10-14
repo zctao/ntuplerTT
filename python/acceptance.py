@@ -1,3 +1,4 @@
+import time
 from ROOT import TH1, TH1F, TChain, TFile
 from extra_variables import varsExtra
 from ntupler import getPrefixReco, getPrefixTruth, buildTreeIndex
@@ -93,6 +94,7 @@ def computeAcceptanceCorrections(
 
     # output file
     outfile_acc = TFile(f"{outputName}_{truthLevel}_acc.root", "recreate")
+    print(f"Create output file: {outfile_acc.GetName()}")
 
     # correction factors
     wname = "totalWeight_nominal"
@@ -102,6 +104,8 @@ def computeAcceptanceCorrections(
     acc_mj = CorrectionFactors('acc_mjets', *getPrefixReco(recoAlgo), wname)
 
     print("Loop over reco trees")
+
+    tstart = time.time()
     for ireco in range(tree_reco.GetEntries()):
         if not ireco%10000:
             print(f"processing event #{ireco}")
@@ -150,6 +154,9 @@ def computeAcceptanceCorrections(
 
     # end of tree_reco loop
 
+    tdone = time.time()
+    print(f"Processing time: {tdone-tstart:.2f} seconds ({(tdone-tstart)/tree_reco.GetEntries():.5f} seconds/event)")
+
     # compute correction factors
     print("Compute acceptance correction factors")
     acc.compute_factors()
@@ -179,6 +186,7 @@ def computeEfficiencyCorrections(
 
     # output file
     outfile_eff = TFile(f"{outputName}_{truthLevel}_eff.root", "recreate")
+    print(f"Create output file: {outfile_eff.GetName()}")
 
     # correction factors
     wname = 'weight_mc'
@@ -188,6 +196,8 @@ def computeEfficiencyCorrections(
     eff_mj = CorrectionFactors('eff_mjets', *getPrefixTruth(truthLevel), wname)
 
     print(f"Loop over {truthLevel} tree")
+
+    tstart = time.time()
     for itruth in range(tree_truth.GetEntries()):
         if not itruth%10000:
             print(f"processing event #{itruth}")
@@ -231,6 +241,9 @@ def computeEfficiencyCorrections(
 
     # end of tree_truth loop
 
+    tdone = time.time()
+    print(f"Processing time: {tdone-tstart:.2f} seconds ({(tdone-tstart)/tree_truth.GetEntries():.5f} seconds/event)")
+
     # compute corrections
     print("Compute efficiency correction factors")
     eff.compute_factors()
@@ -248,6 +261,8 @@ def computeAccEffCorrections(
         truthLevel ='parton',
         treename='nominal',
     ):
+    print("Compute correction factors")
+
     # Reco trees
     print("Read reco level trees")
     tree_reco = TChain(treename)
@@ -265,12 +280,14 @@ def computeAccEffCorrections(
     print(f"Number of events in the truth tree: {nevents_truth}")
 
     # Compute acceptance corrections
+    print("Acceptance corrections")
     computeAcceptanceCorrections(
         outputName, tree_reco, tree_truth,
         recoAlgo=recoAlgo, truthLevel=truthLevel
     )
 
     # Compute efficiency corrections
+    print("Efficiency corrections")
     computeEfficiencyCorrections(
         outputName, tree_truth, tree_reco,
         recoAlgo=recoAlgo, truthLevel=truthLevel
