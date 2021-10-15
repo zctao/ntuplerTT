@@ -23,7 +23,7 @@ for r, dirs, files in os.walk(top_directory):
             jobid = f.split('.')[0]
 
             # get job status
-            report = subprocess.check_output(['tracejob', jobid])
+            report = subprocess.check_output(['tracejob', '-q', jobid])
             status = None
             for x in str(report).split(' '):
                 if x.startswith('Exit_status'):
