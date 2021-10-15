@@ -123,9 +123,14 @@ def matchAndSplitTrees(
     # Output trees
     print("Create output trees")
 
+    # output file name prefix
+    foutname_prefix = f"{outputName}_{recoAlgo}"
+    if tree_truth is not None:
+        foutname_prefix += f"_{truthLevel}"
+
     #####
     # e+jets
-    outfile_ej = TFile(f"{outputName}_{truthLevel}_ejets.root", 'recreate')
+    outfile_ej = TFile(foutname_prefix+"_ejets.root", "recreate")
     print(f"Create output file: {outfile_ej.GetName()}")
 
     # reco
@@ -152,7 +157,7 @@ def matchAndSplitTrees(
 
     #####
     # mu+jets
-    outfile_mj = TFile(f"{outputName}_{truthLevel}_mjets.root", 'recreate')
+    outfile_mj = TFile(foutname_prefix+"_mjets.root", "recreate")
     print(f"Create output file: {outfile_mj.GetName()}")
 
     # reco
