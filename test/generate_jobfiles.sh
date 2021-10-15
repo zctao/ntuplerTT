@@ -1,7 +1,8 @@
 #!/bin/bash
 site=${1:-flashy}
 outdir=${2:-}
-dataset_config=${3:-configs/datasets/datasets_ttdiffxs361v8_mini362v1_klf.yaml}
+
+dataset_config=configs/datasets/datasets_ttdiffxs361_mini362.yaml
 
 if [ -z "$outdir" ]; then
     if [[ $site == "cedar" ]]; then
@@ -12,27 +13,31 @@ if [ -z "$outdir" ]; then
 fi
 
 generate_files() {
-    sample="$1"
-    subcampaign="$2"
+    local sample="$1"
+    local subcampaign="$2"
+    shift 2
+    local extra_args="$@"
+
     echo $sample
     echo $subcampaign
 
     python3 scripts/writeJobFile.py ${sample} -d ${dataset_config} \
             -o ${outdir}/${sample}/${subcampaign} -c ${subcampaign} \
-            -s ${site} -q
+            -s ${site} -q ${extra_args}
 }
 
 # ttbar
-generate_files ttbar mc16a
-generate_files ttbar mc16d
-generate_files ttbar mc16e
+generate_files ttbar mc16a -t parton
+generate_files ttbar mc16d -t parton
+generate_files ttbar mc16e -t parton
 
 # ttbar_hw_lj
-generate_files ttbar_hw_lj mc16a
-generate_files ttbar_hw_lj mc16d
-generate_files ttbar_hw_lj mc16e
+generate_files ttbar_hw mc16a -t parton
+generate_files ttbar_hw mc16d -t parton
+generate_files ttbar_hw mc16e -t parton
 
-# ttbar_hw_ll
-generate_files ttbar_hw_ll mc16a
-generate_files ttbar_hw_ll mc16d
-generate_files ttbar_hw_ll mc16e
+# data
+generate_files data 2015
+generate_files data 2016
+generate_files data 2017
+generate_files data 2018
