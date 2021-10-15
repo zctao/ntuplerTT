@@ -119,10 +119,11 @@ def listDataFiles(dids, local_directory=None, host=''):
 
 def writeDataFileLists(dataset_config,
                        sample_name,
-                       subcampaigns=['mc16a', 'mc16d', 'mc16e'],
+                       subcampaigns = ['mc16a', 'mc16d', 'mc16e'],
                        outdir = '.',
                        njobs=1,
                        host='',
+                       truthLevels = ['parton', 'particle'],
                        quiet=False):
     """ List input file names to be processed to txt files
     These txt files can be used as inputs to the processMiniNtuples.py
@@ -134,11 +135,12 @@ def writeDataFileLists(dataset_config,
     outdir:         str; output directory for the file lists
     njobs:          int; number of jobs to divide the data files into
     host:           str; hostname
+    truthLevels     list of str; truth levels
     quiet:          bool; less verbose
 
     Return
     A dictionary of data list file paths.
-    Keys: 'tt', 'tt_truth', 'tt_PL', 'sumWeights'
+    Keys: 'tt', 'sumWeights', 'tt_truth' (optional), 'tt_PL' (optional)
     """
 
     if njobs <= 0:
@@ -151,8 +153,17 @@ def writeDataFileLists(dataset_config,
     datasets = read_config(dataset_config)
 
     # suffix to be added to DID
-    suffix = ['tt', 'tt_truth', 'tt_PL', 'sumWeights']
-    # reco, parton level, particle level, sum of weights
+    suffix = ['tt'] # reco
+
+    if sample_name != 'data':
+        # MC samples
+        suffix.append('sumWeights') # sum of weights
+
+        # add parton or particle level
+        if 'parton' in truthLevels:
+            suffix.append('tt_truth')
+        if 'particle' in truthLevels:
+            suffix.append('tt_PL')
 
     # get lists of file names and sizes
     datafiles = dict()
@@ -188,16 +199,18 @@ def writeDataFileLists(dataset_config,
 
     # iterate over the file list and split files into lists based on size
     total_size = sum(filesizes['tt'])
+    nfiles = len(filesizes['tt'])
     ijob = 0
     current_size = 0
 
-    for fsize, freco, ftruth, fPL, fsumw in zip(filesizes['tt'], datafiles['tt'], datafiles['tt_truth'], datafiles['tt_PL'], datafiles['sumWeights']):
-        # check the file names are compatible
-        i_reco = os.path.basename(freco).split('.')[-3]
-        i_truth = os.path.basename(ftruth).split('.')[-3]
-        i_PL = os.path.basename(fPL).split('.')[-3]
-        i_sumw = os.path.basename(fsumw).split('.')[-3]
-        assert(i_reco == i_truth and i_truth == i_PL and i_PL == i_sumw)
+    for ifile in range(nfiles):
+        # check file names are consistent
+        freco = datafiles['tt'][ifile]
+        findex_reco = os.path.basename(freco).split('.')[-3]
+        for s in suffix:
+            f_s = datafiles[s][ifile]
+            findex_s = os.path.basename(f_s).split('.')[-3]
+            assert(findex_s == findex_reco)
 
         if current_size >= total_size / njobs:
             ijob += 1
@@ -208,15 +221,14 @@ def writeDataFileLists(dataset_config,
                 fnames[s].append(fnames_template[s].format(ijob))
                 foutputs[s] = open( fnames[s][-1], 'w')
                 if not quiet:
-                    print("Create file {}".format(fnames[s][-1]))
+                    print(f"Create file {fnames[s][-1]}")
 
         # write to the output files
-        foutputs['tt'].write(freco+'\n')
-        foutputs['tt_truth'].write(ftruth+'\n')
-        foutputs['tt_PL'].write(fPL+'\n')
-        foutputs['sumWeights'].write(fsumw+'\n')
+        for s in suffix:
+            f_s = datafiles[s][ifile]
+            foutputs[s].write(f_s+'\n')
 
-        current_size += fsize
+        current_size += filesizes['tt'][ifile]
 
     # close files
     for s in foutputs:

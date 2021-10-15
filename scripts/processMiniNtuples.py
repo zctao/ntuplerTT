@@ -32,9 +32,20 @@ args = parser.parse_args()
 
 # get input files
 inputFiles_reco = getInputFileNames(args.reco_files)
+if args.reco_files:
+    print(f"Get reco input files from {args.reco_files}")
+
 inputFiles_parton = getInputFileNames(args.parton_files)
+if args.parton_files:
+    print(f"Get parton level input files from {args.parton_files}")
+
 inputFiles_particle = getInputFileNames(args.particle_files)
+if args.particle_files:
+    print(f"Get particle level input files from {args.particle_files}")
+
 inputFiles_sumw = getInputFileNames(args.sumweight_files)
+if args.sumweight_files:
+    print(f"Get sum of weights from {args.sumweight_files}")
 
 # output directory
 if not os.path.isdir(args.outdir):

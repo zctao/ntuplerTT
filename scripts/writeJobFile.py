@@ -58,23 +58,12 @@ echo "PWD = $PWD"
 """
 
 template_mntuple = """
-# input files
-InputFiles_Reco={infiles_reco}
-InputFiles_Parton={infiles_parton}
-InputFiles_Particle={infiles_particle}
-InputFiles_SumW={infiles_sumw}
-
-echo InputFiles_Reco=$InputFiles_Reco
-echo InputFiles_Parton=$InputFiles_Parton
-echo InputFiles_Particle=$InputFiles_Particle
-echo InputFiles_SumW=$InputFiles_SumW
-
 # output directory
 OUTDIR={outdir}
 echo OUTDIR=$OUTDIR
 
 # start running
-python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_#ARRAYID# -o $OUTDIR -r $InputFiles_Reco -w $InputFiles_SumW -t $InputFiles_Parton -p $InputFiles_Particle {extra_args}
+python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_#ARRAYID# -o $OUTDIR {input_args} {extra_args}
 
 # clean up
 cd ..
@@ -146,9 +135,8 @@ if __name__ == "__main__":
                         help="Path to the dataset yaml configuration file")
     parser.add_argument('-o', '--outdir', type=str, required=True,
                         help="Output directory for the batch jobs")
-    parser.add_argument('-c', '--subcampaigns',
-                        choices=['mc16a', 'mc16d', 'mc16e'], default='mc16e',
-                        help="MC production subcampaign")
+    parser.add_argument('-c', '--subcampaigns', default='mc16e',
+                        help="MC production subcampaign or data taking year")
     parser.add_argument('-n', '--njobs', type=int, default=-1,
                         help="Number of jobs to run. If non-positive, set the number of jobs such that there is one input file per job")
     parser.add_argument('--submit-dir', type=str,
@@ -160,6 +148,9 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
                         default='flashy',
                         help="Host to run batch jobs")
+    parser.add_argument('-t', '--truth-level', nargs='+',
+                        choices=['parton', 'particle'], default=[],
+                        help="truth levels")
     parser.add_argument('-m', '--max-tasks', type=int, default=8,
                         help="Max number of active tasks at any one time")
     parser.add_argument('-q', '--quiet', action='store_true',
@@ -196,10 +187,15 @@ if __name__ == "__main__":
 
     ########
     # input files
-    datalists = writeDataFileLists(args.dataset_config, args.sample,
-                                   args.subcampaigns,
-                                   os.path.join(args.submit_dir, 'inputs'),
-                                   args.njobs, args.site, args.quiet)
+    datalists = writeDataFileLists(
+        args.dataset_config,
+        args.sample,
+        args.subcampaigns,
+        os.path.join(args.submit_dir, 'inputs'),
+        args.njobs,
+        args.site,
+        args.truth_level,
+        args.quiet)
 
     actual_njobs = len(datalists['tt'])
     assert(actual_njobs != 0)
@@ -207,15 +203,21 @@ if __name__ == "__main__":
         print("The actual number of jobs is {}".format(actual_njobs))
         params_dict['njobarray'] = actual_njobs - 1
 
-    params_dict['infiles_reco'] = datalists['tt'][0].replace('_tt_0.txt', '_tt_#ARRAYID#.txt')
+    fin_reco = datalists['tt'][0].replace('_tt_0.txt', '_tt_#ARRAYID#.txt')
     # '#ARRAYID#' is to be replaced with proper env variables
+    params_dict['input_args'] = f"-r {fin_reco}"
 
-    # TODO: check if datalists['tt_truth'] or datalists['tt_PL'] is empty
-    params_dict['infiles_parton'] = datalists['tt_truth'][0].replace('_tt_truth_0.txt', '_tt_truth_#ARRAYID#.txt')
+    if 'tt_truth' in datalists:
+        fin_truth = datalists['tt_truth'][0].replace('_tt_truth_0.txt', '_tt_truth_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -t {fin_truth}"
 
-    params_dict['infiles_particle'] = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
+    if 'tt_PL' in datalists:
+        fin_PL = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -p {fin_PL}"
 
-    params_dict['infiles_sumw'] = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
+    if 'sumWeights' in datalists:
+        fin_sumw = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -w {fin_sumw}"
 
     ########
     # additional arguments for running processMiniNtuples.py if needed
@@ -236,20 +238,20 @@ if __name__ == "__main__":
         writeJobFile_flashy(params_dict, foutname)
 
     # write ntuple file lists
-    truthLevels = ['parton', 'particle']
-    channels = ['ejets', 'mjets']
+    #truthLevels = ['parton', 'particle']
+    #channels = ['ejets', 'mjets']
 
-    for tl in truthLevels:
-        if datalists['tt_truth'] == [] and tl == 'parton':
-            continue
-        if datalists['tt_PL'] == [] and tl == 'particle':
-            continue
-        for ch in channels:
-            fname_list = os.path.join(params_dict['outdir'], 'ntuplelist_{}_{}.txt'.format(tl, ch))
-            if not args.quiet:
-                print("Create ntuple list:", fname_list)
-            flist = open(fname_list, 'w')
-            for j in range(actual_njobs):
-                output_ntuple = os.path.join(params_dict['outdir'], params_dict['name']+'_{}_{}_{}.root'.format(j, tl, ch))
-                flist.write(output_ntuple+'\n')
-            flist.close()
+    #for tl in truthLevels:
+    #    if datalists['tt_truth'] == [] and tl == 'parton':
+    #        continue
+    #    if datalists['tt_PL'] == [] and tl == 'particle':
+    #        continue
+    #    for ch in channels:
+    #        fname_list = os.path.join(params_dict['outdir'], 'ntuplelist_{}_{}.txt'.format(tl, ch))
+    #        if not args.quiet:
+    #            print("Create ntuple list:", fname_list)
+    #        flist = open(fname_list, 'w')
+    #        for j in range(actual_njobs):
+    #            output_ntuple = os.path.join(params_dict['outdir'], params_dict['name']+'_{}_{}_{}.root'.format(j, tl, ch))
+    #            flist.write(output_ntuple+'\n')
+    #        flist.close()
