@@ -174,8 +174,12 @@ def writeDataFileLists(dataset_config,
 
     for era in subcampaigns:
         data = datasets[sample_name][era]
+        if not isinstance(data, list):
+            data = [data]
+
         for s in suffix:
-            lists = listDataFiles(data.rstrip('_')+'_'+s+'.root',
+            # expand dataset names using the suffix
+            lists = listDataFiles([dn.rstrip('_')+'_'+s+'.root' for dn in data],
                                   local_directory = datasets.get('directory'),
                                   host=host)
             datafiles[s] += lists[0]
