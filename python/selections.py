@@ -3,10 +3,20 @@
 ####
 # Reco level
 def passRecoSelections_ejets(event):
-    return event.passed_resolved_ejets_4j2b
+    if hasattr(event, 'passed_resolved_ejets_4j2b'):
+        return event.passed_resolved_ejets_4j2b
+    else:
+        pass4j2b = (event.jet_n > 3) and (event.bjet_n > 1)
+        passEL = abs(event.lep_pdgid) == 11
+        return pass4j2b and passEL
 
 def passRecoSelections_mjets(event):
-    return event.passed_resolved_mujets_4j2b
+    if hasattr(event, 'passed_resolved_mujets_4j2b'):
+        return event.passed_resolved_mujets_4j2b
+    else:
+        pass4j2b = (event.jet_n > 3) and (event.bjet_n > 1)
+        passMU = abs(event.lep_pdgid) == 13
+        return pass4j2b and passMU
 
 def passRecoSelections(event, recoAlgo='klfitter'):
     if recoAlgo.lower() == 'klfitter':
