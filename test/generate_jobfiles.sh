@@ -26,15 +26,17 @@ generate_files() {
             -s ${site} -q ${extra_args}
 }
 
-# ttbar
-generate_files ttbar mc16a -t parton
-generate_files ttbar mc16d -t parton
-generate_files ttbar mc16e -t parton
+localSampleDir=/home/ztao/data/ttbarDiffXs13TeV/MINI362_v1
 
-# ttbar_hw_lj
-generate_files ttbar_hw mc16a -t parton
-generate_files ttbar_hw mc16d -t parton
-generate_files ttbar_hw mc16e -t parton
+# ttbar
+generate_files ttbar mc16a -t parton -l $localSampleDir
+generate_files ttbar mc16d -t parton -l $localSampleDir
+generate_files ttbar mc16e -t parton -l $localSampleDir
+
+# ttbar_hw
+generate_files ttbar_hw mc16a -t parton -l $localSampleDir
+generate_files ttbar_hw mc16d -t parton -l $localSampleDir
+generate_files ttbar_hw mc16e -t parton -l $localSampleDir
 
 # data
 generate_files data 2015

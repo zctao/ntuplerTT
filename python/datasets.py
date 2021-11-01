@@ -46,6 +46,7 @@ def listFiles_local(dids, directory):
             continue
 
         # add files to the list if they are root files
+        files.sort()
         for f in files:
             if f.endswith('.root'):
                 fullpath = os.path.join(r, f)
@@ -124,6 +125,7 @@ def writeDataFileLists(dataset_config,
                        njobs=1,
                        host='',
                        truthLevels = ['parton', 'particle'],
+                       localDir = None,
                        quiet=False):
     """ List input file names to be processed to txt files
     These txt files can be used as inputs to the processMiniNtuples.py
@@ -136,6 +138,7 @@ def writeDataFileLists(dataset_config,
     njobs:          int; number of jobs to divide the data files into
     host:           str; hostname
     truthLevels     list of str; truth levels
+    localDir        str; local directory to look for sample files if not None
     quiet:          bool; less verbose
 
     Return
@@ -180,7 +183,7 @@ def writeDataFileLists(dataset_config,
         for s in suffix:
             # expand dataset names using the suffix
             lists = listDataFiles([dn.rstrip('_')+'_'+s+'.root' for dn in data],
-                                  local_directory = datasets.get('directory'),
+                                  local_directory = localDir,
                                   host=host)
             datafiles[s] += lists[0]
             filesizes[s] += lists[1]

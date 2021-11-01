@@ -151,6 +151,8 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--truth-level', nargs='+',
                         choices=['parton', 'particle'], default=[],
                         help="truth levels")
+    parser.add_argument('-l', '--local-dir', type=str, default=None,
+                        help="Look for sample files in the local directory if provided")
     parser.add_argument('-m', '--max-tasks', type=int, default=8,
                         help="Max number of active tasks at any one time")
     parser.add_argument('-q', '--quiet', action='store_true',
@@ -195,6 +197,7 @@ if __name__ == "__main__":
         args.njobs,
         args.site,
         args.truth_level,
+        args.local_dir,
         args.quiet)
 
     actual_njobs = len(datalists['tt'])
