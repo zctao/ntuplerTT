@@ -15,7 +15,20 @@ if [ -z "$subcampaigns" ]; then
     fi
 fi
 
-suffix=('tt' 'tt_truth' 'tt_PL' 'sumWeights')
+# Suffix
+suffix=('tt')
+
+# MC samples
+if [[ "$sample" != "data" ]]; then
+    suffix+=('sumWeights')
+fi
+
+# Truth level for signal MC samples
+if [[ "$sample" == "ttbar" || "$sample" == "ttbar_hw" ]]; then
+    suffix+=('tt_truth' 'tt_PL')
+fi
+
+echo "Suffix: ${suffix[*]}"
 
 for sub in "${subcampaigns[@]}"; do
     #echo $sub
