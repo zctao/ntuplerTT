@@ -19,10 +19,12 @@ def passRecoSelections_mjets(event):
         return pass4j2b and passMU
 
 def passRecoSelections(event, recoAlgo='klfitter'):
-    if recoAlgo.lower() == 'klfitter':
-        # cut on likelihood
-        if event.klfitter_logLikelihood < -52:
-            return False
+    # Remove the cut on klfitter logLikelihood here
+    # Apply the cut later
+#    if recoAlgo.lower() == 'klfitter':
+#        # cut on likelihood
+#        if event.klfitter_logLikelihood < -52:
+#            return False
 
     return passRecoSelections_ejets(event) or passRecoSelections_mjets(event)
 
