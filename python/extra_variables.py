@@ -19,8 +19,8 @@ class varsExtra():
         self.sumWeights = sum_weights
         self.compute_energy = compute_energy
 
-        # event weight
-        self.normalizedWeight = np.empty((1), dtype="float32")
+        # event weight normalization factor
+        self.xs_times_lumi_over_sumw = np.empty((1), dtype="float32")
 
         # truth event match flag
         self.isMatched = np.empty((1), dtype="int")
@@ -49,7 +49,7 @@ class varsExtra():
         tree.Branch("isDummy", self.isDummy, "isDummy/I")
 
         if self.sumWeights is not None:
-            tree.Branch("normedWeight", self.normalizedWeight, "normedWeight/F")
+            tree.Branch("xs_times_lumi_over_sumw", self.xs_times_lumi_over_sumw, "xs_times_lumi_over_sumw/F")
 
         if self.compute_energy:
             tree.Branch(self.thad_prefix+"_E", self.thad_E, self.thad_prefix+"_E/F")
@@ -72,11 +72,11 @@ class varsExtra():
         self.isDummy[0] = isdummy
 
     def write_event(self, event):
-        # normalize event weight
+        # for normalizing event weight
         if self.sumWeights is not None:
-            self.normalizedWeight[0] = getattr(event,'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            self.xs_times_lumi_over_sumw[0] = getattr(event,'xs_times_lumi') / float(self.sumWeights)
         else:
-            self.normalizedWeight[0] = -99
+            self.xs_times_lumi_over_sumw[0] = 0
 
         # hadronic top
         th_pt  = getattr(event, self.thad_prefix+'_pt')

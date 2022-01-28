@@ -54,7 +54,7 @@ def getTTbarDecayMode(event):
     tIsHadronic = abs(t_wdecay1_pdgid) in [1, 2, 3, 4, 5, 6]
 
     # Note:
-    # In some events, the pdgID pf one of the decay products of W from either t
+    # In some events, the pdgID of one of the decay products of W from either t
     # or tbar is 0. In such events, it is noticed that the value of some branches
     # e.g. MC_thad_afterFSR_y, MC_ttbar_afterFSR_E, is nan or inf
     # These truth events can be matched to valid reco-level events. and the
