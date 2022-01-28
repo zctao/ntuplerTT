@@ -5,7 +5,7 @@ from datasets import writeDataFileLists
 
 template_header_pbs = """#!/bin/bash
 #PBS -t 0-{njobarray}%{maxtasks}
-#PBS -o {outdir}/$PBS_JOBID.out
+#PBS -o {outdir}
 #PBS -j oe
 #PBS -m abe
 #PBS -M {email}
