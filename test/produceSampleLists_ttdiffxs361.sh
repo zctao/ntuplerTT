@@ -49,5 +49,9 @@ python scripts/getSampleListsFromGitlab.py ${token} -s MINI362_v1 \
 # data
 echo 'Data'
 python scripts/getSampleListsFromGitlab.py ${token} -s MINI362_v1 \
-       -f 'physics_Main' \
+       -f 'physics_Main and not klfitter' \
        -o ${outdir}/datasets_obs.yaml
+
+python scripts/getSampleListsFromGitlab.py ${token} -s MINI362_v1 \
+       -f 'physics_Main and klfitter' \
+       -o ${outdir}/datasets_obs_klf.yaml
