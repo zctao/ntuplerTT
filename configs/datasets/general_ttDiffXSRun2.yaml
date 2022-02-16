@@ -1,0 +1,107 @@
+---
+subcampaign_tag:
+    mc16a: r9364
+    mc16d: r10201
+    mc16e: r10724
+
+# Dataset number
+# https://its.cern.ch/jira/projects/TTDIFFXS/issues/TTDIFFXS-361?filter=allissues
+dsid:
+    # Signal
+
+    ttbar:         # PhPy8EG (nominal) mt = 172.5 GeV, hdamp = 1.5*mt 
+        - 410470
+    ttbar_hw:      # PowhegHerwig7EvtGen
+        - 411233
+        - 411234
+    ttbar_amc:     # aMcAtNloPy8EvtGen
+        - 410464
+        - 410465
+    ttbar_sh:      # Sherpa
+        - 700048
+        - 700049
+        - 700050
+    ttbar_mt169:   # Same as nominal but with mt = 169 GeV
+        - 411044
+        - 411052
+    ttbar_mt176:   # Same as nominal but with mt = 176 GeV
+        - 411051
+        - 411059
+    ttbar_hdamp:   # same as nominal but with hdamp set to 3*mt
+        - 410480
+        - 410482
+
+    # Backgrounds
+
+    # single top
+    singleTop:     # PhPy8EG
+        # t-channel
+        - 410658
+        - 410659
+        # tW
+        - 410646
+        - 410647
+        # s-channel
+        - 410644
+        - 410645
+    singleTop_DS:  # PhPy8EG with DS scheme
+        - 410654
+        - 410655
+    singleTop_hw:  # PowhegHerwig7EvtGen
+        # t-channel
+        - 411032
+        - 411033
+        # tW
+        - 411036
+        - 411037
+        # s-channel
+        - 411034
+        - 411035
+    singleTop_amc:  # aMcAtNloPy8EG
+        - 412002
+        - 412003   # tW_dilepton, but 412002 is tW_inclusive?
+        - 412004
+        - 412005
+
+    # W+jets
+    Wjets:
+        # 364156 - 364197
+        !!python/object/apply:builtins.range [364156, 364198]
+
+    # Z+jets
+    Zjets:
+        # 364100 - 364141
+        !!python/object/apply:builtins.range [364100, 364142]
+
+    # ttV
+    ttV:           # aMcAtNloPythia8EvtGen
+        - 410155   # ttW
+        - 410156   # ttZ,Z->nunu
+        - 410157   # ttZ,Z->qq
+        - 410218   # ttee
+        - 410219   # ttmumu
+        - 410220   # tttautau
+    # For background systematics
+    ttV_syst: 
+        - 410560   # MadGraph tZq
+        - 410080   # MadGraph 4topSM
+        - 410081   # MadGraph ttWW
+        - 410408   # aMcAtNloPythia8EvtGen tWZ,Z->ll
+
+    # Di-boson
+    VV:            # Sherpa
+        - 363356   # Z(qq)Z(ll)
+        - 363358   # W(qq)Z(ll)
+        - 363359   # W+(->qq)W-(->lv) with 0,1j@NLO + 2,3j@LO
+        - 363360   # W+(->lv)W-(->qq) with 0,1j@NLO + 2,3j@LO
+        - 363489   # W(lv)Z(qq)
+    # For background systematics
+    VV_syst:       # Sherpa
+        - 364250   # llll
+        - 364253   # lllnu
+        - 364254   # llnunu
+        - 364255   # lnununu
+
+    # ttH
+    ttH:           # PhPy8EG
+        - 346344   # ttH, mH=125, semilep

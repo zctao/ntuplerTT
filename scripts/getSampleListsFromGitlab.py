@@ -2,37 +2,9 @@
 import requests
 import yaml
 import re
+import os
 
-# https://its.cern.ch/jira/projects/TTDIFFXS/issues/TTDIFFXS-361?filter=allissues
-dsid_dict = {
-    # ttbar
-    'ttbar': [410470],
-    'ttbar_hw': [411233, 411234],
-    'ttbar_amc': [410464, 410465],
-    'ttbar_sh': [700048, 700049, 700050],
-    'ttbar_alt': [411044, 411052, 411051, 411059, 410480, 410482],
-    # single top
-    'singleTop': [410658, 410659, 410646, 410647, 410644, 410645],
-    'singleTop_alt': [410654, 410655],
-    'singleTop_hw': [411032, 411033, 411036, 411037, 411034, 411035],
-    'singleTop_amc': [412002, 412003, 412004, 412005],
-    # W+jets
-    'Wjets': list(range(364156, 364197+1)),
-    # Z+jets
-    'Zjets': list(range(364100, 364141+1)),
-    # ttV
-    'ttV': [410155, 410156, 410157, 410218, 410219, 410220],
-    'ttV_alt': [410560, 410080, 410081, 410408],
-    # diboson
-    'VV': [363356, 363358, 363359, 363360, 363489],
-    'VV_alt': [364250, 364253, 364254, 364255],
-    # ttH
-    'ttH': [346344]
-}
-
-subcampaign_tag = {
-    'mc16a': 'r9364', 'mc16d': 'r10201', 'mc16e': 'r10724'
-}
+from datasets import read_config
 
 def applyFilters(sample_name, expressions, case_sensitive=False):
     # Examples:
@@ -103,14 +75,21 @@ def parseMCFileName(filename, scope):
     physics_short = fname_split[2]
     tags = fname_split[3]
 
+    # FIXME hard code the config file path here
+    fpath_config = os.path.join(
+        os.getenv("SourceDIR"), "configs/datasets/general_ttDiffXSRun2.yaml"
+    )
+    assert(os.path.isfile(fpath_config))
+    dsgen_dict = read_config(fpath_config)
+
     results['label'] = None
-    for l in dsid_dict:
-        if int(dsid) in dsid_dict[l]:
+    for l in dsgen_dict['dsid']:
+        if int(dsid) in dsgen_dict['dsid'][l]:
             results['label'] = l
             break
 
     results['era'] = None
-    for e, t in subcampaign_tag.items():
+    for e, t in dsgen_dict['subcampaign_tag'].items():
         if t in tags:
             results['era'] = e
             break
