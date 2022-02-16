@@ -281,11 +281,11 @@ def produceSampleList(url, headers, output='dataset_list.yaml', filters=[]):
     removeDuplicates(datasets_dict)
 
     # write to file
-    if datasets_dict:
-        with open(output, 'w') as outfile:
-            yaml.dump(datasets_dict, outfile)
-    else:
+    if not datasets_dict:
         print("WARNING: no sample found")
+
+    with open(output, 'w') as outfile:
+        yaml.dump(datasets_dict, outfile)
 
 if __name__ == "__main__":
 
