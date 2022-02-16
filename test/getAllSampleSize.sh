@@ -1,7 +1,7 @@
 #!/bin/bash
 dataconfig_dir=${1:-configs/datasets/ttdiffxs361}
 
-samples='ttbar ttbar_hw ttbar_amc ttbar_sh ttbar_alt singleTop singleTop_alt singleTop_hw singleTop_amc Wjets Zjets ttV ttV_alt VV VV_alt ttH'
+samples=$(python -c "import os; from datasets import read_config; dsgen_dict = read_config('configs/datasets/general_ttDiffXSRun2.yaml'); print(' '.join(list(dsgen_dict['dsid'].keys())))")
 
 for file in ${dataconfig_dir}/*.yaml; do
     echo "Processing $file"
