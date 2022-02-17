@@ -13,10 +13,14 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('-r', '--reco-files', required=True, nargs='+', type=str,
                     help="Input root files containing reco trees")
-parser.add_argument('-t', '--parton-files', nargs='+', type=str,
+#
+# either parton level or particle level input files, but not both
+mgroup = parser.add_mutually_exclusive_group()
+mgroup.add_argument('-t', '--parton-files', nargs='+', type=str,
                     help="Input root files containing parton level trees")
-parser.add_argument('-p', '--particle-files', nargs='+', type=str,
+mgroup.add_argument('-p', '--particle-files', nargs='+', type=str,
                     help="Input root files containing particle level trees")
+#
 parser.add_argument('-w', '--sumweight-files', nargs='+', type=str,
                     help="Input root files containing sum weights")
 parser.add_argument('-o', '--outdir', default='.',
@@ -27,6 +31,9 @@ parser.add_argument('-m', '--maxevents', type=int,
                     help="Max number of events to process")
 parser.add_argument('-c', '--compute-corrections', action='store_true',
                     help="Compute acceptance and efficiency correction factors")
+parser.add_argument('-a', '--algorithm-topreco',
+                    choices=['pseudotop', 'klfitter'], default='pseudotop',
+                    help="Top reconstruction algorithm")
 
 args = parser.parse_args()
 
@@ -35,17 +42,24 @@ inputFiles_reco = getInputFileNames(args.reco_files)
 if args.reco_files:
     print(f"Get reco input files from {args.reco_files}")
 
-inputFiles_parton = getInputFileNames(args.parton_files)
-if args.parton_files:
-    print(f"Get parton level input files from {args.parton_files}")
-
-inputFiles_particle = getInputFileNames(args.particle_files)
-if args.particle_files:
-    print(f"Get particle level input files from {args.particle_files}")
-
 inputFiles_sumw = getInputFileNames(args.sumweight_files)
 if args.sumweight_files:
     print(f"Get sum of weights from {args.sumweight_files}")
+
+if args.parton_files:
+    # parton level
+    print(f"Get parton level input files from {args.parton_files}")
+    inputFiles_mctruth = getInputFileNames(args.parton_files)
+    truth_level = 'parton'
+elif args.particle_files:
+    # particle level
+    print(f"Get particle level input files from {args.particle_files}")
+    inputFiles_mctruth = getInputFileNames(args.particle_files)
+    truth_level = 'particle'
+else:
+    # reco only
+    inputFiles_mctruth = []
+    truth_level = ''
 
 # output directory
 if not os.path.isdir(args.outdir):
@@ -54,72 +68,32 @@ if not os.path.isdir(args.outdir):
 
 assert(len(inputFiles_reco) > 0)
 
+# start processing
 tracemalloc.start()
 
-######
-if len(inputFiles_parton) == 0 and len(inputFiles_particle) == 0:
-    # reco only
-    print("Process reco events only")
-    matchAndSplitTrees(
+matchAndSplitTrees(
+    os.path.join(args.outdir, args.name),
+    inputFiles_reco,
+    inputFiles_mctruth,
+    inputFiles_sumw,
+    recoAlgo = args.algorithm_topreco,
+    truthLevel = truth_level,
+    saveUnmatchedReco = True,
+    saveUnmatchedTruth = truth_level=='particle', # TODO: check this
+    maxevents = args.maxevents
+)
+
+mcurrent, mpeak = tracemalloc.get_traced_memory()
+print(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
+
+if inputFiles_mctruth and args.compute_corrections:
+    computeAccEffCorrections(
         os.path.join(args.outdir, args.name),
         inputFiles_reco,
-        inputFiles_sumw = inputFiles_sumw,
-        recoAlgo = 'klfitter',
-        maxevents = args.maxevents
-    )
-
-######
-if len(inputFiles_parton) > 0:
-    # reco and parton level
-    print("Match reco and parton level events")
-    matchAndSplitTrees(
-        os.path.join(args.outdir, args.name),
-        inputFiles_reco, inputFiles_parton, inputFiles_sumw,
-        recoAlgo = 'klfitter',
-        truthLevel = 'parton',
-        saveUnmatchedReco = True,
-        saveUnmatchedTruth = False,
-        maxevents = args.maxevents
+        inputFiles_mctruth,
+        recoAlgo = args.algorithm_topreco,
+        truthLevel = truth_level
     )
 
     mcurrent, mpeak = tracemalloc.get_traced_memory()
-    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
-
-    if args.compute_corrections:
-        computeAccEffCorrections(
-            os.path.join(args.outdir, args.name),
-            inputFiles_reco, inputFiles_parton,
-            recoAlgo = 'klfitter',
-            truthLevel = 'parton'
-        )
-
-        mcurrent, mpeak = tracemalloc.get_traced_memory()
-        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
-
-######
-if len(inputFiles_particle) > 0:
-    # reco and particle level
-    print("Match reco and particle level events")
-    matchAndSplitTrees(
-        os.path.join(args.outdir, args.name),
-        inputFiles_reco, inputFiles_particle, inputFiles_sumw,
-        recoAlgo = 'pseudotop',
-        truthLevel = 'particle',
-        saveUnmatchedReco = True,
-        saveUnmatchedTruth = True,
-        maxevents = args.maxevents
-    )
-
-    mcurrent, mpeak = tracemalloc.get_traced_memory()
-    print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
-
-    if args.compute_corrections:
-        computeAccEffCorrections(
-            os.path.join(args.outdir, args.name),
-            inputFiles_reco, inputFiles_particle,
-            recoAlgo = 'pseudotop',
-            truthLevel = 'particle'
-        )
-
-        mcurrent, mpeak = tracemalloc.get_traced_memory()
-        print("Current memory usage is {:.1f} MB; Peak was {:.1f} MB".format(mcurrent * 10**-6, mpeak * 10**-6))
+    print(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
