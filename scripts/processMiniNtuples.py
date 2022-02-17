@@ -26,7 +26,7 @@ parser.add_argument('-w', '--sumweight-files', nargs='+', type=str,
 parser.add_argument('-o', '--outdir', default='.',
                     help="Output directory")
 parser.add_argument('-n', '--name', type=str, default='ntuple',
-                    help="Suffix of the output file names")
+                    help="Prefix of the output file names")
 parser.add_argument('-m', '--maxevents', type=int,
                     help="Max number of events to process")
 parser.add_argument('-c', '--compute-corrections', action='store_true',
@@ -34,6 +34,8 @@ parser.add_argument('-c', '--compute-corrections', action='store_true',
 parser.add_argument('-a', '--algorithm-topreco',
                     choices=['pseudotop', 'klfitter'], default='pseudotop',
                     help="Top reconstruction algorithm")
+parser.add_argument('--treename', type=str, default='nominal',
+                    help="Tree name of reco level input")
 
 args = parser.parse_args()
 
@@ -78,6 +80,7 @@ matchAndSplitTrees(
     inputFiles_sumw,
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
+    treename = args.treename,
     saveUnmatchedReco = True,
     saveUnmatchedTruth = truth_level=='particle', # TODO: check this
     maxevents = args.maxevents

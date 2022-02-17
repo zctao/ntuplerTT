@@ -12,7 +12,7 @@ def buildTreeIndex(tree):
 
     # A return code less than 0 indicates failure.
     if status < 0:
-        raise RuntimeError(f"Could not build index for tree {treename}")
+        raise RuntimeError(f"Could not build index for tree {tree.GetName()}")
     else:
         print(f"Building index took {tdone-tstart:.2f} seconds")
 
@@ -97,7 +97,7 @@ def matchAndSplitTrees(
     # MC truth level
     if inputFiles_truth:
         print(truthLevel.capitalize()+" level")
-        tree_truth = TChain(treename)
+        tree_truth = TChain('nominal') # truth level tree is always 'nominal'
         for infile_truth in inputFiles_truth:
             tree_truth.Add(infile_truth)
         nevents_truth = tree_truth.GetEntries()
