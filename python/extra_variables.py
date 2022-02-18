@@ -22,6 +22,10 @@ class varsExtra():
         # event weight normalization factor
         self.xs_times_lumi_over_sumw = np.empty((1), dtype="float32")
 
+        # event weights normalized to cross section, luminosity, and sum weights
+        self.normalized_weight = np.empty((1), dtype="float32")
+        self.normalized_weight_mc = np.empty((1), dtype="float32")
+
         # truth event match flag
         self.isMatched = np.empty((1), dtype="int")
 
@@ -48,7 +52,9 @@ class varsExtra():
         tree.Branch("isMatched", self.isMatched, "isMatched/I")
         tree.Branch("isDummy", self.isDummy, "isDummy/I")
 
+        tree.Branch("normalized_weight", self.normalized_weight, "normalized_weight/F")
         if self.sumWeights is not None:
+            tree.Branch("normalized_weight_mc", self.normalized_weight_mc, "normalized_weight_mc/F")
             tree.Branch("xs_times_lumi_over_sumw", self.xs_times_lumi_over_sumw, "xs_times_lumi_over_sumw/F")
 
         if self.compute_energy:
@@ -72,11 +78,17 @@ class varsExtra():
         self.isDummy[0] = isdummy
 
     def write_event(self, event):
-        # for normalizing event weight
-        if self.sumWeights is not None:
-            self.xs_times_lumi_over_sumw[0] = getattr(event,'xs_times_lumi') / float(self.sumWeights)
+        # normalized event weight
+        if self.sumWeights is None:
+            if hasattr(event, 'ASM_weight'):
+                # Data-drive fakes estimation
+                self.normalized_weight[0] = getattr(event, 'ASM_weight')[0]
+            else:
+                self.normalized_weight[0] = 1
         else:
-            self.xs_times_lumi_over_sumw[0] = 0
+            self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            self.normalized_weight_mc[0] = getattr(event, 'weight_mc') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            self.xs_times_lumi_over_sumw[0] = getattr(event,'xs_times_lumi') / float(self.sumWeights)
 
         # hadronic top
         th_pt  = getattr(event, self.thad_prefix+'_pt')
