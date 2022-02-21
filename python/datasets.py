@@ -124,7 +124,7 @@ def writeDataFileLists(dataset_config,
                        outdir = '.',
                        njobs=1,
                        host='',
-                       truthLevels = ['parton', 'particle'],
+                       truthLevel = '', # or 'parton' or 'particle'
                        localDir = None,
                        quiet=False):
     """ List input file names to be processed to txt files
@@ -137,7 +137,7 @@ def writeDataFileLists(dataset_config,
     outdir:         str; output directory for the file lists
     njobs:          int; number of jobs to divide the data files into
     host:           str; hostname
-    truthLevels     list of str; truth levels
+    truthLevel      str; truth levels
     localDir        str; local directory to look for sample files if not None
     quiet:          bool; less verbose
 
@@ -163,9 +163,9 @@ def writeDataFileLists(dataset_config,
         suffix.append('sumWeights') # sum of weights
 
         # add parton or particle level
-        if 'parton' in truthLevels:
+        if truthLevel == 'parton':
             suffix.append('tt_truth')
-        if 'particle' in truthLevels:
+        elif truthLevel == 'particle':
             suffix.append('tt_PL')
 
     # get lists of file names and sizes
