@@ -1,0 +1,158 @@
+---
+# systematic uncertainties
+
+# Tree name: <prefix>_<uncertainty>_<variation>
+jet:
+    type:
+        Branch
+    prefix:
+        CategoryReduction_JET
+    uncertainties:
+        - BJES_Response
+        - EffectiveNP_Detector1
+        - EffectiveNP_Detector2
+        - EffectiveNP_Mixed1
+        - EffectiveNP_Mixed2
+        - EffectiveNP_Mixed3
+        - EffectiveNP_Modelling1
+        - EffectiveNP_Modelling2
+        - EffectiveNP_Modelling3
+        - EffectiveNP_Modelling4
+        - EffectiveNP_Statistical1
+        - EffectiveNP_Statistical2
+        - EffectiveNP_Statistical3
+        - EffectiveNP_Statistical4
+        - EffectiveNP_Statistical5
+        - EffectiveNP_Statistical6
+        - EtaIntercalibration_Modelling
+        - EtaIntercalibration_NonClosure_2018data
+        - EtaIntercalibration_NonClosure_highE
+        - EtaIntercalibration_NonClosure_negEta
+        - EtaIntercalibration_NonClosure_posEta
+        - EtaIntercalibration_TotalStat
+        - Flavor_Composition
+        - Flavor_Response
+        - JER_DataVsMC_MC16
+        - JER_EffectiveNP_1
+        - JER_EffectiveNP_2
+        - JER_EffectiveNP_3
+        - JER_EffectiveNP_4
+        - JER_EffectiveNP_5
+        - JER_EffectiveNP_6
+        - JER_EffectiveNP_7restTerm
+        - Pileup_OffsetMu
+        - Pileup_OffsetNPV
+        - Pileup_PtTerm
+        - Pileup_RhoTopology
+        - PunchThrough_MC16
+        - SingleParticle_HighPt
+    variations:
+        - _1down
+        - _1up
+
+egamma:
+    type:
+        Branch
+    prefix:
+        EG
+    uncertainties:
+        - RESOLUTION_ALL
+        - SCALE_AF2
+        - SCALE_ALL
+    variations:
+        - _1down
+        - _1up
+
+met:
+    type:
+        Branch
+    prefix:
+        MET
+    uncertainties:
+        - SoftTrk_Scale
+    variations:
+        - _1down
+        - _1up
+met_res:
+    type:
+        branch
+    prefix:
+        MET
+    uncertainties:
+        - SoftTrk
+    variables:
+        - ResoPara
+        - ResoPerp
+
+muon:
+    type:
+        Branch
+    prefix:
+        MUON
+    uncertainties:
+        - ID
+        - MS
+        - SAGITTA_RESBIAS
+        - SAGITTA_RHO
+        - SCALE
+    variations:
+        - _1down
+        - _1up
+
+# scale factors
+# weight name: weight_<prefix>_<uncertainty>_<variation>
+# nominal weight: weight_<prefix>
+btag:
+    type:
+        ScaleFactor
+    prefix:
+        bTagSF_DL1r_70
+    uncertainties:
+        - extrapolation
+        - extrapolation_from_charm
+        - eigenvars_B: 9
+        - eigenvars_C: 4
+        - eigenvars_Light: 4 
+    variations:
+        - down
+        - up
+
+pileup:
+    type:
+        ScaleFactor
+    prefix:
+        pileup
+    variables:
+        - DOWN
+        - UP
+
+jvt:
+    type:
+        ScaleFactor
+    prefix:
+        jvt
+    variations:
+        - DOWN
+        - UP
+
+leptonSF:
+    type:
+        ScaleFactor
+    prefix:
+        leptonSF
+    uncertainties:
+        - EL_SF_ID
+        - EL_SF_Isol
+        - EL_SF_Reco
+        - EL_SF_Trigger
+        - MU_SF_Trigger_STAT
+        - MU_SF_ID_STAT_LOWPT
+        - MU_SF_ID_SYST
+        - MU_SF_ID_SYST_LOWPT
+        - MU_SF_Isol_STAT
+        - MU_SF_Isol_SYST
+        - MU_SF_TTVA_STAT
+        - MU_SF_TTVA_SYST
+    variations:
+        - DOWN
+        - UP
