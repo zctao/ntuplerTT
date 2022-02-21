@@ -4,11 +4,11 @@ import subprocess
 from datasets import writeDataFileLists
 
 template_header_pbs = """#!/bin/bash
-#PBS -t 0-{njobarray}%{maxtasks}
+#PBS -t 0-{njobarray}
 #PBS -o {outdir}
 #PBS -j oe
 #PBS -m abe
-#PBS -M {email}
+### #PBS -M
 #PBS -l nodes=1
 #PBS -V
 
@@ -20,10 +20,10 @@ if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 """
 
 template_header_slurm = """
-#SBATCH --array=0-{njobarray}%{maxtasks}
+#SBATCH --array=0-{njobarray}
 #SBATCH --output={outdir}/%A_%a.out
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user={email}
+### #SBATCH --mail-user=
 #SBATCH --mem=4G
 """
 
@@ -32,8 +32,9 @@ echo HOSTNAME=$HOSTNAME
 
 # set up environment
 source {ntupler_dir}/setup_atlas.sh
+
 # grid proxy
-export X509_USER_PROXY={proxy}
+#export X509_USER_PROXY=
 
 echo "SourceDIR = $SourceDIR"
 WorkDIR=#TMP#/$USER/$(date +'%Y%m%d%H%M%S')
@@ -74,7 +75,7 @@ if [ $? -ne 0 ]; then
 fi
 """
 
-def writeJobFile_flashy(pars_dict, filename):
+def writeJobFile_flashy(pars_dict, filename, verbosity=1):
     # PBS jobs on atlas-t3-ubc.westgrid.ca
     # $PBS_ARRAYID, $PBS_JOBID, /tmp
 
@@ -83,15 +84,17 @@ def writeJobFile_flashy(pars_dict, filename):
     jobscripts = jobscripts.replace('#ARRAYID#', '${PBS_ARRAYID}')
     jobscripts = jobscripts.replace('#TMP#', '/tmp')
 
-    print("Create job file:", filename)
+    if verbosity > 0:
+        print("Create job file:", filename)
     fjobfile = open(filename, 'w')
     fjobfile.write(jobscripts)
     fjobfile.close()
 
-    print("To submit the job to cluster:")
-    print("qsub -l walltime=<hh:mm:ss>", filename)
+    if verbosity > 0:
+        print("To submit the job to cluster:")
+        print("qsub -l walltime=<hh:mm:ss>", filename)
 
-def writeJobFile_cedar(pars_dict, filename):
+def writeJobFile_cedar(pars_dict, filename, verbosity=1):
     # Slurm jobs on cedar.computecanada.ca
     # $SLURM_ARRAY_TASK_ID, $SLURM_JOB_ID, $SLURM_TMPDIR
 
@@ -111,18 +114,138 @@ def writeJobFile_cedar(pars_dict, filename):
     runscript = runscript.replace('#TMP#', '${SLURM_TMPDIR}')
     # save run script
     fname_run = filename.replace('submitJob', 'runJob')
-    print("Create run script file:", fname_run)
+    if verbosity > 0:
+        print("Create run script file:", fname_run)
     frunfile = open(fname_run, 'w')
     frunfile.write(runscript)
     frunfile.close()
 
-    print("Create job file:", filename)
+    if verbosity > 0:
+        print("Create job file:", filename)
     fjobfile = open(filename, 'w')
     fjobfile.write(template_jobfile.replace("RUNPLACEHOLDER", "source {} {}".format(fname_run, "${SLURM_ARRAY_TASK_ID}")))
     fjobfile.close()
 
-    print("To submit the job to cluster:")
-    print("sbatch --export=None --time=<hh:mm:ss>", filename)
+    if verbosity > 0:
+        print("To submit the job to cluster:")
+        print("sbatch --export=None --time=<hh:mm:ss>", filename)
+
+def writeJobFile(
+    sample,
+    dataset_config,
+    outdir,
+    subcampaigns = ['mc16a', 'mc16d', 'mc16e'],
+    extra_args = '',
+    njobs = -1,
+    submit_dir = None,
+    grid_proxy = None, #'$HOME/x509up_u$(id -u)',
+    email = None, #"os.getenv('USER')+@phas.ubc.ca",
+    site = 'flashy',
+    truth_level = '',
+    local_dir = None,
+    max_task = None,
+    verbosity = 0
+    ):
+
+    srcdir = os.getenv('SourceDIR')
+    if srcdir is None:
+        raise RuntimeError("SourceDIR is not set.")
+
+    # update templates
+    global template_env_atlas
+    global template_header_pbs
+    global template_header_slurm
+
+    if grid_proxy:
+        template_env_atlas = template_env_atlas.replace(
+            "#export X509_USER_PROXY=", f"export X509_USER_PROXY={grid_proxy}")
+
+    if email:
+        if site == 'flashy':
+            template_header_pbs = template_header_pbs.replace(
+                "### #PBS -M", f"#PBS -M {email}")
+        elif site == 'cedar':
+            template_header_slurm = template_header_slurm(
+                "### #SBATCH --mail-user=", f"#SBATCH --mail-user={email}")
+
+    if max_task:
+        if site == 'flashy':
+            template_header_pbs = template_header_pbs.replace(
+                "#PBS -t 0-{njobarray}", "#PBS -t 0-{njobarray}%"+str(max_task))
+        elif site == 'cedar':
+            template_header_slurm = template_header_slurm(
+                "#SBATCH --array=0-{njobarray}",
+                "#SBATCH --array=0-{njobarray}%"+str(max_task))
+
+    # Job parameters
+    params_dict = {
+        'ntupler_dir' : srcdir,
+        'njobarray' : njobs - 1,
+        'name' : sample,
+        'extra_args' : extra_args,
+        'outdir' : outdir
+    }
+
+    ########
+    # output diretory
+    if not os.path.isdir(outdir):
+        if verbosity > 0:
+            print(f"Create output directory: {outdir}")
+        os.makedirs(outdir)
+
+    # submit directory
+    if not submit_dir:
+        submit_dir = outdir
+
+    ########
+    # Create input file lists
+    datalists = writeDataFileLists(
+        dataset_config,
+        sample,
+        subcampaigns,
+        outdir = os.path.join(submit_dir, 'inputs'),
+        njobs = njobs,
+        host = site,
+        truthLevel = truth_level,
+        localDir = local_dir,
+        quiet = verbosity < 1)
+
+    actual_njobs = len(datalists['tt'])
+    assert(actual_njobs != 0)
+    if actual_njobs != njobs:
+        if verbosity > 0:
+            print(f"The actual number of jobs is {actual_njobs}")
+        params_dict['njobarray'] = actual_njobs - 1
+
+    # Input files
+    fin_reco = datalists['tt'][0].replace('_tt_0.txt', '_tt_#ARRAYID#.txt')
+    # '#ARRAYID#' is to be replaced with proper env variables
+    params_dict['input_args'] = f"-r {fin_reco}"
+
+    if 'tt_truth' in datalists:
+        fin_truth = datalists['tt_truth'][0].replace('_tt_truth_0.txt', '_tt_truth_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -t {fin_truth}"
+
+    if 'tt_PL' in datalists:
+        fin_PL = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -p {fin_PL}"
+
+    if 'sumWeights' in datalists:
+        fin_sumw = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
+        params_dict['input_args'] += f" -w {fin_sumw}"
+
+    ########
+    # job file name
+    foutname = f"submitJob_{sample}_{'_'.join(subcampaigns)}.sh"
+    foutname = os.path.join(submit_dir, foutname)
+
+    # write job file
+    if site == 'flashy':
+        writeJobFile_flashy(params_dict, foutname, verbosity)
+    elif site == 'cedar':
+        writeJobFile_cedar(params_dict, foutname, verbosity)
+    else:
+        raise RuntimeError(f"Unknown site {site}")
 
 if __name__ == "__main__":
 
@@ -135,8 +258,10 @@ if __name__ == "__main__":
                         help="Path to the dataset yaml configuration file")
     parser.add_argument('-o', '--outdir', type=str, required=True,
                         help="Output directory for the batch jobs")
-    parser.add_argument('-c', '--subcampaigns', default='mc16e',
+    parser.add_argument('-c', '--subcampaigns', nargs='+', default=['mc16e'],
                         help="MC production subcampaign or data taking year")
+    parser.add_argument('-a', '--extra-args', type=str, default='',
+                        help="Extra arguments to be passed to processMiniNtuples.py")
     parser.add_argument('-n', '--njobs', type=int, default=-1,
                         help="Number of jobs to run. If non-positive, set the number of jobs such that there is one input file per job")
     parser.add_argument('--submit-dir', type=str,
@@ -155,106 +280,27 @@ if __name__ == "__main__":
                         help="Look for sample files in the local directory if provided")
     parser.add_argument('-m', '--max-tasks', type=int, default=8,
                         help="Max number of active tasks at any one time")
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help="Suppress some printouts")
+    parser.add_argument('-v', '--verbosity', action='count', default=0,
+                        help="Verbosity level")
 
     args = parser.parse_args()
 
-    ########
-    # General job parameters
-    srcdir = os.getenv('SourceDIR')
-    if srcdir is None:
-        sys.exit("SourceDIR is not set. Abort.")
-
-    params_dict = {
-        'ntupler_dir' : srcdir,
-        'njobarray' : args.njobs - 1,
-        'email' : eval(args.email),
-        'proxy' : args.grid_proxy,
-        'name' : 'mntuple_'+args.sample,
-        'maxtasks' : args.max_tasks,
-        'extra_args' : ''
-    }
-
-    ########
-    # output diretory
-    if not os.path.isdir(args.outdir):
-        print("Create output directory: {}".format(args.outdir))
-        os.makedirs(args.outdir)
-    params_dict['outdir'] = args.outdir
-
-    # submit directory
-    if args.submit_dir is None:
-        args.submit_dir = args.outdir
-
-    ########
-    # input files
-    datalists = writeDataFileLists(
-        args.dataset_config,
-        args.sample,
-        args.subcampaigns,
-        os.path.join(args.submit_dir, 'inputs'),
-        args.njobs,
-        args.site,
-        args.truth_level,
-        args.local_dir,
-        args.quiet)
-
-    actual_njobs = len(datalists['tt'])
-    assert(actual_njobs != 0)
-    if actual_njobs != args.njobs:
-        print("The actual number of jobs is {}".format(actual_njobs))
-        params_dict['njobarray'] = actual_njobs - 1
-
-    fin_reco = datalists['tt'][0].replace('_tt_0.txt', '_tt_#ARRAYID#.txt')
-    # '#ARRAYID#' is to be replaced with proper env variables
-    params_dict['input_args'] = f"-r {fin_reco}"
-
-    if 'tt_truth' in datalists:
-        fin_truth = datalists['tt_truth'][0].replace('_tt_truth_0.txt', '_tt_truth_#ARRAYID#.txt')
-        params_dict['input_args'] += f" -t {fin_truth}"
-
-    if 'tt_PL' in datalists:
-        fin_PL = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
-        params_dict['input_args'] += f" -p {fin_PL}"
-
-    if 'sumWeights' in datalists:
-        fin_sumw = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
-        params_dict['input_args'] += f" -w {fin_sumw}"
-
-    ########
-    # additional arguments for running processMiniNtuples.py if needed
-    if args.sample == 'ttbar': # nominal ttbar sample
-        # compute acceptance and efficiency corrections
-        params_dict['extra_args'] = "-c"
-
-    ########
-    # output job file name
-    foutname = os.path.join(args.submit_dir, 'submitJob_'+args.sample+'_'+args.subcampaigns+'.sh')
-
-
-    ########
-    # write job file
-    if args.site == 'cedar':
-        writeJobFile_cedar(params_dict, foutname)
-    else:
-        writeJobFile_flashy(params_dict, foutname)
-
-    # write ntuple file lists
-    #truthLevels = ['parton', 'particle']
-    #channels = ['ejets', 'mjets']
-
-    #for tl in truthLevels:
-    #    if datalists['tt_truth'] == [] and tl == 'parton':
-    #        continue
-    #    if datalists['tt_PL'] == [] and tl == 'particle':
-    #        continue
-    #    for ch in channels:
-    #        fname_list = os.path.join(params_dict['outdir'], 'ntuplelist_{}_{}.txt'.format(tl, ch))
-    #        if not args.quiet:
-    #            print("Create ntuple list:", fname_list)
-    #        flist = open(fname_list, 'w')
-    #        for j in range(actual_njobs):
-    #            output_ntuple = os.path.join(params_dict['outdir'], params_dict['name']+'_{}_{}_{}.root'.format(j, tl, ch))
-    #            flist.write(output_ntuple+'\n')
-    #        flist.close()
+    try:
+        writeJobFile(
+            args.sample,
+            args.dataset_config,
+            args.outdir,
+            subcampaigns = args.subcampaigns,
+            extra_args = args.extra_args,
+            njobs = args.njobs,
+            submit_dir = args.submit_dir,
+            grid_proxy = args.grid_proxy,
+            email = args.email,
+            site = args.site,
+            truth_level = args.truth_level,
+            local_dir = args.local_dir,
+            max_task = args.max_tasks,
+            verbosity = args.verbosity
+        )
+    except:
+        print("Failed to generate job files.")
