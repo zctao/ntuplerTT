@@ -247,6 +247,8 @@ def writeJobFile(
     else:
         raise RuntimeError(f"Unknown site {site}")
 
+    return foutname
+
 if __name__ == "__main__":
 
     import argparse
