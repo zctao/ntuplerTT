@@ -4,7 +4,7 @@ import subprocess
 from datasets import writeDataFileLists
 
 template_header_pbs = """#!/bin/bash
-#PBS -t 0-{njobarray}
+#PBS -t 0-{njobarray}%{max_task}
 #PBS -o {outdir}
 #PBS -j oe
 #PBS -m abe
@@ -20,7 +20,7 @@ if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 """
 
 template_header_slurm = """
-#SBATCH --array=0-{njobarray}
+#SBATCH --array=0-{njobarray}%{max_task}
 #SBATCH --output={outdir}/%A_%a.out
 #SBATCH --mail-type=ALL
 ### #SBATCH --mail-user=
@@ -168,14 +168,14 @@ def writeJobFile(
             template_header_slurm = template_header_slurm(
                 "### #SBATCH --mail-user=", f"#SBATCH --mail-user={email}")
 
-    if max_task:
+    if not max_task:
         if site == 'flashy':
             template_header_pbs = template_header_pbs.replace(
-                "#PBS -t 0-{njobarray}", "#PBS -t 0-{njobarray}%"+str(max_task))
+                '#PBS -t 0-{njobarray}%{max_task}', '#PBS -t 0-{njobarray}')
         elif site == 'cedar':
-            template_header_slurm = template_header_slurm(
-                "#SBATCH --array=0-{njobarray}",
-                "#SBATCH --array=0-{njobarray}%"+str(max_task))
+            template_header_slurm = template_header_slurm.replace(
+                '#SBATCH --array=0-{njobarray}%{max_task}',
+                '#SBATCH --array=0-{njobarray}')
 
     # Job parameters
     params_dict = {
@@ -183,7 +183,8 @@ def writeJobFile(
         'njobarray' : njobs - 1,
         'name' : sample,
         'extra_args' : extra_args,
-        'outdir' : outdir
+        'outdir' : outdir,
+        'max_task' : max_task
     }
 
     ########
