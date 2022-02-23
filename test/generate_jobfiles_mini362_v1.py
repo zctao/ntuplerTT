@@ -49,7 +49,7 @@ common_args = {
     'email': os.getenv('USER')+'@phas.ubc.ca',
     'site': 'flashy',
     'local_dir': local_sample_dir,
-    'max_task': 8,
+    #'max_task': 8,
     'verbosity': 0
 }
 
