@@ -148,7 +148,8 @@ def matchAndSplitTrees(
 
         # add extra branches
         extra_variables_truth_ej = varsExtra(
-            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton"
+            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
+            sum_weights=sumWeights, is_reco=False
             )
         extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
     else:
@@ -175,7 +176,8 @@ def matchAndSplitTrees(
 
         # add extra branches
         extra_variables_truth_mj = varsExtra(
-            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton"
+            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
+            sum_weights=sumWeights, is_reco=False
             )
         extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
     else:

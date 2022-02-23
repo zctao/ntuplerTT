@@ -5,7 +5,7 @@ import ROOT
 from ROOT import TLorentzVector, TVector3
 
 class varsExtra():
-    def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights=None):
+    def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights=None, is_reco=True):
         # prefix of branches names for ttbar, hadronic top, and leptonic top
         # e.g
         # klfitter_bestPerm_ttbar, klfitter_bestPerm_topHad, klfitter_bestPerm_topLep
@@ -18,13 +18,13 @@ class varsExtra():
 
         self.sumWeights = sum_weights
         self.compute_energy = compute_energy
+        self.isReco = is_reco
 
         # event weight normalization factor
         self.xs_times_lumi_over_sumw = np.empty((1), dtype="float32")
 
         # event weights normalized to cross section, luminosity, and sum weights
         self.normalized_weight = np.empty((1), dtype="float32")
-        self.normalized_weight_mc = np.empty((1), dtype="float32")
 
         # truth event match flag
         self.isMatched = np.empty((1), dtype="int")
@@ -52,9 +52,10 @@ class varsExtra():
         tree.Branch("isMatched", self.isMatched, "isMatched/I")
         tree.Branch("isDummy", self.isDummy, "isDummy/I")
 
-        tree.Branch("normalized_weight", self.normalized_weight, "normalized_weight/F")
+        wbranch = "normalized_weight" if self.isReco else "normalized_weight_mc"
+        tree.Branch(wbranch, self.normalized_weight, wbranch+"/F")
+
         if self.sumWeights is not None:
-            tree.Branch("normalized_weight_mc", self.normalized_weight_mc, "normalized_weight_mc/F")
             tree.Branch("xs_times_lumi_over_sumw", self.xs_times_lumi_over_sumw, "xs_times_lumi_over_sumw/F")
 
         if self.compute_energy:
@@ -86,9 +87,11 @@ class varsExtra():
             else:
                 self.normalized_weight[0] = 1
         else:
-            self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
-            self.normalized_weight_mc[0] = getattr(event, 'weight_mc') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
             self.xs_times_lumi_over_sumw[0] = getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            if self.isReco:
+                self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            else:
+                self.normalized_weight[0] = getattr(event, 'weight_mc') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
 
         # hadronic top
         th_pt  = getattr(event, self.thad_prefix+'_pt')
