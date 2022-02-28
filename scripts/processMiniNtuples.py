@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-
 import os
 import tracemalloc
 
 from ntupler import matchAndSplitTrees
-from datasets import getInputFileNames
+from datasets import getInputFileNames, read_config
 from acceptance import computeAccEffCorrections
 
 import argparse
@@ -21,8 +20,8 @@ mgroup.add_argument('-t', '--parton-files', nargs='+', type=str,
 mgroup.add_argument('-p', '--particle-files', nargs='+', type=str,
                     help="Input root files containing particle level trees")
 #
-parser.add_argument('-w', '--sumweight-files', nargs='+', type=str,
-                    help="Input root files containing sum weights")
+parser.add_argument('-w', '--sumweight-config', type=str,
+                    help="Config file to read sum weight from")
 parser.add_argument('-o', '--outdir', default='.',
                     help="Output directory")
 parser.add_argument('-n', '--name', type=str, default='ntuple',
@@ -44,9 +43,11 @@ inputFiles_reco = getInputFileNames(args.reco_files)
 if args.reco_files:
     print(f"Get reco input files from {args.reco_files}")
 
-inputFiles_sumw = getInputFileNames(args.sumweight_files)
-if args.sumweight_files:
-    print(f"Get sum of weights from {args.sumweight_files}")
+if args.sumweight_config:
+    print(f"Get sum weights map from {args.sumweight_config}")
+    sumw_dict = read_config(args.sumweight_config)
+else:
+    sumw_dict = None
 
 if args.parton_files:
     # parton level
@@ -77,7 +78,7 @@ matchAndSplitTrees(
     os.path.join(args.outdir, args.name),
     inputFiles_reco,
     inputFiles_mctruth,
-    inputFiles_sumw,
+    sumWeights_dict = sumw_dict,
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
     treename = args.treename,

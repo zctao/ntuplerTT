@@ -75,7 +75,7 @@ def matchAndSplitTrees(
         outputName,
         inputFiles_reco,
         inputFiles_truth=[],
-        inputFiles_sumw=[],
+        sumWeights_dict = None,
         recoAlgo = 'klfitter', # ttbar reconstruction algorithm
         truthLevel ='parton',
         treename='nominal',
@@ -111,14 +111,6 @@ def matchAndSplitTrees(
     else:
         tree_truth = None
 
-    # Sum weights
-    if inputFiles_sumw:
-        print("Read sumWeights")
-        sumWeights = getSumWeights(inputFiles_sumw)
-        print("sum weights = ", sumWeights)
-    else:
-        sumWeights = None
-
     ##########
     # Output trees
     print("Create output trees")
@@ -138,7 +130,8 @@ def matchAndSplitTrees(
 
     # add extra branches
     extra_variables_reco_ej = varsExtra(
-        *getPrefixReco(recoAlgo), compute_energy=True, sum_weights=sumWeights
+        *getPrefixReco(recoAlgo), compute_energy=True,
+        sum_weights_map = sumWeights_dict
         )
     extra_variables_reco_ej.set_up_branches(newtree_reco_ej)
 
@@ -149,7 +142,7 @@ def matchAndSplitTrees(
         # add extra branches
         extra_variables_truth_ej = varsExtra(
             *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
-            sum_weights=sumWeights, is_reco=False
+            sum_weights_map = sumWeights_dict, is_reco=False
             )
         extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
     else:
@@ -166,7 +159,8 @@ def matchAndSplitTrees(
 
     # add extra branches
     extra_variables_reco_mj = varsExtra(
-        *getPrefixReco(recoAlgo), compute_energy=True, sum_weights=sumWeights
+        *getPrefixReco(recoAlgo), compute_energy=True,
+        sum_weights_map = sumWeights_dict
         )
     extra_variables_reco_mj.set_up_branches(newtree_reco_mj)
 
@@ -177,7 +171,7 @@ def matchAndSplitTrees(
         # add extra branches
         extra_variables_truth_mj = varsExtra(
             *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
-            sum_weights=sumWeights, is_reco=False
+            sum_weights_map = sumWeights_dict, is_reco=False
             )
         extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
     else:

@@ -166,8 +166,6 @@ def writeDataFileLists(dataset_config,
 
     if sample_name != 'data':
         # MC samples
-        suffix.append('sumWeights') # sum of weights
-
         # add parton or particle level
         if truthLevel == 'parton':
             suffix.append('tt_truth')

@@ -5,7 +5,7 @@ import ROOT
 from ROOT import TLorentzVector, TVector3
 
 class varsExtra():
-    def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights=None, is_reco=True):
+    def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights_map=None, is_reco=True):
         # prefix of branches names for ttbar, hadronic top, and leptonic top
         # e.g
         # klfitter_bestPerm_ttbar, klfitter_bestPerm_topHad, klfitter_bestPerm_topLep
@@ -16,12 +16,12 @@ class varsExtra():
         self.tlep_prefix = tlep_prefix.rstrip('_')
         self.ttbar_prefix = ttbar_prefix.rstrip('_')
 
-        self.sumWeights = sum_weights
+        self.sumWeights_d = sum_weights_map
         self.compute_energy = compute_energy
         self.isReco = is_reco
 
         # event weight normalization factor
-        self.xs_times_lumi_over_sumw = np.empty((1), dtype="float32")
+        self.sum_weights = np.empty((1), dtype="float32")
 
         # event weights normalized to cross section, luminosity, and sum weights
         self.normalized_weight = np.empty((1), dtype="float32")
@@ -55,8 +55,8 @@ class varsExtra():
         wbranch = "normalized_weight" if self.isReco else "normalized_weight_mc"
         tree.Branch(wbranch, self.normalized_weight, wbranch+"/F")
 
-        if self.sumWeights is not None:
-            tree.Branch("xs_times_lumi_over_sumw", self.xs_times_lumi_over_sumw, "xs_times_lumi_over_sumw/F")
+        if self.sumWeights_d is not None:
+            tree.Branch("sum_weights", self.sum_weights, "sum_weights/F")
 
         if self.compute_energy:
             tree.Branch(self.thad_prefix+"_E", self.thad_E, self.thad_prefix+"_E/F")
@@ -80,18 +80,28 @@ class varsExtra():
 
     def write_event(self, event):
         # normalized event weight
-        if self.sumWeights is None:
+        dsid = getattr(event, 'mcChannelNumber')
+
+        if not dsid: # for data files, mcChannelNumber is 0
             if hasattr(event, 'ASM_weight'):
-                # Data-drive fakes estimation
+                # Data-driven fakes estimation
                 self.normalized_weight[0] = getattr(event, 'ASM_weight')[0]
             else:
                 self.normalized_weight[0] = 1
         else:
-            self.xs_times_lumi_over_sumw[0] = getattr(event,'xs_times_lumi') / float(self.sumWeights)
-            if self.isReco:
-                self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
-            else:
-                self.normalized_weight[0] = getattr(event, 'weight_mc') * getattr(event,'xs_times_lumi') / float(self.sumWeights)
+            # Monte Carlo
+            if self.sumWeights_d is not None:
+                # look up sum weights from self.sumWeights_d
+                if not dsid in self.sumWeights_d:
+                    raise RuntimeError(f"Cannot find sum of weights for {dsid}")
+
+                # total sum of weights: mc16a + mc16d + mc16e
+                self.sum_weights[0] = self.sumWeights_d[dsid]['mc16a'] + self.sumWeights_d[dsid]['mc16d'] + self.sumWeights_d[dsid]['mc16e']
+
+                if self.isReco:
+                    self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / self.sum_weights[0]
+                else:
+                    self.normalized_weight[0] = getattr(event, 'weight_mc') * getattr(event, 'xs_times_lumi') / self.sum_weights[0]
 
         # hadronic top
         th_pt  = getattr(event, self.thad_prefix+'_pt')

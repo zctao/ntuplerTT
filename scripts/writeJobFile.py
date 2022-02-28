@@ -144,7 +144,8 @@ def writeJobFile(
     truth_level = '',
     local_dir = None,
     max_task = None,
-    verbosity = 0
+    verbosity = 0,
+    sumw_config = None
     ):
 
     srcdir = os.getenv('SourceDIR')
@@ -231,9 +232,19 @@ def writeJobFile(
         fin_PL = datalists['tt_PL'][0].replace('_tt_PL_0.txt', '_tt_PL_#ARRAYID#.txt')
         params_dict['input_args'] += f" -p {fin_PL}"
 
-    if 'sumWeights' in datalists:
-        fin_sumw = datalists['sumWeights'][0].replace('_sumWeights_0.txt', '_sumWeights_#ARRAYID#.txt')
-        params_dict['input_args'] += f" -w {fin_sumw}"
+    if sumw_config is None:
+        # infer the sum weights config file name based on dataset_config
+        # replace the prefix of the dataset config file name with 'sumWeights'
+        sumw_config = os.path.basename(dataset_config)
+        sumw_config = 'sumWeights'+sumw_config[sumw_config.find('_'):]
+        sumw_config = os.path.join(os.path.dirname(dataset_config), sumw_config)
+
+    if sample != 'data':
+        # check the sum weight config file exists
+        assert(os.path.isfile(sumw_config))
+
+        # add to input_args
+        params_dict['input_args'] += f" -w {sumw_config}"
 
     ########
     # job file name
@@ -285,6 +296,8 @@ if __name__ == "__main__":
                         help="Max number of active tasks at any one time")
     parser.add_argument('-v', '--verbosity', action='count', default=0,
                         help="Verbosity level")
+    parser.add_argument('-w', '--sumw-config', type=str, default=None,
+                        help="Path to th sum weights yaml config file. If None, infer the file name based on dataset config")
 
     args = parser.parse_args()
 
@@ -303,7 +316,8 @@ if __name__ == "__main__":
             truth_level = args.truth_level,
             local_dir = args.local_dir,
             max_task = args.max_tasks,
-            verbosity = args.verbosity
+            verbosity = args.verbosity,
+            sumw_config = args.sumw_config
         )
     except:
         print("Failed to generate job files.")
