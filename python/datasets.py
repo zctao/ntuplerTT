@@ -53,6 +53,9 @@ def listFiles_local(dids, directory):
                 filelist.append(fullpath)
                 sizelist.append(os.path.getsize(fullpath))
 
+    if not filelist:
+        print(f"Warning: cannot find files for {dids} in {directory}!")
+
     return filelist, sizelist
 
 def listFiles_rucio(dids, localSite='CA-SFU-T2_LOCALGROUPDISK', getLocalPath=False):
@@ -90,6 +93,9 @@ def listFiles_rucio(dids, localSite='CA-SFU-T2_LOCALGROUPDISK', getLocalPath=Fal
         if file_path:
             filelist.append(file_path)
             sizelist.append(replica['bytes'])
+
+    if not filelist:
+        print(f"Warning: cannot find files for {dids}!")
 
     return filelist, sizelist
 
