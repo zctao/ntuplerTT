@@ -75,12 +75,12 @@ met:
         - _1up
 met_res:
     type:
-        branch
+        Branch
     prefix:
         MET
     uncertainties:
         - SoftTrk
-    variables:
+    variations:
         - ResoPara
         - ResoPerp
 
