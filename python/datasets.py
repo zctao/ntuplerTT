@@ -277,3 +277,14 @@ def getInputFileNames(input_list, check_file=True):
             continue
 
     return rootFiles
+
+def getMC16SubCampaign(run_number):
+    # https://twiki.cern.ch/twiki/bin/view/AtlasProtected/DataMCForAnalysis
+    if 276073 <= run_number <= 311481: # 2015, 2016
+        return "mc16a"
+    elif 325713 <= run_number <= 340453:
+        return "mc16d"
+    elif 348885 <= run_number <= 364292:
+        return "mc16e"
+    else:
+        return "unknown"

@@ -4,6 +4,8 @@ import ROOT
 #from ROOT.Math import PtEtaPhiMVector, XYZVectorF
 from ROOT import TLorentzVector, TVector3
 
+from datasets import getMC16SubCampaign
+
 class varsExtra():
     def __init__(self, thad_prefix, tlep_prefix, ttbar_prefix, compute_energy=True, sum_weights_map=None, is_reco=True):
         # prefix of branches names for ttbar, hadronic top, and leptonic top
@@ -95,8 +97,10 @@ class varsExtra():
                 if not dsid in self.sumWeights_d:
                     raise RuntimeError(f"Cannot find sum of weights for {dsid}")
 
-                # total sum of weights: mc16a + mc16d + mc16e
-                self.sum_weights[0] = self.sumWeights_d[dsid]['mc16a'] + self.sumWeights_d[dsid]['mc16d'] + self.sumWeights_d[dsid]['mc16e']
+                # total sum of weights:
+                # infer MC subcampaign based on run number
+                subcamp = getMC16SubCampaign(getattr(event, 'runNumber'))
+                self.sum_weights[0] = self.sumWeights_d[dsid][subcamp]
 
                 if self.isReco:
                     self.normalized_weight[0] = getattr(event, 'totalWeight_nominal') * getattr(event,'xs_times_lumi') / self.sum_weights[0]
