@@ -103,7 +103,7 @@ CVMFS
 
       source test/submit_mini362_v1.sh
       
-- Check job status:
+- To check job outputs:
 
       python scripts/checkOutputs.py -j <job_summary.yaml>
       
