@@ -89,10 +89,18 @@ def submitJobs(
             if not s in jobs_dict[category]:
                 print(f"WARNING: {s} not in [{category}]")
                 continue
-            for syst in systematics:
+
+            # all available systematics
+            systematics_cfg = list(jobs_dict[category][s].keys())
+
+            for syst in systematics_cfg:
+                # filter syst based on the systematics argument
+                if not any(keyword in syst for keyword in systematics):
+                    continue
+
                 for e in eras:
                     if submitted_dict[category][s][syst][e] and not resubmit:
-                        print("WARNING: [{category}][{s}][{syst}][{e}] has already been submitted")
+                        print(f"WARNING: [{category}][{s}][{syst}][{e}] has already been submitted")
                         continue
                     submit(jobs_dict[category][s][syst][e], args_string, dry_run)
                     submitted_dict[category][s][syst][e] = True
@@ -103,7 +111,7 @@ def submitJobs(
                 continue
             for e in eras:
                 if submitted_dict[category][s][e] and not resubmit:
-                    print("WARNING: {[category]}{[s]}{[e]} has already been submitted")
+                    print(f"WARNING: {[category]}{[s]}{[e]} has already been submitted")
                     continue
                 submit(jobs_dict[category][s][e], args_string, dry_run)
                 submitted_dict[category][s][e] = True
