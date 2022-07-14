@@ -238,7 +238,11 @@ t_done = time.time()
 print(f"Total time: {(t_done-t_start)/60.:.2f} min")
 
 # write dict to disk
-foutname = 'jobfiles.yaml'
+foutname = 'configs/jobs_mini362_v1/jobfiles.yaml'
+
+if not os.path.isdir(os.path.dirname(foutname)):
+    os.makedirs(os.path.dirname(foutname))
+
 print(f"Write job file config: {foutname}")
 with open(foutname, 'w') as outfile:
     yaml.dump(jobfiles_dict, outfile)
