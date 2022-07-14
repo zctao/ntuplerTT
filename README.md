@@ -72,6 +72,10 @@ CVMFS
 
       python scripts/processMiniNtuples.py -h
 
+  A script for a quick test run:
+
+      source test/quick_test.sh 
+
 - To prepare and produce batch job files to be submitted to a cluster:
 
       python scripts/writeJobFile.py <sample_name> -d <dataset_config.yaml> -o <output_directory> -c <subcampaign or year> -t <truth_level> -l <local_directory_to_read_input_files> -w <sum_weight_config.yaml>
@@ -84,4 +88,24 @@ CVMFS
   
       python test/generate_jobfiles_mini362_v1.py
 
-  It writes job files, which can be submitted using qsub later, to ${HOME}/data/batch_output/NtupleTT/latest/ by default.
+  It writes job files, which can be submitted using qsub later, to ${HOME}/data/batch_output/NtupleTT/latest/ by default. 
+  A summary of these job files is also written to configs/jobs_mini362_v1/jobfiles.yaml.
+
+- To submit the jobs:
+
+      python scripts/submitJobs.py <job_summary.yaml> -c <sample_category> -s <list_of_sample_names> -u <list_of_systematics>
+
+  It generates a job submission status file with suffix "_submitted" based on the `<job_summary.yaml>` (configs/jobs_mini362_v1/jobfiles.yaml).
+
+  Any systematic uncertainty in `<job_summary.yaml>` is included if its name contains one of the elements in `<list_of_systematics>`.
+
+  A example script to submit all jobs generated in the previous step:
+
+      source test/submit_mini362_v1.sh
+      
+- To check job outputs:
+
+      python scripts/checkOutputs.py -j <job_summary.yaml>
+      
+  It generates a yaml file (in the same directory as `<job_summary.yaml>` by default) that reports the fraction of complete outputs.
+
