@@ -11,6 +11,9 @@ def checkROOTinDir(dirname):
         if not fname.endswith(".root"):
             continue
 
+        if fname.endswith("_acc.root") or fname.endswith("_eff.root"):
+            continue
+
         # found a ROOT file
         nfiles += 1
         fullname = os.path.join(dirname, fname)
