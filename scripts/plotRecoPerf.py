@@ -26,6 +26,16 @@ def drawFromTree(
     h_res_pt = gDirectory.Get(hname_pt)
     h_res_pt.Write()
 
+    # mass resolution
+    m_reco = f"{reco_prefix}_m"
+    m_truth = f"({truth_prefix}_m/1000)" # convert MeV to GeV
+    hname_m = f"h_{label}_res_m"
+    bins_m = "(100, -1, 5)"
+
+    tree.Draw(f"({m_reco}/{m_truth})-1>>{hname_m}{bins_m}", selections)
+    h_res_m = gDirectory.Get(hname_m)
+    h_res_m.Write()
+
     # y residual
     y_reco = f"{reco_prefix}_y"
     y_truth = f"{truth_prefix}_y"
@@ -106,6 +116,48 @@ def plotRecoPerf(inputfiles, output, treename_reco, treename_truth=None):
         reco_prefix = "PseudoTop_Reco_top_lep",
         truth_prefix = "MC_tlep_afterFSR",
         selections="MC_ttbar_afterFSR_pt/1000>250")
+
+    print("PseudoTop central eta")
+    outfile.mkdir("PseudoTop_central")
+    outfile.cd("PseudoTop_central")
+    drawFromTree(
+        tree_reco, "ttbar",
+        reco_prefix = "PseudoTop_Reco_ttbar",
+        truth_prefix = "MC_ttbar_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5")
+
+    drawFromTree(
+        tree_reco, "thad",
+        reco_prefix = "PseudoTop_Reco_top_had",
+        truth_prefix = "MC_thad_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5")
+
+    drawFromTree(
+        tree_reco, "tlep",
+        reco_prefix = "PseudoTop_Reco_top_lep",
+        truth_prefix = "MC_tlep_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5")
+
+    print("PseudoTop central eta high pT")
+    outfile.mkdir("PseudoTop_central_highPt")
+    outfile.cd("PseudoTop_central_highPt")
+    drawFromTree(
+        tree_reco, "ttbar",
+        reco_prefix = "PseudoTop_Reco_ttbar",
+        truth_prefix = "MC_ttbar_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5&&MC_ttbar_afterFSR_pt/1000>250")
+
+    drawFromTree(
+        tree_reco, "thad",
+        reco_prefix = "PseudoTop_Reco_top_had",
+        truth_prefix = "MC_thad_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5&&MC_ttbar_afterFSR_pt/1000>250")
+
+    drawFromTree(
+        tree_reco, "tlep",
+        reco_prefix = "PseudoTop_Reco_top_lep",
+        truth_prefix = "MC_tlep_afterFSR",
+        selections="abs(MC_ttbar_afterFSR_eta)<2.5&&MC_ttbar_afterFSR_pt/1000>250")
 
     outfile.Close()
 
