@@ -151,6 +151,9 @@ def processFilenames(datasets_dict, filenames, scope, filters=[]):
         datasets_dict[ sample_dict['label'] ][ sample_dict['era'] ].append(
             sample_dict['dataset_name'])
 
+        # sort the list
+        datasets_dict[ sample_dict['label'] ][ sample_dict['era'] ].sort()
+
     # end of for sample_name in filenames
 
     return datasets_dict
