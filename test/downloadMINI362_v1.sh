@@ -1,6 +1,10 @@
 #!/bin/bash
 
 datadir=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1
+if [ ! -d ${datadir} ]; then
+    echo "Create directory ${datadir}"
+    mkdir -p ${datadir}
+fi
 
 # Observed data
 config_obs=configs/datasets/ttdiffxs361/datasets_obs.yaml
