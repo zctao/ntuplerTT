@@ -49,6 +49,7 @@ def parseDataFileName(filename, scope, version_tag='v01_p4345'):
 
     year = fname_split[1]
     results['era'] = year
+
     # last two digits
     yy = year[-2:]
 
@@ -140,6 +141,11 @@ def processFilenames(datasets_dict, filenames, scope, filters=[]):
 
         if sample_dict['era'] is None:
             print(f"Cannot determine the year/subcampaign for {dataset_name}")
+            continue
+
+        # A special case: kkip in case of combined samples
+        if len(sample_dict['era'].split('_')) > 1:
+            print(f"Skip combined sample {sample_dict['label']} {sample_dict['era']}")
             continue
 
         if not sample_dict['label'] in datasets_dict:
@@ -242,10 +248,13 @@ def removeDuplicates(datasets):
             sample_list = datasets[label][era]
 
             dsid_dict = {}
-            for i, name in enumerate(sample_list):
-                dsid = name.split('.')[2]
-                if dsid == 'AllYear': # data sample, skip for now
+            for name in sample_list:
+                if not name:
                     continue
+
+                dsid = name.split('.')[2]
+                if dsid == 'AllYear': # data sample, use year
+                    dsid = era
 
                 if not dsid in dsid_dict:
                     dsid_dict[dsid] = name
@@ -265,7 +274,7 @@ def removeDuplicates(datasets):
                     else:
                         # add this one to the unused samples
                         datasets_unused[label][era].append(name)
-            # end of for i, name in enumerate(sample_list)
+            # end of for name in sample_list
 
             # update sample list
             datasets[label][era] = list(dsid_dict.values())
