@@ -274,6 +274,40 @@ def removeDuplicates(datasets):
     if datasets_unused:
         datasets['unused'] = datasets_unused
 
+def isFastSim(sample_name):
+    # Extract AMI tag from sample_name
+    # Assume all samples are DAOD_TOPQ1
+    sname_tuple = sample_name.partition('.DAOD_TOPQ1.')
+    suffix = sname_tuple[-1]
+    tags = suffix.split('.')[0]
+    return '_a' in tags
+
+def addFastSimSample(datasets, sample_label='ttbar'):
+    datasets_fastsim = {}
+
+    for label in datasets:
+        if label != sample_label: # not what we are looking for
+            continue
+
+        label_afii = label+'_AFII'
+
+        for era in datasets[label]:
+            sample_list = datasets[label][era]
+
+            for sname in sample_list:
+                if not isFastSim(sname):
+                    continue
+
+                # Add it to datasets_fastsim
+                if not label_afii in datasets_fastsim:
+                    datasets_fastsim[label_afii] = {}
+                if not era in datasets_fastsim[label_afii]:
+                    datasets_fastsim[label_afii][era] = list()
+
+                datasets_fastsim[label_afii][era].append(sname)
+
+    datasets.update(datasets_fastsim)
+
 def produceSampleList(url, headers, output='dataset_list.yaml', filters=[]):
     datasets_dict = dict()
 
@@ -283,6 +317,9 @@ def produceSampleList(url, headers, output='dataset_list.yaml', filters=[]):
     while 'next' in r.links:
         r = requests.get(r.links['next']['url'], headers=headers)
         processPage(datasets_dict, r.json(), filters=filters, scope='user.mromano')
+
+    # add nominal ttbar fast sim
+    addFastSimSample(datasets_dict, sample_label='ttbar')
 
     # clean up the sample list
     removeDuplicates(datasets_dict)
@@ -298,6 +335,9 @@ def produceSampleList_local(filelists_directory, output='dataset_list.yaml', fil
     datasets_dict = dict()
 
     processFilenames(datasets_dict, os.listdir(filelists_directory), scope='user.mromano', filters=filters)
+
+    # add nominal ttbar fast sim
+    addFastSimSample(datasets_dict, sample_label='ttbar')
 
     # clean up the sample list
     removeDuplicates(datasets_dict)
