@@ -72,6 +72,11 @@ def parseMCFileName(filename, scope):
     assert(fname_split[0] == 'mc')
 
     dsid = fname_split[1]
+    try: # cast to int if possible
+        dsid = int(dsid)
+    except:
+        pass
+
     physics_short = fname_split[2]
     tags = fname_split[3]
 
@@ -84,7 +89,7 @@ def parseMCFileName(filename, scope):
 
     results['label'] = None
     for l in dsgen_dict['dsid']:
-        if int(dsid) in dsgen_dict['dsid'][l]:
+        if dsid in dsgen_dict['dsid'][l]:
             results['label'] = l
             break
 
@@ -100,10 +105,9 @@ def parseMCFileName(filename, scope):
 
     return results
 
-def processPage(datasets_dict, json_from_requests, scope='user.mromano', filters=[]):
+def processFilenames(datasets_dict, filenames, scope, filters=[]):
 
-    for entry in json_from_requests:
-        sample_name = entry['name']
+    for sample_name in filenames:
 
         # Only need to check the file name that ends with '_tt.txt'
         if not sample_name.endswith('_tt.txt'):
@@ -147,9 +151,14 @@ def processPage(datasets_dict, json_from_requests, scope='user.mromano', filters
         datasets_dict[ sample_dict['label'] ][ sample_dict['era'] ].append(
             sample_dict['dataset_name'])
 
-    # end of for entry in json_from_requests
+    # end of for sample_name in filenames
 
     return datasets_dict
+
+def processPage(datasets_dict, json_from_requests, scope, filters=[]):
+    filename_list = [entry['name'] for entry in json_from_requests]
+
+    processFilenames(datasets_dict, filename_list, scope=scope, filters=filters)
 
 def isPreferredSample(sample_name, sample_name_ref):
     # Return True is sample_name is preferred compared to sample_name_ref
@@ -231,11 +240,9 @@ def removeDuplicates(datasets):
 
             dsid_dict = {}
             for i, name in enumerate(sample_list):
-                try:
-                    dsid = int(name.split('.')[2])
-                except:
-                    # Likely a data sample. Skip for now
-                    dsid = int(era)
+                dsid = name.split('.')[2]
+                if dsid == 'AllYear': # data sample, skip for now
+                    continue
 
                 if not dsid in dsid_dict:
                     dsid_dict[dsid] = name
@@ -271,11 +278,26 @@ def produceSampleList(url, headers, output='dataset_list.yaml', filters=[]):
     datasets_dict = dict()
 
     r = requests.get(url, headers=headers)
-    processPage(datasets_dict, r.json(), filters=filters)
+    processPage(datasets_dict, r.json(), filters=filters, scope='user.mromano')
 
     while 'next' in r.links:
         r = requests.get(r.links['next']['url'], headers=headers)
-        processPage(datasets_dict, r.json(), filters=filters)
+        processPage(datasets_dict, r.json(), filters=filters, scope='user.mromano')
+
+    # clean up the sample list
+    removeDuplicates(datasets_dict)
+
+    # write to file
+    if not datasets_dict:
+        print("WARNING: no sample found")
+
+    with open(output, 'w') as outfile:
+        yaml.dump(datasets_dict, outfile)
+
+def produceSampleList_local(filelists_directory, output='dataset_list.yaml', filters=[]):
+    datasets_dict = dict()
+
+    processFilenames(datasets_dict, os.listdir(filelists_directory), scope='user.mromano', filters=filters)
 
     # clean up the sample list
     removeDuplicates(datasets_dict)
@@ -292,9 +314,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('token', type=str,
-                        help="Gitlab access token")
+    parser.add_argument('token_or_directory', type=str,
+                        help="Gitlab access token or local directory of the repository that stores the file lists")
     parser.add_argument('-s', '--sample-tag', type=str, default="MINI362_v1",
                         help="Mini-ntuple production tag")
     parser.add_argument('-f', '--filters', default=[], type=str, nargs='*',
@@ -304,14 +325,25 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # project info
-    # https://gitlab.cern.ch:8443/ttbarDiffXs13TeV/pyTTbarDiffXs13TeV
-    project = "17479"
-    branch = "DM_ljets_resolved"
-    sampletag = args.sample_tag
-    headers={"PRIVATE-TOKEN": args.token}
-    per_page=100
+    if os.path.isdir(args.token_or_directory):
+        # get the sample list from local repo directory
+        print (f"Get sample list from {args.token_or_directory}")
 
-    url = f"https://gitlab.cern.ch/api/v4/projects/{project}/repository/tree?ref={branch}&path=data/CERN/filelists_{sampletag}&per_page={per_page}&pagination=keyset"
+        samplelist_dir = os.path.join(args.token_or_directory, 'data', 'CERN', f'filelists_{args.sample_tag}')
+        produceSampleList_local(samplelist_dir, args.output, filters=args.filters)
 
-    produceSampleList(url, headers, args.output, filters=args.filters)
+    else:
+        # try accessing the sample list from gitlab
+        print("Get sample list from https://gitlab.cern.ch:8443/ttbarDiffXs13TeV/pyTTbarDiffXs13TeV")
+
+        # project info
+        # https://gitlab.cern.ch:8443/ttbarDiffXs13TeV/pyTTbarDiffXs13TeV
+        project = "17479"
+        branch = "DM_ljets_resolved"
+        sampletag = args.sample_tag
+        headers={"PRIVATE-TOKEN": args.token_or_directory}
+        per_page=100
+
+        url = f"https://gitlab.cern.ch/api/v4/projects/{project}/repository/tree?ref={branch}&path=data/CERN/filelists_{sampletag}&per_page={per_page}&pagination=keyset"
+
+        produceSampleList(url, headers, args.output, filters=args.filters)
