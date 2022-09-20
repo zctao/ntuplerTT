@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
 import os
+import sys
 import yaml
 import time
 
 from datasets import read_config
 from writeJobFile import writeJobFile
+
+# Usage
+def printHelp():
+    print("Usage: python generate_jobfiles_mini362_v1.py [site]")
+
+site = 'atlasserv' # default, options: atlasserv, flashy, cedar
+if len(sys.argv) == 1:
+    pass
+elif len(sys.argv) == 2:
+    if sys.argv[1] in ['-h', '-?', 'help']:
+        printHelp()
+        sys.exit()
+    else:
+        site = sys.argv[1]
+else:
+    printHelp()
+    sys.exit()
 
 ##
 # local directory where input sample files are stored
@@ -13,7 +31,7 @@ local_sample_dir = os.path.join(
 
 ##
 # output directory
-topoutdir = os.path.join(os.getenv("HOME"), 'data/batch_output/NtupleTT/latest')
+topoutdir = os.path.join(os.getenv("HOME"), 'data/NtupleTT/latest')
 
 if not os.path.isdir(topoutdir):
     os.makedirs(topoutdir)
@@ -47,7 +65,7 @@ t_start = time.time()
 # Common arguments for writeJobFile
 common_args = {
     'email': os.getenv('USER')+'@phas.ubc.ca',
-    'site': 'flashy',
+    'site': site,
     'local_dir': local_sample_dir,
     #'max_task': 8,
     'verbosity': 0

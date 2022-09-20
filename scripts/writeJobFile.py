@@ -10,7 +10,6 @@ template_header_pbs = """#!/bin/bash
 #PBS -m abe
 ### #PBS -M
 #PBS -l nodes=1
-#PBS -V
 
 export FRONTIER="(http://frontier.triumf.ca:3128/ATLAS_frontier)(proxyurl=http://lcg-adm1.sfu.computecanada.ca:3128)(proxyurl=http://lcg-adm2.sfu.computecanada.ca:3128)(proxyurl=http://lcg-adm3.sfu.computecanada.ca:3128)"
 
@@ -19,12 +18,13 @@ if [ ! -v PBS_JOBID ]; then PBS_JOBID=42; fi
 if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 """
 
-template_header_slurm = """
+template_header_slurm = """#!/bin/bash
 #SBATCH --array=0-{njobarray}%{max_task}
 #SBATCH --output={outdir}/%A_%a.out
 #SBATCH --mail-type=ALL
 ### #SBATCH --mail-user=
 #SBATCH --mem=4G
+#SBATCH --export=NONE
 """
 
 template_env_atlas = """
@@ -37,11 +37,6 @@ source {ntupler_dir}/setup_atlas.sh
 #export X509_USER_PROXY=
 
 echo "SourceDIR = $SourceDIR"
-WorkDIR=#TMP#/$USER/$(date +'%Y%m%d%H%M%S')
-mkdir -p $WorkDIR
-cd $WorkDIR
-echo "Change to work directory: $WorkDIR"
-echo "PWD = $PWD"
 """
 
 template_env_lcg = """
@@ -50,7 +45,9 @@ echo HOSTNAME=$HOSTNAME
 # set up environment
 source {ntupler_dir}/setup_lcg.sh LCG_100
 echo "SourceDIR = $SourceDIR"
+"""
 
+template_workdir = """
 WorkDIR=#TMP#/$USER/$(date +'%Y%m%d%H%M%S')
 mkdir -p $WorkDIR
 cd $WorkDIR
@@ -66,20 +63,20 @@ echo OUTDIR=$OUTDIR
 # start running
 python3 $SourceDIR/scripts/processMiniNtuples.py -n {name}_#ARRAYID# -o $OUTDIR {input_args} {extra_args}
 
+echo exit code $?
+"""
+
+template_cleanup = """
 # clean up
 cd ..
 rm -rf $WorkDIR
-
-if [ $? -ne 0 ]; then
-    exit $?
-fi
 """
 
 def writeJobFile_flashy(pars_dict, filename, verbosity=1):
     # PBS jobs on atlas-t3-ubc.westgrid.ca
     # $PBS_ARRAYID, $PBS_JOBID, /tmp
 
-    jobscripts = template_header_pbs + template_env_atlas + template_mntuple
+    jobscripts = template_header_pbs + template_env_atlas + template_workdir + template_mntuple + template_cleanup
     jobscripts = jobscripts.format(**pars_dict)
     jobscripts = jobscripts.replace('#ARRAYID#', '${PBS_ARRAYID}')
     jobscripts = jobscripts.replace('#TMP#', '/tmp')
@@ -94,6 +91,24 @@ def writeJobFile_flashy(pars_dict, filename, verbosity=1):
         print("To submit the job to cluster:")
         print("qsub -l walltime=<hh:mm:ss>", filename)
 
+def writeJobFile_atlasserv(pars_dict, filename, verbosity=1):
+    # Slurm jobs on atlasserv2.phas.ubc.ca
+    # $SLURM_ARRAY_TASK_ID, $SLURM_JOB_ID, /mnt/xrootdg/tmp (for now)
+    jobscripts = template_header_slurm + template_env_atlas + template_mntuple
+    jobscripts = jobscripts.format(**pars_dict)
+    jobscripts = jobscripts.replace('#ARRAYID#', '${SLURM_ARRAY_TASK_ID}')
+    jobscripts = jobscripts.replace('#TMP#', '/mnt/xrootdg/tmp') # For now
+
+    if verbosity > 0:
+        print("Create job file:", filename)
+    fjobfile = open(filename, 'w')
+    fjobfile.write(jobscripts)
+    fjobfile.close()
+
+    if verbosity > 0:
+        print("To submit the job to cluster:")
+        print("sbatch --time=<hh:mm:ss>", filename)
+
 def writeJobFile_cedar(pars_dict, filename, verbosity=1):
     # Slurm jobs on cedar.computecanada.ca
     # $SLURM_ARRAY_TASK_ID, $SLURM_JOB_ID, $SLURM_TMPDIR
@@ -102,12 +117,12 @@ def writeJobFile_cedar(pars_dict, filename, verbosity=1):
     template_jobfile = subprocess.check_output(['batchScript','RUNPLACEHOLDER']).decode('utf-8')
 
     # add job directives after #! /bin/bash -l
-    template_jobfile = template_jobfile.replace('#! /bin/bash -l\n', '#! /bin/bash -l\nDIRECTIVES\n')
+    template_jobfile = template_jobfile.replace('#! /bin/bash -l\n', 'DIRECTIVES\n')
 
     template_jobfile = template_jobfile.replace("DIRECTIVES", template_header_slurm.format(**pars_dict))
 
     # run script
-    runscript = template_env_lcg + template_mntuple
+    runscript = template_env_lcg + template_workdir + template_mntuple + template_cleanup
     runscript = runscript.format(**pars_dict)
     runscript = "array_id=${1}\n" + runscript
     runscript = runscript.replace('#ARRAYID#', '${array_id}')
@@ -148,6 +163,14 @@ def writeJobFile(
     sumw_config = None
     ):
 
+    # get the type of job manager based on the site
+    if site in ['flashy']:
+        job_manager = 'torque'
+    elif site in ['cedar', 'atlasserv']:
+        job_manager = 'slurm'
+    else:
+        raise RuntimeError(f"Unknown site {site}")
+
     srcdir = os.getenv('SourceDIR')
     if srcdir is None:
         raise RuntimeError("SourceDIR is not set.")
@@ -162,18 +185,18 @@ def writeJobFile(
             "#export X509_USER_PROXY=", f"export X509_USER_PROXY={grid_proxy}")
 
     if email:
-        if site == 'flashy':
+        if job_manager == 'torque':
             template_header_pbs = template_header_pbs.replace(
                 "### #PBS -M", f"#PBS -M {email}")
-        elif site == 'cedar':
-            template_header_slurm = template_header_slurm(
+        elif job_manager == 'slurm':
+            template_header_slurm = template_header_slurm.replace(
                 "### #SBATCH --mail-user=", f"#SBATCH --mail-user={email}")
 
     if not max_task:
-        if site == 'flashy':
+        if job_manager == 'torque':
             template_header_pbs = template_header_pbs.replace(
                 '#PBS -t 0-{njobarray}%{max_task}', '#PBS -t 0-{njobarray}')
-        elif site == 'cedar':
+        elif job_manager == 'slurm':
             template_header_slurm = template_header_slurm.replace(
                 '#SBATCH --array=0-{njobarray}%{max_task}',
                 '#SBATCH --array=0-{njobarray}')
@@ -254,10 +277,12 @@ def writeJobFile(
     # write job file
     if site == 'flashy':
         writeJobFile_flashy(params_dict, foutname, verbosity)
+    elif site == 'atlasserv':
+        writeJobFile_atlasserv(params_dict, foutname, verbosity)
     elif site == 'cedar':
         writeJobFile_cedar(params_dict, foutname, verbosity)
     else:
-        raise RuntimeError(f"Unknown site {site}")
+        raise RuntimeError(f"Unknown job manager {job_manager}")
 
     return foutname
 
