@@ -5,6 +5,13 @@ ttbar:
   - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10201_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
   mc16e:
   - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10724_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
+ttbar_AFII:
+  mc16a:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r9364_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
+  mc16d:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10201_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
+  mc16e:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10724_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
 ttbar_hw:
   mc16a:
   - user.mromano.411233.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r9364_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
@@ -37,6 +44,13 @@ ttbar_mt176:
   - user.mromano.411059.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10724_p4346.TTDIFFXS361_v08.MINI362_v2_klfitter
 unused:
   ttbar:
+    mc16a:
+    - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r9364_p4346.TTDIFFXS361_v08.MINI362_v1_klfitter
+    mc16d:
+    - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10201_p4346.TTDIFFXS361_v08.MINI362_v1_klfitter
+    mc16e:
+    - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10724_p4346.TTDIFFXS361_v08.MINI362_v1_klfitter
+  ttbar_AFII:
     mc16a:
     - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r9364_p4346.TTDIFFXS361_v08.MINI362_v1_klfitter
     mc16d:

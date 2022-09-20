@@ -27,7 +27,7 @@ syst_dict = read_config(syst_config)
 ##
 # number of jobs for each sample
 # TODO: update this
-njobs_dict = {'ttbar': 10, 'ttbar_amc': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10}
+njobs_dict = {'ttbar': 10, 'ttbar_amc': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10. 'ttbar_AFII': 10}
 
 def getSystTreeNames():
     trees = []
@@ -213,6 +213,28 @@ for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', '
         )
 
         jobfiles_dict['mcWAlt'][signal][era] = fname_tt
+
+# ttbar FastSim
+sample_name = "ttbar_AFII"
+print(sample_name)
+jobfiles_dict['mcWAlt'][sample_name] = {}
+
+# A special sum weights config for ttbar AFII
+sumw_config_afii = os.path.join(os.path.dirname(dataset_mcWAlt_config), "sumWeights_mcWAlt_AFII.yaml")
+
+for era in ['mc16a', 'mc16d', 'mc16e']:
+    print(f"  {era}")
+
+    fname_tt = writeJobFile(
+        sample_name,
+        dataset_mcWAlt_config,
+        outdir = os.path.join(topoutdir,'mcWAlt',f'{sample_name}_nominal',f'{era}'),
+        subcampaigns = [era],
+        truth_level = 'parton',
+        njobs = njobs_dict.get(sample_name, 1),
+        sumw_config = sumw_config_afii,
+        **common_args
+    )
 
 # MC backgrounds
 for bkg in ['VV', 'VV_syst', 'singleTop', 'singleTop_DS', 'singleTop_amc', 'singleTop_hw', 'ttH', 'ttV', 'ttV_syst']:
