@@ -27,7 +27,7 @@ syst_dict = read_config(syst_config)
 ##
 # number of jobs for each sample
 # TODO: update this
-njobs_dict = {'ttbar': 10, 'ttbar_amc': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10. 'ttbar_AFII': 10}
+njobs_dict = {'ttbar': 10, 'ttbar_amc': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10, 'ttbar_AFII': 10}
 
 def getSystTreeNames():
     trees = []
