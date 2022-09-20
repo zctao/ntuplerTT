@@ -265,6 +265,8 @@ def writeJobFile(
     if sample != 'data':
         # check the sum weight config file exists
         assert(os.path.isfile(sumw_config))
+        # convert it to absolute path
+        sumw_config = os.path.abspath(sumw_config)
 
         # add to input_args
         params_dict['input_args'] += f" -w {sumw_config}"
