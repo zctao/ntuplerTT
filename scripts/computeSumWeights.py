@@ -40,11 +40,7 @@ def computeSumWeights(
 
             for dn in dsname:
                 # e.g. user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v05.MINI362_v1
-                try:
-                    dsid = int(dn.split('.')[2])
-                except:
-                    dsid = dn.split('.')[2]
-
+                dsid = int(dn.split('.')[2])
                 if verbosity > 1:
                     print(f"    {dsid}")
 
