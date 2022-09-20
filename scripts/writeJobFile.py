@@ -280,15 +280,15 @@ if __name__ == "__main__":
                         help="Number of jobs to run. If non-positive, set the number of jobs such that there is one input file per job")
     parser.add_argument('--submit-dir', type=str,
                         help="Directory to write job scripts and input lists. If none, set to outdir")
-    parser.add_argument('-g', '--grid-proxy', default="$HOME/x509up_u$(id -u)",
+    parser.add_argument('-g', '--grid-proxy', #default="$HOME/x509up_u$(id -u)",
                         help="Grid proxy for accessing files via xrootd")
     parser.add_argument('-e', '--email', type=str,
                         default="os.getenv('USER')+'@phas.ubc.ca'")
-    parser.add_argument('-s', '--site', choices=['flashy', 'cedar'],
+    parser.add_argument('-s', '--site', choices=['flashy', 'cedar', 'atlasserv'],
                         default='flashy',
                         help="Host to run batch jobs")
-    parser.add_argument('-t', '--truth-level', nargs='+',
-                        choices=['parton', 'particle'], default=[],
+    parser.add_argument('-t', '--truth-level',
+                        choices=['parton', 'particle', ''], default='',
                         help="truth levels")
     parser.add_argument('-l', '--local-dir', type=str, default=None,
                         help="Look for sample files in the local directory if provided")
@@ -311,7 +311,7 @@ if __name__ == "__main__":
             njobs = args.njobs,
             submit_dir = args.submit_dir,
             grid_proxy = args.grid_proxy,
-            email = args.email,
+            email = eval(args.email),
             site = args.site,
             truth_level = args.truth_level,
             local_dir = args.local_dir,
