@@ -15,6 +15,9 @@ def computeSumWeights(
 
     sumw_map = dict()
 
+    # Another map for ttbar fast sim samples
+    sumw_afii_map = dict()
+
     if verbosity:
         print(f"Read dataset config from {dataset_config}")
     datasets_dict = read_config(dataset_config)
@@ -26,6 +29,11 @@ def computeSumWeights(
 
         if sample_name == 'unused':
             continue
+
+        if sample_name == 'ttbar_AFII':
+            sumw_map_tofill = sumw_afii_map
+        else:
+            sumw_map_tofill = sumw_map
 
         if verbosity:
             print(f"sample {sample_name}")
@@ -40,12 +48,18 @@ def computeSumWeights(
 
             for dn in dsname:
                 # e.g. user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v05.MINI362_v1
-                dsid = int(dn.split('.')[2])
+                dsid = dn.split('.')[2]
+                # try cast dsid to int, otherwise skip
+                try:
+                    dsid = int(dsid)
+                except:
+                    print(f"WARNING: DSID {dsid} not a number. Skip.")
+
                 if verbosity > 1:
                     print(f"    {dsid}")
 
-                if not dsid in sumw_map:
-                    sumw_map[dsid] = {}
+                if not dsid in sumw_map_tofill:
+                    sumw_map_tofill[dsid] = {}
 
                 # get the corresponding sumWeight files
                 fname_sumw = dn.rstrip('_')+'_sumWeights.root'
@@ -56,10 +70,10 @@ def computeSumWeights(
 
                 # compute sum weights
                 sumw = getSumWeights(flist_sumw)
-                sumw_map[dsid][era] = sumw
+                sumw_map_tofill[dsid][era] = sumw
 
     # save the sum weight dict to disk
-    if not sumw_map:
+    if not sumw_map or not sumw_afii_map:
         return
 
     # replace the prefix of the dataset config file name with 'sumWeights'
@@ -77,6 +91,17 @@ def computeSumWeights(
 
     with open(fname_wcfg, 'w') as outfile:
         yaml.dump(sumw_map, outfile)
+
+    # write sumw_afii_map to a separate file if it is not empty
+    if sumw_afii_map:
+        fname_wcfg_base, fname_wcfg_ext = os.path.splitext(fname_wcfg)
+        fname_wcfg_afii = fname_wcfg_base+'_AFII'+fname_wcfg_ext
+
+        if verbosity:
+            print(f"Write sum weight map to file {fname_wcfg_afii}")
+
+        with open(fname_wcfg_afii, 'w') as outfile:
+            yaml.dump(sumw_afii_map, outfile)
 
 if __name__ == "__main__":
 
