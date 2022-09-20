@@ -319,7 +319,7 @@ if __name__ == "__main__":
                         help="truth levels")
     parser.add_argument('-l', '--local-dir', type=str, default=None,
                         help="Look for sample files in the local directory if provided")
-    parser.add_argument('-m', '--max-tasks', type=int, default=8,
+    parser.add_argument('-m', '--max-tasks', type=int,
                         help="Max number of active tasks at any one time")
     parser.add_argument('-v', '--verbosity', action='count', default=0,
                         help="Verbosity level")
