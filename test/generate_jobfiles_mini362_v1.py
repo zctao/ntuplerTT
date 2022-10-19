@@ -254,6 +254,8 @@ for era in ['mc16a', 'mc16d', 'mc16e']:
         **common_args
     )
 
+    jobfiles_dict['mcWAlt'][sample_name][era] = fname_tt
+
 # MC backgrounds
 for bkg in ['VV', 'VV_syst', 'singleTop', 'singleTop_DS', 'singleTop_amc', 'singleTop_hw', 'ttH', 'ttV', 'ttV_syst']:
     print(f"{bkg}")
