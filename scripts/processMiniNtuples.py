@@ -33,6 +33,8 @@ parser.add_argument('-c', '--compute-corrections', action='store_true',
 parser.add_argument('-a', '--algorithm-topreco',
                     choices=['pseudotop', 'klfitter'], default='pseudotop',
                     help="Top reconstruction algorithm")
+parser.add_argument('-d', '--duplicate-removal', action='store_true',
+                    help="If True, check for events with duplicated event IDs and remove them")
 parser.add_argument('--treename', type=str, default='nominal',
                     help="Tree name of reco level input")
 
@@ -84,7 +86,8 @@ matchAndSplitTrees(
     treename = args.treename,
     saveUnmatchedReco = True,
     saveUnmatchedTruth = truth_level=='particle', # TODO: check this
-    maxevents = args.maxevents
+    maxevents = args.maxevents,
+    checkDuplicate = args.duplicate_removal
 )
 
 mcurrent, mpeak = tracemalloc.get_traced_memory()
