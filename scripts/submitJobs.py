@@ -12,8 +12,14 @@ def init_dict(job_file_dict, val=False):
 
     return sub_dict
 
-def submit(fname_job, args='', dry_run=False):
-    commands = ['qsub']
+def submit(fname_job, args='', dry_run=False, batch_system='flashy'):
+
+    commands = []
+
+    if batch_system in ['flashy','pbs','torque', 'qsub']:
+        commands += ['qsub', '-l', 'walltime=8:0:0']
+    elif batch_system in ['atlasserv', 'slurm', 'sbatch']:
+        commands += ['sbatch', '--time=8:0:0']
 
     if args:
         commands += args.split()
@@ -33,7 +39,8 @@ def submitJobs(
     args_string='', # command line arguments to be passed to qsub
     jobs_submitted=None, # yaml files to keep track of the submitted jobs
     resubmit=False, # if True, resubmit the jobs even if they have been submitted
-    dry_run=False # if True, print the qsub command instead of executing it
+    dry_run=False, # if True, print the qsub command instead of executing it
+    batch_system='pbs' # or 'slurm'
     ):
 
     # load the dictionary of jobs that are ready to be submitted
@@ -82,7 +89,7 @@ def submitJobs(
             if submitted_dict[category][e] and not resubmit:
                 print(f"WARNING: [{category}][{e}] has already been submitted")
                 continue
-            submit(jobs_dict[category][e], args_string, dry_run)
+            submit(jobs_dict[category][e], args_string, dry_run, batch_system)
             submitted_dict[category][e] = True
     elif category == 'detNP':
         for s in samples:
@@ -102,7 +109,7 @@ def submitJobs(
                     if submitted_dict[category][s][syst][e] and not resubmit:
                         print(f"WARNING: [{category}][{s}][{syst}][{e}] has already been submitted")
                         continue
-                    submit(jobs_dict[category][s][syst][e], args_string, dry_run)
+                    submit(jobs_dict[category][s][syst][e], args_string, dry_run, batch_system)
                     submitted_dict[category][s][syst][e] = True
     else:
         for s in samples:
@@ -113,7 +120,7 @@ def submitJobs(
                 if submitted_dict[category][s][e] and not resubmit:
                     print(f"WARNING: {[category]}{[s]}{[e]} has already been submitted")
                     continue
-                submit(jobs_dict[category][s][e], args_string, dry_run)
+                submit(jobs_dict[category][s][e], args_string, dry_run, batch_system)
                 submitted_dict[category][s][e] = True
 
     # Save job submission status to file, replace the old one if it exists
@@ -139,9 +146,10 @@ if __name__ == "__main__":
                         help="List of systematic uncertainties")
     parser.add_argument("-e", "--eras", nargs="+", default=["mc16a", "mc16d", "mc16e"],
                         help="List of subcampaigns/years of datasets")
-    parser.add_argument("-a", "--arguments", type=str,
-                        default="-l walltime=8:00:00",
+    parser.add_argument("-a", "--arguments", type=str, default="",
                         help="Arguments to be passed to qsub")
+    parser.add_argument("-b", "--batch-system", choices=['pbs','slurm'],
+                        default='slurm', help="Batch system")
     parser.add_argument("-r", "--resubmit", action="store_true",
                         help="If True, submit the job even if it has been submitted before")
     parser.add_argument("-d", "--dry-run", action="store_true",
@@ -158,5 +166,6 @@ if __name__ == "__main__":
             eras = args.eras,
             args_string = args.arguments,
             resubmit = args.resubmit,
-            dry_run = args.dry_run
+            dry_run = args.dry_run,
+            batch_system = args.batch_system
         )
