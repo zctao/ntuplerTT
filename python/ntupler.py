@@ -1,9 +1,19 @@
 import os
 import time
 import numpy as np
+
 from ROOT import TChain, TTree, TFile
+
 from extra_variables import varsExtra
 import selections as sel
+
+import logging
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-7s %(name)-10s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+    )
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def buildTreeIndex(tree):
     tstart = time.time()
@@ -14,7 +24,7 @@ def buildTreeIndex(tree):
     if status < 0:
         raise RuntimeError(f"Could not build index for tree {tree.GetName()}")
     else:
-        print(f"Building index took {tdone-tstart:.2f} seconds")
+        logger.info(f"Building index took {tdone-tstart:.2f} seconds")
 
     return tree
 
@@ -32,7 +42,7 @@ def buildHashMapFromTTree(tree, check_duplicate=False, fname_eventID=None):
     for i, ev in enumerate(tree):
         # print progress
         if i >= (nentries-1) * progress_mark:
-            print(f"processing {i}/{nentries}")
+            logger.info(f"processing {i}/{nentries}")
             progress_mark += 0.1
 
         # key for hmap
@@ -51,13 +61,13 @@ def buildHashMapFromTTree(tree, check_duplicate=False, fname_eventID=None):
 
     tdone = time.time()
 
-    print(f"Build index: {tdone-tstart:.2f} seconds")
+    logger.info(f"Build index: {tdone-tstart:.2f} seconds")
     if check_duplicate:
-        print(f"Found {len(duplicates)} duplicated event IDs")
+        logger.info(f"Found {len(duplicates)} duplicated event IDs")
 
         if len(duplicates) > 0 and fname_eventID:
             # write the duplicate event IDs to a file
-            print(f"Write duplicate event IDs to {fname_eventID}")
+            logger.info(f"Write duplicate event IDs to {fname_eventID}")
             with open(fname_eventID, 'w') as fid:
                 #fid.write(f"{keys}\n")
                 for dk in duplicates:
@@ -130,20 +140,20 @@ def matchAndSplitTrees(
         maxevents=None,
         checkDuplicate=False
     ):
-    print("Start processing mini-ntuples")
+    logger.info("Start processing mini-ntuples")
 
     ##########
-    print("Read input trees and build index")
+    logger.info("Read input trees and build index")
     # Reco
-    print("Reco level")
+    logger.info("Reco level")
     tree_reco = TChain(treename)
     for infile_reco in inputFiles_reco:
         tree_reco.Add(infile_reco)
     nevents_reco = tree_reco.GetEntries()
-    print(f"Number of events in the reco tree: {nevents_reco}")
+    logger.info(f"Number of events in the reco tree: {nevents_reco}")
 
     if checkDuplicate:
-        print(f"Build index hash table for reco tree")
+        logger.info(f"Build index hash table for reco tree")
         index_reco, dup_reco = buildHashMapFromTTree(
             tree_reco,
             check_duplicate=True,
@@ -157,20 +167,20 @@ def matchAndSplitTrees(
 
     # MC truth level
     if inputFiles_truth:
-        print(truthLevel.capitalize()+" level")
+        logger.info(truthLevel.capitalize()+" level")
         tree_truth = TChain('nominal') # truth level tree is always 'nominal'
         for infile_truth in inputFiles_truth:
             tree_truth.Add(infile_truth)
         nevents_truth = tree_truth.GetEntries()
-        print(f"Number of events in the truth tree: {nevents_truth}")
+        logger.info(f"Number of events in the truth tree: {nevents_truth}")
 
 #        try:
 #            buildTreeIndex(tree_truth)
 #        except RuntimeError as err:
-#            print(f"Failed to build index for truth level trees: {err}")
+#            logger.info(f"Failed to build index for truth level trees: {err}")
 #            return
 
-        print(f"Build index hash table for truth tree")
+        logger.info(f"Build index hash table for truth tree")
         index_truth, dup_truth = buildHashMapFromTTree(
             tree_truth,
             check_duplicate=checkDuplicate,
@@ -184,7 +194,7 @@ def matchAndSplitTrees(
 
     ##########
     # Output trees
-    print("Create output trees")
+    logger.info("Create output trees")
 
     # output file name prefix
     foutname_prefix = f"{outputName}_{recoAlgo}"
@@ -194,7 +204,7 @@ def matchAndSplitTrees(
     #####
     # e+jets
     outfile_ej = TFile(foutname_prefix+"_ejets.root", "recreate")
-    print(f"Create output file: {outfile_ej.GetName()}")
+    logger.info(f"Create output file: {outfile_ej.GetName()}")
 
     # reco
     newtree_reco_ej = prepareOutputTree(tree_reco, 'reco')
@@ -223,7 +233,7 @@ def matchAndSplitTrees(
     #####
     # mu+jets
     outfile_mj = TFile(foutname_prefix+"_mjets.root", "recreate")
-    print(f"Create output file: {outfile_mj.GetName()}")
+    logger.info(f"Create output file: {outfile_mj.GetName()}")
 
     # reco
     newtree_reco_mj = prepareOutputTree(tree_reco, 'reco')
@@ -250,7 +260,7 @@ def matchAndSplitTrees(
         newtree_truth_mj = None
 
     ##########
-    print("Iterate through events in reco trees")
+    logger.info("Iterate through events in reco trees")
 
     tstart = time.time()
 
@@ -260,7 +270,7 @@ def matchAndSplitTrees(
                 break
 
         if not i%10000:
-            print(f"processing event #{i}")
+            logger.info(f"processing event #{i}")
         tree_reco.GetEntry(i)
 
         # event ID
@@ -279,7 +289,7 @@ def matchAndSplitTrees(
 
         # sanity check: should pass one and only one of the selections
         if not ( bool(passEJets) ^ bool(passMJets) ):
-            print(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
+            logger.info(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
             continue
 
         # point to the extra variables and output trees for the right channel
@@ -341,7 +351,7 @@ def matchAndSplitTrees(
     # end of tree_reco loop
 
     tdone = time.time()
-    print(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
+    logger.info(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
 
     ##########
     # truth tree
@@ -350,11 +360,11 @@ def matchAndSplitTrees(
 #        try:
 #            buildTreeIndex(tree_reco)
 #        except RuntimeError as err:
-#            print(f"Failed to build index for reco level trees: {err}")
+#            logger.info(f"Failed to build index for reco level trees: {err}")
 #            return
 
         if not index_reco:
-            print(f"Build index hash table for reco tree")
+            logger.info(f"Build index hash table for reco tree")
             index_reco, dup_reco = buildHashMapFromTTree(
                 tree_reco,
                 check_duplicate=checkDuplicate,
@@ -362,7 +372,7 @@ def matchAndSplitTrees(
                 )
             assert(index_reco)
 
-        print("Iterate through events in truth trees")
+        logger.info("Iterate through events in truth trees")
 
         # append unmatched truth events
         tstart = time.time()
@@ -372,7 +382,7 @@ def matchAndSplitTrees(
                     break
 
             if not j%10000:
-                print(f"processing {truthLevel} event {j}")
+                logger.info(f"processing {truthLevel} event {j}")
 
             tree_truth.GetEntry(j)
 
@@ -441,7 +451,7 @@ def matchAndSplitTrees(
         # end of tree_truth loop
 
         tdone = time.time()
-        print(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
+        logger.info(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
 
     # new reco and truth trees should be of the same length
     #if newtree_truth_ej is not None:

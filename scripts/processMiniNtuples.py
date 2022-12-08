@@ -6,6 +6,13 @@ from ntupler import matchAndSplitTrees
 from datasets import getInputFileNames, read_config
 from acceptance import computeAccEffCorrections
 
+import logging
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-7s %(name)-10s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+    )
+logger = logging.getLogger(__name__)
+
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -37,28 +44,35 @@ parser.add_argument('-d', '--duplicate-removal', action='store_true',
                     help="If True, check for events with duplicated event IDs and remove them")
 parser.add_argument('--treename', type=str, default='nominal',
                     help="Tree name of reco level input")
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help="If True, set logging level to DEBUG, otherwise INFO")
 
 args = parser.parse_args()
+
+if args.verbose:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 # get input files
 inputFiles_reco = getInputFileNames(args.reco_files)
 if args.reco_files:
-    print(f"Get reco input files from {args.reco_files}")
+    logger.info(f"Get reco input files from {args.reco_files}")
 
 if args.sumweight_config:
-    print(f"Get sum weights map from {args.sumweight_config}")
+    logger.info(f"Get sum weights map from {args.sumweight_config}")
     sumw_dict = read_config(args.sumweight_config)
 else:
     sumw_dict = None
 
 if args.parton_files:
     # parton level
-    print(f"Get parton level input files from {args.parton_files}")
+    logger.info(f"Get parton level input files from {args.parton_files}")
     inputFiles_mctruth = getInputFileNames(args.parton_files)
     truth_level = 'parton'
 elif args.particle_files:
     # particle level
-    print(f"Get particle level input files from {args.particle_files}")
+    logger.info(f"Get particle level input files from {args.particle_files}")
     inputFiles_mctruth = getInputFileNames(args.particle_files)
     truth_level = 'particle'
 else:
@@ -68,7 +82,7 @@ else:
 
 # output directory
 if not os.path.isdir(args.outdir):
-    print("Create output directory: {}".format(args.outdir))
+    logger.info("Create output directory: {}".format(args.outdir))
     os.makedirs(args.outdir)
 
 assert(len(inputFiles_reco) > 0)
@@ -91,7 +105,7 @@ matchAndSplitTrees(
 )
 
 mcurrent, mpeak = tracemalloc.get_traced_memory()
-print(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
+logger.debug(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
 
 if inputFiles_mctruth and args.compute_corrections:
     computeAccEffCorrections(
@@ -103,4 +117,4 @@ if inputFiles_mctruth and args.compute_corrections:
     )
 
     mcurrent, mpeak = tracemalloc.get_traced_memory()
-    print(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
+    logger.debug(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
