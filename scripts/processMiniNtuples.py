@@ -2,7 +2,7 @@
 import os
 import tracemalloc
 
-from ntupler import matchAndSplitTrees
+from ntupler import Ntupler
 from datasets import getInputFileNames, read_config
 from acceptance import computeAccEffCorrections
 
@@ -90,17 +90,21 @@ assert(len(inputFiles_reco) > 0)
 # start processing
 tracemalloc.start()
 
-matchAndSplitTrees(
+ntupler = Ntupler(
     os.path.join(args.outdir, args.name),
     inputFiles_reco,
     inputFiles_mctruth,
     sumWeights_dict = sumw_dict,
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
-    treename = args.treename,
+    treename = args.treename
+)
+
+# run
+ntupler(
+    maxevents = args.maxevents,
     saveUnmatchedReco = True,
     saveUnmatchedTruth = truth_level=='particle', # TODO: check this
-    maxevents = args.maxevents,
     checkDuplicate = args.duplicate_removal
 )
 

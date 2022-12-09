@@ -42,7 +42,7 @@ def buildHashMapFromTTree(tree, check_duplicate=False, fname_eventID=None):
     for i, ev in enumerate(tree):
         # print progress
         if i >= (nentries-1) * progress_mark:
-            logger.info(f"processing {i}/{nentries}")
+            logger.info(f" processing {i}/{nentries}")
             progress_mark += 0.1
 
         # key for hmap
@@ -74,16 +74,6 @@ def buildHashMapFromTTree(tree, check_duplicate=False, fname_eventID=None):
                     fid.write(" ".join(str(x) for x in dk) + "\n")
 
     return hmap, duplicates
-
-def prepareOutputTree(input_tree, new_name, extra_branches=[]):
-    newtree = input_tree.CloneTree(0)
-    newtree.SetName(new_name)
-
-    # add extra branches
-    for branch_args in extra_branches:
-        newtree.Branch(branch_args[0], branch_args[1], branch_args[2])
-
-    return newtree
 
 def getSumWeights(infiles_sumw):
     tree_sumw = TChain('sumWeights')
@@ -128,310 +118,378 @@ def getPrefixTruth(truthLevel):
 
     return prefix_thad, prefix_tlep, prefix_ttbar
 
-def matchAndSplitTrees(
+class Ntupler():
+    def __init__(
+        self,
         outputName,
         inputFiles_reco,
-        inputFiles_truth=[],
+        inputFiles_truth = [],
         sumWeights_dict = None,
         recoAlgo = 'klfitter', # ttbar reconstruction algorithm
         truthLevel ='parton',
-        treename='nominal',
-        saveUnmatchedReco=True, saveUnmatchedTruth=True,
+        treename = 'nominal'
+        ):
+
+        self.recoAlgo = recoAlgo
+        self.truthLevel = truthLevel
+
+        ######
+        # Read input trees
+        # Set self.tree_reco and self.tree_truth
+        # Initialize self.index_reco, self.index_truth to empty dict()
+        # Initialize self.dup_reco, self.dup_truth to empty set()
+        self._read_input_trees(
+            inputFiles_reco,
+            inputFiles_truth,
+            treename = treename
+            )
+
+        ######
+        # Prepare output trees
+        # self.outfile_ej, self.outfile_mj
+        # self.newtree_reco_ej, self.newtree_reco_mj
+        # self.newtree_truth_ej, self.newtree_truth_mj
+        # self.extra_variables_reco_ej, self.extra_variables_truth_ej
+        # self.extra_variables_reco_mj, self.extra_variables_truth_mj
+        self._prepare_outputs(
+            outputName,
+            sumWeights_dict = sumWeights_dict
+            )
+
+    def __call__(
+        self,
         maxevents=None,
-        checkDuplicate=False
-    ):
-    logger.info("Start processing mini-ntuples")
+        saveUnmatchedReco=True,
+        saveUnmatchedTruth=True,
+        checkDuplicate = False
+        ):
+        logger.info("Start processing mini-ntuples")
 
-    ##########
-    logger.info("Read input trees and build index")
-    # Reco
-    logger.info("Reco level")
-    tree_reco = TChain(treename)
-    for infile_reco in inputFiles_reco:
-        tree_reco.Add(infile_reco)
-    nevents_reco = tree_reco.GetEntries()
-    logger.info(f"Number of events in the reco tree: {nevents_reco}")
+        if self.tree_truth is None:
+            saveUnmatchedTruth = False
 
-    if checkDuplicate:
-        logger.info(f"Build index hash table for reco tree")
-        index_reco, dup_reco = buildHashMapFromTTree(
-            tree_reco,
-            check_duplicate=True,
-            fname_eventID=f"{outputName}_duplicate_eventID_reco.txt"
-            )
-        assert(index_reco)
-    else:
-        # No need to build tree index now if not check duplicated event ID
-        index_reco = dict()
-        dup_reco = set()
+        ######
+        # Build tree index
+        if checkDuplicate or saveUnmatchedTruth:
+            # Need to build reco tree index before iterating
+            self._build_reco_index(checkDuplicate=checkDuplicate)
 
-    # MC truth level
-    if inputFiles_truth:
-        logger.info(truthLevel.capitalize()+" level")
-        tree_truth = TChain('nominal') # truth level tree is always 'nominal'
-        for infile_truth in inputFiles_truth:
-            tree_truth.Add(infile_truth)
-        nevents_truth = tree_truth.GetEntries()
-        logger.info(f"Number of events in the truth tree: {nevents_truth}")
+        # Always need to build truth tree index if there is one
+        if self.tree_truth:
+            self._build_truth_index(checkDuplicate=checkDuplicate)
 
-#        try:
-#            buildTreeIndex(tree_truth)
-#        except RuntimeError as err:
-#            logger.info(f"Failed to build index for truth level trees: {err}")
-#            return
+        ######
+        # Loop over reco tree
+        self._iterate_reco_tree(maxevents, saveUnmatchedReco)
 
-        logger.info(f"Build index hash table for truth tree")
-        index_truth, dup_truth = buildHashMapFromTTree(
-            tree_truth,
-            check_duplicate=checkDuplicate,
-            fname_eventID=f"{outputName}_duplicate_eventID_truth.txt"
-            )
-        assert(index_truth)
-    else:
-        tree_truth = None
-        index_truth = dict()
-        dup_truth = set()
+        ######
+        # Loop over truth tree
+        if self.tree_truth and saveUnmatchedTruth:
+            self._iterate_truth_tree(maxevents)
 
-    ##########
-    # Output trees
-    logger.info("Create output trees")
+        ###
+        # new reco and truth trees should be of the same length
+        #if self.newtree_truth_ej is not None:
+        #    assert(self.newtree_reco_ej.GetEntries() == self.newtree_truth_ej.GetEntries())
+        #if self.newtree_truth_mj is not None:
+        #    assert(self.newtree_reco_mj.GetEntries() == self.newtree_truth_mj.GetEntries())
 
-    # output file name prefix
-    foutname_prefix = f"{outputName}_{recoAlgo}"
-    if tree_truth is not None:
-        foutname_prefix += f"_{truthLevel}"
+        ######
+        # Write files to disk
+        self.outfile_ej.Write()
+        self.outfile_ej.Close()
 
-    #####
-    # e+jets
-    outfile_ej = TFile(foutname_prefix+"_ejets.root", "recreate")
-    logger.info(f"Create output file: {outfile_ej.GetName()}")
+        self.outfile_mj.Write()
+        self.outfile_mj.Close()
 
-    # reco
-    newtree_reco_ej = prepareOutputTree(tree_reco, 'reco')
+    def _read_input_trees(
+        self,
+        inputFiles_reco,
+        inputFiles_truth = [],
+        treename = 'nominal'
+        ):
 
-    # add extra branches
-    extra_variables_reco_ej = varsExtra(
-        *getPrefixReco(recoAlgo), compute_energy=True,
-        sum_weights_map = sumWeights_dict
-        )
-    extra_variables_reco_ej.set_up_branches(newtree_reco_ej)
+        self.tree_reco = TChain(treename)
+        logger.info("Read input trees and build index")
+        logger.info("Reco level")
+        for infile_reco in inputFiles_reco:
+            self.tree_reco.Add(infile_reco)
+        nevents_reco = self.tree_reco.GetEntries()
+        logger.info(f"Number of events in the reco tree: {nevents_reco}")
 
-    # truth
-    if tree_truth is not None:
-        newtree_truth_ej = prepareOutputTree(tree_truth, truthLevel)
+        self.index_reco = dict()
+        self.dup_reco = set()
 
-        # add extra branches
-        extra_variables_truth_ej = varsExtra(
-            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
-            sum_weights_map = sumWeights_dict, is_reco=False
-            )
-        extra_variables_truth_ej.set_up_branches(newtree_truth_ej)
-    else:
-        extra_variables_truth_ej = None
-        newtree_truth_ej = None
+        self.tree_truth = None
+        if inputFiles_truth:
+            logger.info(self.truthLevel.capitalize()+" level")
+            self.tree_truth = TChain('nominal') # truth-level tree is always 'nominal'
+            for infile_truth in inputFiles_truth:
+                self.tree_truth.Add(infile_truth)
+            nevents_truth = self.tree_truth.GetEntries()
+            logger.info(f"Number of events in the truth tree: {nevents_truth}")
 
-    #####
-    # mu+jets
-    outfile_mj = TFile(foutname_prefix+"_mjets.root", "recreate")
-    logger.info(f"Create output file: {outfile_mj.GetName()}")
+        self.index_truth = dict()
+        self.dup_truth = set()
 
-    # reco
-    newtree_reco_mj = prepareOutputTree(tree_reco, 'reco')
+    def _prepare_outputs(
+        self,
+        outputName,
+        sumWeights_dict = None
+        ):
+        logger.info("Create output trees")
 
-    # add extra branches
-    extra_variables_reco_mj = varsExtra(
-        *getPrefixReco(recoAlgo), compute_energy=True,
-        sum_weights_map = sumWeights_dict
-        )
-    extra_variables_reco_mj.set_up_branches(newtree_reco_mj)
+        self.outNamePrefix = outputName
+        foutname = f"{self.outNamePrefix}_{self.recoAlgo}"
+        if self.tree_truth:
+            foutname += f"_{self.truthLevel}"
 
-    # truth
-    if tree_truth is not None:
-        newtree_truth_mj = prepareOutputTree(tree_truth, truthLevel)
+        ###
+        # e+jets
+        self.outfile_ej = TFile(foutname+"_ejets.root", "recreate")
+        logger.info(f"Create output file: {self.outfile_ej.GetName()}")
+
+        # reco tree
+        self.newtree_reco_ej = self.tree_reco.CloneTree(0)
+        self.newtree_reco_ej.SetName('reco')
 
         # add extra branches
-        extra_variables_truth_mj = varsExtra(
-            *getPrefixTruth(truthLevel), compute_energy = truthLevel!="parton",
-            sum_weights_map = sumWeights_dict, is_reco=False
+        self.extra_variables_reco_ej = varsExtra(
+            *getPrefixReco(self.recoAlgo), compute_energy=True,
+            sum_weights_map = sumWeights_dict
+        )
+        self.extra_variables_reco_ej.set_up_branches(self.newtree_reco_ej)
+
+        # truth tree
+        if self.tree_truth:
+            self.newtree_truth_ej = self.tree_truth.CloneTree(0)
+            self.newtree_truth_ej.SetName(self.truthLevel)
+
+            # add extra branches
+            self.extra_variables_truth_ej = varsExtra(
+                *getPrefixTruth(self.truthLevel),
+                compute_energy = self.truthLevel!="parton",
+                sum_weights_map = sumWeights_dict, is_reco=False
             )
-        extra_variables_truth_mj.set_up_branches(newtree_truth_mj)
-    else:
-        extra_variables_truth_mj = None
-        newtree_truth_mj = None
-
-    ##########
-    logger.info("Iterate through events in reco trees")
-
-    tstart = time.time()
-
-    for i in range(nevents_reco):
-        if maxevents is not None:
-            if i > maxevents:
-                break
-
-        if not i%10000:
-            logger.info(f"processing event #{i}")
-        tree_reco.GetEntry(i)
-
-        # event ID
-        eventID = (tree_reco.runNumber, tree_reco.eventNumber)
-
-        if eventID in dup_reco or eventID in dup_truth:
-            # this is an event with duplicated event ID
-            continue
-
-        # reco-level selections
-        if not sel.passRecoSelections(tree_reco, recoAlgo):
-            continue
-
-        passEJets = sel.passRecoSelections_ejets(tree_reco)
-        passMJets = sel.passRecoSelections_mjets(tree_reco)
-
-        # sanity check: should pass one and only one of the selections
-        if not ( bool(passEJets) ^ bool(passMJets) ):
-            logger.info(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
-            continue
-
-        # point to the extra variables and output trees for the right channel
-        if passEJets:
-            extra_vars_reco = extra_variables_reco_ej
-            extra_vars_truth = extra_variables_truth_ej
-            newtree_reco = newtree_reco_ej
-            newtree_truth = newtree_truth_ej
-        else: # passMJets
-            extra_vars_reco = extra_variables_reco_mj
-            extra_vars_truth = extra_variables_truth_mj
-            newtree_reco = newtree_reco_mj
-            newtree_truth = newtree_truth_mj
-
-        # try to find the matched event in truth tree
-        isTruthMatched = False
-
-        if tree_truth is not None:
-#            truth_entry = tree_truth.GetEntryNumberWithIndex(*eventID)
-            truth_entry = index_truth.get(eventID, -1)
-            tree_truth.GetEntry(truth_entry)
-
-            if truth_entry >= 0:
-                # found a matched truth-level event
-                # check if the matched event satisfies truth-level requirements
-                if truthLevel == 'parton':
-                    # check if it is semi-leptonic ttbar
-                    #isTruthMatched = tree_reco.isTruthSemileptonic
-                    # instead of trusting the flag in tree_reco, check tree_truth
-                    isTruthMatched = sel.isSemiLeptonicTTbar(tree_truth)
-                elif truthLevel == 'particle':
-                    # check if passing the particle level selections
-                    isTruthMatched = sel.passPLSelections(tree_truth)
-
-            if isTruthMatched:
-                extra_vars_truth.write_event(tree_truth)
-                extra_vars_truth.set_dummy_flag(0)
-                extra_vars_truth.set_match_flag(1)
-            else:
-                # no matched truth event or the truth event fails selections
-                extra_vars_truth.write_event(tree_truth)
-                extra_vars_truth.set_dummy_flag(1)
-                extra_vars_truth.set_match_flag(0)
-
-        extra_vars_reco.write_event(tree_reco)
-        extra_vars_reco.set_dummy_flag(0)
-        extra_vars_reco.set_match_flag(isTruthMatched)
-
-        # fill the new tree
-        if tree_truth is None:
-            # truth matching not possible, just fill the new reco tree
-            newtree_reco.Fill()
+            self.extra_variables_truth_ej.set_up_branches(self.newtree_truth_ej)
         else:
-            if isTruthMatched or saveUnmatchedReco:
-                # fill the new reco and truth tree
+            self.newtree_truth_ej = None
+            self.extra_variables_truth_ej = None
+
+        ##
+        # mu+jets
+        self.outfile_mj = TFile(foutname+"_mjets.root", "recreate")
+        logger.info(f"Create output file: {self.outfile_mj.GetName()}")
+
+        # reco tree
+        self.newtree_reco_mj = self.tree_reco.CloneTree(0)
+        self.newtree_reco_mj.SetName('reco')
+
+        # add extra branches
+        self.extra_variables_reco_mj = varsExtra(
+            *getPrefixReco(self.recoAlgo), compute_energy=True,
+            sum_weights_map = sumWeights_dict
+        )
+        self.extra_variables_reco_mj.set_up_branches(self.newtree_reco_mj)
+
+        # truth tree
+        if self.tree_truth:
+            self.newtree_truth_mj = self.tree_truth.CloneTree(0)
+            self.newtree_truth_mj.SetName(self.truthLevel)
+
+            # add extra branches
+            self.extra_variables_truth_mj = varsExtra(
+                *getPrefixTruth(self.truthLevel),
+                compute_energy = self.truthLevel!="parton",
+                sum_weights_map = sumWeights_dict, is_reco=False
+            )
+            self.extra_variables_truth_mj.set_up_branches(self.newtree_truth_mj)
+        else:
+            self.newtree_truth_mj = None
+            self.extra_variables_truth_mj = None
+
+    def _build_reco_index(self, checkDuplicate):
+        logger.info(f"Build index hash table for reco tree")
+        self.index_reco, self.dup_reco = buildHashMapFromTTree(
+            self.tree_reco,
+            check_duplicate = checkDuplicate,
+            fname_eventID = f"{self.outNamePrefix}_duplicate_eventID_reco.txt"
+        )
+        assert(self.index_reco)
+
+    def _build_truth_index(self, checkDuplicate):
+        logger.info(f"Build index hash table for truth tree")
+        self.index_truth, self.dup_truth = buildHashMapFromTTree(
+            self.tree_truth,
+            check_duplicate = checkDuplicate,
+            fname_eventID = f"{self.outNamePrefix}_duplicate_eventID_truth.txt"
+        )
+        assert(self.tree_truth)
+
+    def _iterate_reco_tree(self, maxevents=None, saveUnmatchedReco=True):
+        logger.info("Iterate through events in reco trees")
+
+        tstart = time.time()
+
+        nevents_reco = self.tree_reco.GetEntries()
+
+        for i in range(nevents_reco):
+            if maxevents is not None:
+                if i > maxevents:
+                    break
+
+            if not i%10000:
+                logger.info(f" processing event #{i}")
+
+            self.tree_reco.GetEntry(i)
+
+            # event ID
+            eventID = (self.tree_reco.runNumber, self.tree_reco.eventNumber)
+
+            if eventID in self.dup_reco or eventID in self.dup_truth:
+                # this is an event with duplicated event ID
+                continue
+
+            # reco-level selections
+            if not sel.passRecoSelections(self.tree_reco, self.recoAlgo):
+                continue
+
+            passEJets = sel.passRecoSelections_ejets(self.tree_reco)
+            passMJets = sel.passRecoSelections_mjets(self.tree_reco)
+
+            # sanity check: should pass one and only one of the selections
+            if not ( bool(passEJets) ^ bool(passMJets) ):
+                logger.info(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
+                continue
+
+            # pointers to the extra variables and output trees
+            if passEJets:
+                extra_vars_reco = self.extra_variables_reco_ej
+                extra_vars_truth = self.extra_variables_truth_ej
+                newtree_reco = self.newtree_reco_ej
+                newtree_truth = self.newtree_truth_ej
+            else: # passMJets
+                extra_vars_reco = self.extra_variables_reco_mj
+                extra_vars_truth = self.extra_variables_truth_mj
+                newtree_reco = self.newtree_reco_mj
+                newtree_truth = self.newtree_truth_mj
+
+            # try to find the matched event in the truth tree
+            isTruthMatched = False
+
+            if self.tree_truth:
+                #truth_entry = self.tree_truth.GetEntryNumberWithIndex(*eventID)
+                truth_entry = self.index_truth.get(eventID, -1)
+                self.tree_truth.GetEntry(truth_entry)
+
+                if truth_entry >= 0:
+                    # found a matched truth-level event
+                    # check if the matched event satisfies the truth-level requirement
+                    if self.truthLevel == 'parton':
+                        # check if it is semi-leptonic ttbar
+                        #isTruthMatched = tree_reco.isTruthSemileptonic
+                        # instead of trusting the flag in tree_reco, check the tree_truth ourselves
+                        isTruthMatched = sel.isSemiLeptonicTTbar(self.tree_truth)
+                    elif truthLevel == 'particle':
+                        # check if passing the particle-level selections
+                        isTruthMatched = sel.passPLSelections(self.tree_truth)
+
+                if isTruthMatched:
+                    extra_vars_truth.write_event(self.tree_truth)
+                    extra_vars_truth.set_dummy_flag(0)
+                    extra_vars_truth.set_match_flag(1)
+                else:
+                    # no matched truth event or the truth event fails selections
+                    extra_vars_truth.write_event(self.tree_truth)
+                    extra_vars_truth.set_dummy_flag(1)
+                    extra_vars_truth.set_match_flag(0)
+
+            extra_vars_reco.write_event(self.tree_reco)
+            extra_vars_reco.set_dummy_flag(0)
+            extra_vars_reco.set_match_flag(isTruthMatched)
+
+            # fill the new tree
+            if self.tree_truth is None:
+                # just fill the new reco tree
                 newtree_reco.Fill()
-                newtree_truth.Fill()
+            else:
+                if isTruthMatched or saveUnmatchedReco:
+                    # fill the new reco and truth tree
+                    newtree_reco.Fill()
+                    newtree_truth.Fill()
 
-    # end of tree_reco loop
+        # end of tree_reco loop
 
-    tdone = time.time()
-    logger.info(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
+        tdone = time.time()
+        logger.info(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
 
-    ##########
-    # truth tree
-    if saveUnmatchedTruth and tree_truth is not None:
-        # build reco tree index if this has not been done already
-#        try:
-#            buildTreeIndex(tree_reco)
-#        except RuntimeError as err:
-#            logger.info(f"Failed to build index for reco level trees: {err}")
-#            return
+    def _iterate_truth_tree(self, maxevents=None, truthLevel='parton'):
 
-        if not index_reco:
-            logger.info(f"Build index hash table for reco tree")
-            index_reco, dup_reco = buildHashMapFromTTree(
-                tree_reco,
-                check_duplicate=checkDuplicate,
-                fname_eventID=f"{outputName}_duplicate_eventID_reco.txt"
-                )
-            assert(index_reco)
+        assert(self.index_reco)
 
         logger.info("Iterate through events in truth trees")
 
-        # append unmatched truth events
         tstart = time.time()
+
+        nevents_truth = self.tree_truth.GetEntries()
+
         for j in range(nevents_truth):
             if maxevents is not None:
                 if j > maxevents:
                     break
 
             if not j%10000:
-                logger.info(f"processing {truthLevel} event {j}")
+                logger.info(f" processing {self.truthLevel} event {j}")
 
-            tree_truth.GetEntry(j)
+            self.tree_truth.GetEntry(j)
 
-            eventID_truth = (tree_truth.runNumber, tree_truth.eventNumber)
-            if eventID_truth in dup_truth or eventID_truth in dup_reco:
+            eventID_truth = (self.tree_truth.runNumber, self.tree_truth.eventNumber)
+
+            if eventID_truth in self.dup_truth or eventID_truth in self.dup_reco:
                 continue
 
             # truth-level selections
             passTruthSel = False
-            if truthLevel=='parton':
-                passTruthSel = sel.isSemiLeptonicTTbar(tree_truth)
-            elif truthLevel=='particle':
-                passTruthSel = sel.passPLSelections(tree_truth)
+            if self.truthLevel == 'parton':
+                passTruthSel = sel.isSemiLeptonicTTbar(self.tree_truth)
+            elif self.truthLevel == 'particle':
+                passTruthSel = sel.passPLSelections(self.tree_truth)
 
             if not passTruthSel:
                 continue
 
             # try getting the matched reco event
-#            reco_entry = tree_reco.GetEntryNumberWithIndex(tree_truth.runNumber, tree_truth.eventNumber)
-            reco_entry = index_reco.get(eventID_truth, -1)
+            #reco_entry = self.tree_reco.GetEntryNumberWithIndex(*eventID_truth)
+            reco_entry = self.index_reco.get(eventID_truth, -1)
 
             if reco_entry >= 0:
                 # found a matched reco-level event
-                tree_reco.GetEntry(reco_entry)
+                self.tree_reco.GetEntry(reco_entry)
 
                 # check if it passed the reco-level selection
-                if sel.passRecoSelections(tree_reco, recoAlgo):
-                    # this event has already been included in the reco tree loop
+                if sel.passRecoSelections(self.tree_reco, self.recoAlgo):
+                    # !!this event has already been included in the reco tree loop!!
                     # skip
                     continue
 
-            passEJets = sel.passTruthSelections_ejets(tree_truth)
-            passMJets = sel.passTruthSelections_mjets(tree_truth)
+            passEJets = sel.passTruthSelections_ejets(self.tree_truth)
+            passMJets = sel.passTruthSelections_mjets(self.tree_truth)
 
             if passEJets:
-                extra_vars_reco = extra_variables_reco_ej
-                extra_vars_truth = extra_variables_truth_ej
-                newtree_reco = newtree_reco_ej
-                newtree_truth = newtree_truth_ej
+                extra_vars_reco = self.extra_variables_reco_ej
+                extra_vars_truth = self.extra_variables_truth_ej
+                newtree_reco = self.newtree_reco_ej
+                newtree_truth = self.newtree_truth_ej
             elif passMJets:
-                extra_vars_reco = extra_variables_reco_mj
-                extra_vars_truth = extra_variables_truth_mj
-                newtree_reco = newtree_reco_mj
-                newtree_truth = newtree_truth_mj
+                extra_vars_reco = self.extra_variables_reco_mj
+                extra_vars_truth = self.extra_variables_truth_mj
+                newtree_reco = self.newtree_reco_mj
+                newtree_truth = self.newtree_truth_mj
             else:
                 # do not know tau decay products, skip for now
                 continue
 
-            extra_vars_truth.write_event(tree_truth)
+            extra_vars_truth.write_event(self.tree_truth)
             extra_vars_truth.set_match_flag(0)
             extra_vars_truth.set_dummy_flag(0)
 
@@ -441,27 +499,15 @@ def matchAndSplitTrees(
             # get a random event from the reco tree
             #ireco = np.random.randint(0, nevents_reco-1) # too slow
             ireco = -1
-            tree_reco.GetEntry(ireco)
+            self.tree_reco.GetEntry(ireco)
 
-            extra_vars_reco.write_event(tree_reco)
+            extra_vars_reco.write_event(self.tree_reco)
             extra_vars_reco.set_match_flag(0)
             extra_vars_reco.set_dummy_flag(1)
+
             newtree_reco.Fill()
 
         # end of tree_truth loop
 
         tdone = time.time()
         logger.info(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
-
-    # new reco and truth trees should be of the same length
-    #if newtree_truth_ej is not None:
-    #    assert(newtree_reco_ej.GetEntries() == newtree_truth_ej.GetEntries())
-    #if newtree_truth_mj is not None:
-    #    assert(newtree_reco_mj.GetEntries() == newtree_truth_mj.GetEntries())
-
-    # Write and close output files
-    outfile_ej.Write()
-    outfile_ej.Close()
-
-    outfile_mj.Write()
-    outfile_mj.Close()
