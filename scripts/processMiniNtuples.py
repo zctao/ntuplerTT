@@ -111,15 +111,3 @@ ntupler(
 
 mcurrent, mpeak = tracemalloc.get_traced_memory()
 logger.debug(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
-
-if inputFiles_mctruth and args.compute_corrections:
-    computeAccEffCorrections(
-        os.path.join(args.outdir, args.name),
-        inputFiles_reco,
-        inputFiles_mctruth,
-        recoAlgo = args.algorithm_topreco,
-        truthLevel = truth_level
-    )
-
-    mcurrent, mpeak = tracemalloc.get_traced_memory()
-    logger.debug(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")

@@ -200,6 +200,9 @@ class Ntupler():
         #if self.newtree_truth_mj is not None:
         #    assert(self.newtree_reco_mj.GetEntries() == self.newtree_truth_mj.GetEntries())
 
+        if self.histograms:
+            self.histograms.computeCorrections()
+
         ######
         # Write files to disk
         self._write_to_files()

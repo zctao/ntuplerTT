@@ -70,6 +70,34 @@ def hasUnitMeV(variable_name):
     else:
         return False
 
+def getAcceptanceCorrection(h2d_response, h_reco, hname="Acceptance", flow=True):
+    # project h2d_response to x-axis i.e. the reco axis
+    if flow:
+        firstbin_mc = 0
+        lastbin_mc = -1
+    else:
+        # exclude Y underflow and overflow bins
+        firstbin_mc = 1
+        lastbin_mc = h2d_response.GetNbinsY()
+
+    h_acc = h2d_response.ProjectionX(hname, firstbin_mc, lastbin_mc, "e")
+    h_acc.Divide(h_reco)
+    return h_acc
+
+def getEfficiencyCorrection(h2d_response, h_mctruth, hname="Efficiency", flow=True):
+    # project h2d_response to y-axis i.e. the MC truth axis
+    if flow:
+        firstbin_reco = 0
+        lastbin_reco = -1
+    else:
+        # exclude X underflow and overflow bins
+        firstbin_reco = 1
+        lastbin_reco = h2d_response.GetNbinsX()
+
+    h_eff = h2d_response.ProjectionY(hname, firstbin_reco, lastbin_reco, "e")
+    h_eff.Divide(h_mctruth)
+    return h_eff
+
 class HistogramManager():
     def __init__(self, outputname='histograms.root'):
 
@@ -173,6 +201,50 @@ class HistogramManager():
 
             self.hists_d[ob]['response'].Fill(value_reco, value_truth, w_reco)
             self.hists_d[ob]['response_mcweight'].Fill(value_reco, value_truth, w_truth)
+
+    def computeCorrections(self):
+        for ob in self.hists_d:
+            self.hists_d[ob]['acceptance'] = getAcceptanceCorrection(
+                h2d_response = self.hists_d[ob]['response'],
+                h_reco = self.hists_d[ob]['reco'],
+                hname = "Acceptance",
+                flow = True
+            )
+
+            self.hists_d[ob]['acceptance_noflow'] = getAcceptanceCorrection(
+                h2d_response = self.hists_d[ob]['response'],
+                h_reco = self.hists_d[ob]['reco'],
+                hname = "Acceptance_noflow",
+                flow = False
+            )
+
+            self.hists_d[ob]['efficiency'] = getEfficiencyCorrection(
+                h2d_response = self.hists_d[ob]['response_mcweight'],
+                h_mctruth = self.hists_d[ob]['truth'],
+                hname = "Efficiency",
+                flow = True
+            )
+
+            self.hists_d[ob]['efficiency_noflow'] = getEfficiencyCorrection(
+                h2d_response = self.hists_d[ob]['response_mcweight'],
+                h_mctruth = self.hists_d[ob]['truth'],
+                hname = "Efficiency_noflow",
+                flow = False
+            )
+
+            self.hists_d[ob]['efficiency_wreco'] = getEfficiencyCorrection(
+                h2d_response = self.hists_d[ob]['response'],
+                h_mctruth = self.hists_d[ob]['truth'],
+                hname = "Efficiency_wreco",
+                flow = True
+            )
+
+            self.hists_d[ob]['efficiency_wreco_noflow'] = getEfficiencyCorrection(
+                h2d_response = self.hists_d[ob]['response'],
+                h_mctruth = self.hists_d[ob]['truth'],
+                hname = "Efficiency_wreco_noflow",
+                flow = False
+            )
 
     def write_to_file(self):
         for ob in self.hists_d:
