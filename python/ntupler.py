@@ -6,6 +6,7 @@ from ROOT import TChain, TTree, TFile
 
 from extra_variables import varsExtra
 import selections as sel
+from histogramer import HistogramManager
 
 import logging
 logging.basicConfig(
@@ -127,7 +128,8 @@ class Ntupler():
         sumWeights_dict = None,
         recoAlgo = 'klfitter', # ttbar reconstruction algorithm
         truthLevel ='parton',
-        treename = 'nominal'
+        treename = 'nominal',
+        makeHistograms = False
         ):
 
         self.recoAlgo = recoAlgo
@@ -155,6 +157,10 @@ class Ntupler():
             outputName,
             sumWeights_dict = sumWeights_dict
             )
+
+        ######
+        # Histograms
+        self.histograms = HistogramManager(outputName+'_histograms.root') if makeHistograms else None
 
     def __call__(
         self,
@@ -184,7 +190,7 @@ class Ntupler():
 
         ######
         # Loop over truth tree
-        if self.tree_truth and saveUnmatchedTruth:
+        if saveUnmatchedTruth or self.histograms is not None:
             self._iterate_truth_tree(maxevents)
 
         ###
@@ -196,11 +202,7 @@ class Ntupler():
 
         ######
         # Write files to disk
-        self.outfile_ej.Write()
-        self.outfile_ej.Close()
-
-        self.outfile_mj.Write()
-        self.outfile_mj.Close()
+        self._write_to_files()
 
     def _read_input_trees(
         self,
@@ -390,7 +392,7 @@ class Ntupler():
                         #isTruthMatched = tree_reco.isTruthSemileptonic
                         # instead of trusting the flag in tree_reco, check the tree_truth ourselves
                         isTruthMatched = sel.isSemiLeptonicTTbar(self.tree_truth)
-                    elif truthLevel == 'particle':
+                    elif self.truthLevel == 'particle':
                         # check if passing the particle-level selections
                         isTruthMatched = sel.passPLSelections(self.tree_truth)
 
@@ -418,16 +420,23 @@ class Ntupler():
                     newtree_reco.Fill()
                     newtree_truth.Fill()
 
+            # fill the histograms
+            if self.histograms:
+                self.histograms.fillReco(newtree_reco)
+                if isTruthMatched:
+                    self.histograms.fillResponse(newtree_reco, newtree_truth)
+
         # end of tree_reco loop
 
         tdone = time.time()
         logger.info(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
 
-    def _iterate_truth_tree(self, maxevents=None, truthLevel='parton'):
-
-        assert(self.index_reco)
+    def _iterate_truth_tree(self, maxevents=None, truthLevel='parton', saveEvents=False):
 
         logger.info("Iterate through events in truth trees")
+
+        if saveEvents:
+            assert(self.index_reco)
 
         tstart = time.time()
 
@@ -456,6 +465,13 @@ class Ntupler():
                 passTruthSel = sel.passPLSelections(self.tree_truth)
 
             if not passTruthSel:
+                continue
+
+            # fill the histograms
+            if self.histograms:
+                self.histograms.fillTruth(self.tree_truth)
+
+            if not saveEvents:
                 continue
 
             # try getting the matched reco event
@@ -511,3 +527,12 @@ class Ntupler():
 
         tdone = time.time()
         logger.info(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
+
+    def _write_to_files(self):
+        self.outfile_ej.Write()
+        self.outfile_ej.Close()
+
+        self.outfile_mj.Write()
+        self.outfile_mj.Close()
+
+        self.histograms.write_to_file()

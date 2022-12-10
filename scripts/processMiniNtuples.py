@@ -97,7 +97,8 @@ ntupler = Ntupler(
     sumWeights_dict = sumw_dict,
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
-    treename = args.treename
+    treename = args.treename,
+    makeHistograms = args.compute_corrections
 )
 
 # run
