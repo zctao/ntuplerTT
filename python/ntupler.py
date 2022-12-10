@@ -148,11 +148,9 @@ class Ntupler():
 
         ######
         # Prepare output trees
-        # self.outfile_ej, self.outfile_mj
-        # self.newtree_reco_ej, self.newtree_reco_mj
-        # self.newtree_truth_ej, self.newtree_truth_mj
-        # self.extra_variables_reco_ej, self.extra_variables_truth_ej
-        # self.extra_variables_reco_mj, self.extra_variables_truth_mj
+        # self.outfile
+        # self.newtree_reco, self.newtree_truth
+        # self.extra_variables_reco, self.extra_variables_truth
         self._prepare_outputs(
             outputName,
             sumWeights_dict = sumWeights_dict
@@ -251,67 +249,35 @@ class Ntupler():
 
         ###
         # e+jets
-        self.outfile_ej = TFile(foutname+"_ejets.root", "recreate")
-        logger.info(f"Create output file: {self.outfile_ej.GetName()}")
+        self.outfile = TFile(foutname+"_ljets.root", "recreate")
+        logger.info(f"Create output file: {self.outfile.GetName()}")
 
         # reco tree
-        self.newtree_reco_ej = self.tree_reco.CloneTree(0)
-        self.newtree_reco_ej.SetName('reco')
+        self.newtree_reco = self.tree_reco.CloneTree(0)
+        self.newtree_reco.SetName('reco')
 
         # add extra branches
-        self.extra_variables_reco_ej = varsExtra(
+        self.extra_variables_reco = varsExtra(
             *getPrefixReco(self.recoAlgo), compute_energy=True,
             sum_weights_map = sumWeights_dict
         )
-        self.extra_variables_reco_ej.set_up_branches(self.newtree_reco_ej)
+        self.extra_variables_reco.set_up_branches(self.newtree_reco)
 
         # truth tree
         if self.tree_truth:
-            self.newtree_truth_ej = self.tree_truth.CloneTree(0)
-            self.newtree_truth_ej.SetName(self.truthLevel)
+            self.newtree_truth = self.tree_truth.CloneTree(0)
+            self.newtree_truth.SetName(self.truthLevel)
 
             # add extra branches
-            self.extra_variables_truth_ej = varsExtra(
+            self.extra_variables_truth = varsExtra(
                 *getPrefixTruth(self.truthLevel),
                 compute_energy = self.truthLevel!="parton",
                 sum_weights_map = sumWeights_dict, is_reco=False
             )
-            self.extra_variables_truth_ej.set_up_branches(self.newtree_truth_ej)
+            self.extra_variables_truth.set_up_branches(self.newtree_truth)
         else:
-            self.newtree_truth_ej = None
-            self.extra_variables_truth_ej = None
-
-        ##
-        # mu+jets
-        self.outfile_mj = TFile(foutname+"_mjets.root", "recreate")
-        logger.info(f"Create output file: {self.outfile_mj.GetName()}")
-
-        # reco tree
-        self.newtree_reco_mj = self.tree_reco.CloneTree(0)
-        self.newtree_reco_mj.SetName('reco')
-
-        # add extra branches
-        self.extra_variables_reco_mj = varsExtra(
-            *getPrefixReco(self.recoAlgo), compute_energy=True,
-            sum_weights_map = sumWeights_dict
-        )
-        self.extra_variables_reco_mj.set_up_branches(self.newtree_reco_mj)
-
-        # truth tree
-        if self.tree_truth:
-            self.newtree_truth_mj = self.tree_truth.CloneTree(0)
-            self.newtree_truth_mj.SetName(self.truthLevel)
-
-            # add extra branches
-            self.extra_variables_truth_mj = varsExtra(
-                *getPrefixTruth(self.truthLevel),
-                compute_energy = self.truthLevel!="parton",
-                sum_weights_map = sumWeights_dict, is_reco=False
-            )
-            self.extra_variables_truth_mj.set_up_branches(self.newtree_truth_mj)
-        else:
-            self.newtree_truth_mj = None
-            self.extra_variables_truth_mj = None
+            self.newtree_truth = None
+            self.extra_variables_truth = None
 
     def _build_reco_index(self, checkDuplicate):
         logger.info(f"Build index hash table for reco tree")
@@ -367,18 +333,6 @@ class Ntupler():
                 logger.info(f"WARNING! event {i}: passEJets = {passEJets} passMJets = {passMJets}")
                 continue
 
-            # pointers to the extra variables and output trees
-            if passEJets:
-                extra_vars_reco = self.extra_variables_reco_ej
-                extra_vars_truth = self.extra_variables_truth_ej
-                newtree_reco = self.newtree_reco_ej
-                newtree_truth = self.newtree_truth_ej
-            else: # passMJets
-                extra_vars_reco = self.extra_variables_reco_mj
-                extra_vars_truth = self.extra_variables_truth_mj
-                newtree_reco = self.newtree_reco_mj
-                newtree_truth = self.newtree_truth_mj
-
             # try to find the matched event in the truth tree
             isTruthMatched = False
 
@@ -400,34 +354,34 @@ class Ntupler():
                         isTruthMatched = sel.passPLSelections(self.tree_truth)
 
                 if isTruthMatched:
-                    extra_vars_truth.write_event(self.tree_truth)
-                    extra_vars_truth.set_dummy_flag(0)
-                    extra_vars_truth.set_match_flag(1)
+                    self.extra_variables_truth.write_event(self.tree_truth)
+                    self.extra_variables_truth.set_dummy_flag(0)
+                    self.extra_variables_truth.set_match_flag(1)
                 else:
                     # no matched truth event or the truth event fails selections
-                    extra_vars_truth.write_event(self.tree_truth)
-                    extra_vars_truth.set_dummy_flag(1)
-                    extra_vars_truth.set_match_flag(0)
+                    self.extra_variables_truth.write_event(self.tree_truth)
+                    self.extra_variables_truth.set_dummy_flag(1)
+                    self.extra_variables_truth.set_match_flag(0)
 
-            extra_vars_reco.write_event(self.tree_reco)
-            extra_vars_reco.set_dummy_flag(0)
-            extra_vars_reco.set_match_flag(isTruthMatched)
+            self.extra_variables_reco.write_event(self.tree_reco)
+            self.extra_variables_reco.set_dummy_flag(0)
+            self.extra_variables_reco.set_match_flag(isTruthMatched)
 
             # fill the new tree
             if self.tree_truth is None:
                 # just fill the new reco tree
-                newtree_reco.Fill()
+                self.newtree_reco.Fill()
             else:
                 if isTruthMatched or saveUnmatchedReco:
                     # fill the new reco and truth tree
-                    newtree_reco.Fill()
-                    newtree_truth.Fill()
+                    self.newtree_reco.Fill()
+                    self.newtree_truth.Fill()
 
             # fill the histograms
             if self.histograms:
-                self.histograms.fillReco(newtree_reco)
+                self.histograms.fillReco(self.newtree_reco)
                 if isTruthMatched:
-                    self.histograms.fillResponse(newtree_reco, newtree_truth)
+                    self.histograms.fillResponse(self.newtree_reco, self.newtree_truth)
 
         # end of tree_reco loop
 
@@ -491,28 +445,11 @@ class Ntupler():
                     # skip
                     continue
 
-            passEJets = sel.passTruthSelections_ejets(self.tree_truth)
-            passMJets = sel.passTruthSelections_mjets(self.tree_truth)
+            self.extra_variables_truth.write_event(self.tree_truth)
+            self.extra_variables_truth.set_match_flag(0)
+            self.extra_variables_truth.set_dummy_flag(0)
 
-            if passEJets:
-                extra_vars_reco = self.extra_variables_reco_ej
-                extra_vars_truth = self.extra_variables_truth_ej
-                newtree_reco = self.newtree_reco_ej
-                newtree_truth = self.newtree_truth_ej
-            elif passMJets:
-                extra_vars_reco = self.extra_variables_reco_mj
-                extra_vars_truth = self.extra_variables_truth_mj
-                newtree_reco = self.newtree_reco_mj
-                newtree_truth = self.newtree_truth_mj
-            else:
-                # do not know tau decay products, skip for now
-                continue
-
-            extra_vars_truth.write_event(self.tree_truth)
-            extra_vars_truth.set_match_flag(0)
-            extra_vars_truth.set_dummy_flag(0)
-
-            newtree_truth.Fill()
+            self.newtree_truth.Fill()
 
             # fill reco tree with dummy events
             # get a random event from the reco tree
@@ -520,11 +457,11 @@ class Ntupler():
             ireco = -1
             self.tree_reco.GetEntry(ireco)
 
-            extra_vars_reco.write_event(self.tree_reco)
-            extra_vars_reco.set_match_flag(0)
-            extra_vars_reco.set_dummy_flag(1)
+            self.extra_variables_reco.write_event(self.tree_reco)
+            self.extra_variables_reco.set_match_flag(0)
+            self.extra_variables_reco.set_dummy_flag(1)
 
-            newtree_reco.Fill()
+            self.newtree_reco.Fill()
 
         # end of tree_truth loop
 
@@ -532,10 +469,7 @@ class Ntupler():
         logger.info(f"Processing all truth events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_truth:.5f} seconds/event)")
 
     def _write_to_files(self):
-        self.outfile_ej.Write()
-        self.outfile_ej.Close()
-
-        self.outfile_mj.Write()
-        self.outfile_mj.Close()
+        self.outfile.Write()
+        self.outfile.Close()
 
         self.histograms.write_to_file()
