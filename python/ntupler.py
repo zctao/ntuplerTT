@@ -472,4 +472,5 @@ class Ntupler():
         self.outfile.Write()
         self.outfile.Close()
 
-        self.histograms.write_to_file()
+        if self.histograms is not None:
+            self.histograms.write_to_file()
