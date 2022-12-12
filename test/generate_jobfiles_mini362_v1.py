@@ -280,7 +280,7 @@ t_done = time.time()
 print(f"Total time: {(t_done-t_start)/60.:.2f} min")
 
 # write dict to disk
-foutname = 'configs/jobs_mini362_v1/jobfiles.yaml'
+foutname = os.path.join(topoutdir, 'jobs_mini362_v1/jobfiles.yaml')
 
 if not os.path.isdir(os.path.dirname(foutname)):
     os.makedirs(os.path.dirname(foutname))

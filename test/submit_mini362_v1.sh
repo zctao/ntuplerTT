@@ -1,5 +1,5 @@
 #!/bin/bash
-jobcfg=configs/jobs_mini362_v1/jobfiles.yaml
+jobcfg=${1:-${HOME}/data/NtupleTT/latest/jobs_mini362_v1/jobfiles.yaml}
 
 # obs
 python scripts/submitJobs.py ${jobcfg} -c obs
