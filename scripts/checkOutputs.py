@@ -2,9 +2,16 @@ import os
 import yaml
 import ROOT
 
+import logging
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-7s %(name)-10s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+    )
+logger = logging.getLogger("checkOutputs")
+
 def checkNumInputs(dirname):
     inlistdir = os.path.join(dirname, "inputs")
-    print(f"Check input files in {inlistdir}")
+    logger.debug(f"Check input files in {inlistdir}")
 
     indices = set()
 
@@ -50,7 +57,7 @@ def checkJobLogs(dirname, bad_job_indices):
             last_line = flog.readlines()[-1]
 
         if not "exit code " in last_line:
-            print(f"ERROR: cannot find the exit code in the last line of the log {logname}")
+            logger.debug(f"ERROR: cannot find the exit code in the last line of the log {logname}")
             bad_job_indices.add(arrayid)
         else:
             # extract the exit code
@@ -63,7 +70,7 @@ def checkJobLogs(dirname, bad_job_indices):
     return str(njobs_success)+'/'+str(njobs_exp)
 
 def checkROOTinDir(dirname):
-    print(f"Check ROOT files in {dirname}")
+    logger.debug(f"Check ROOT files in {dirname}")
     nfiles = 0
     ngood = 0
 
@@ -101,7 +108,7 @@ def checkROOTinDir(dirname):
                     ngoodtrees += 1
             rootfile.Close()
         except Exception as e:
-            print(f"Failed to open ROOT file {fullname}: {e}")
+            logger.debug(f"Failed to open ROOT file {fullname}: {e}")
 
         if treenames:
             ngood += int(ngoodtrees / len(treenames))
@@ -141,6 +148,7 @@ def checkOutputs(jDict, sDict, check_root=False):
 
             # get directory name
             dirname = os.path.dirname(jDict[k])
+            logger.info(f"Checking {dirname}")
 
             # indices of jobs to be resubmitted
             jobarray_index_resubmit = set()
@@ -183,28 +191,36 @@ if __name__ == "__main__":
                         help="Config file for outputs")
     parser.add_argument("-r", "--check-root", action='store_true',
                         help="If True, check the output ROOT files too")
+    parser.add_argument("-v", "--verbose", action='store_true',
+                        help="If True, set logging level to DEBUG, else INFO")
 
     args = parser.parse_args()
 
-    print(f"Read job config {args.job_config}")
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+    logger.info(f"Read job config {args.job_config}")
     with open(args.job_config) as f:
         jobs_dict = yaml.load(f, yaml.FullLoader)
     jcfg_names = os.path.splitext(args.job_config)
 
     if args.submit_config is None:
         args.submit_config = jcfg_names[0] + '_submitted' + jcfg_names[1]
-    print(f"Read job submission status from {args.submit_config}")
+    logger.info(f"Read job submission status from {args.submit_config}")
     with open(args.submit_config) as f:
         submit_dict = yaml.load(f, yaml.FullLoader)
 
+    logger.info(f"Start checking jobs")
     result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, args.check_root)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
-    print(f"Write results to {args.output}")
+    logger.info(f"Write results to {args.output}")
     with open(args.output, 'w') as outfile:
         yaml.dump(result_dict, outfile)
 
-    print(f"Write list of scripts for resubmitting jobs")
+    logger.info(f"Write list of scripts for resubmitting jobs")
     with open(os.path.join(os.path.dirname(args.output), "resubmit_list.txt"), 'w') as f_resub:
         f_resub.writelines('\n'.join(fresub_list))
