@@ -123,11 +123,11 @@ def prepareResub(fname_orig, indices_resub):
             if "#SBATCH --array=" in line:
                 fresub.write("#SBATCH --array=" + ",".join([str(x) for x in indices_resub]) + "\n")
             else:
-                fresub.write(line+'\n')
+                fresub.write(line)
 
     return fname_resub
 
-def checkOutputs(jDict, sDict):
+def checkOutputs(jDict, sDict, check_root=False):
     oDict = {}
     flist_resub = []
 
@@ -146,20 +146,25 @@ def checkOutputs(jDict, sDict):
             jobarray_index_resubmit = set()
 
             # check files
-            res = checkROOTinDir(dirname)
+            if check_root:
+                res = checkROOTinDir(dirname)
+            else:
+                res = 'n/a'
 
             # check logs
             logs = checkJobLogs(dirname, jobarray_index_resubmit)
 
             # write to the result dictionary
-            oDict[k] = f"{res} (files) {logs} (jobs)"
+            res_str = f"{res} (files) {logs} (jobs)"
 
             if len(jobarray_index_resubmit) > 0:
-                oDict[k] += f" failed: {sorted(jobarray_index_resubmit)}"
+                res_str += f" failed: {sorted(jobarray_index_resubmit)}"
 
                 # prepare job files to be resubmitted
                 fpath_resub = prepareResub(jDict[k], sorted(jobarray_index_resubmit))
                 flist_resub.append(fpath_resub)
+
+            oDict[k] = res_str
 
     return oDict, flist_resub
 
@@ -176,6 +181,8 @@ if __name__ == "__main__":
                         help="Config file of job submission status")
     parser.add_argument("-o", "--output", type=str,
                         help="Config file for outputs")
+    parser.add_argument("-r", "--check-root", action='store_true',
+                        help="If True, check the output ROOT files too")
 
     args = parser.parse_args()
 
@@ -190,7 +197,7 @@ if __name__ == "__main__":
     with open(args.submit_config) as f:
         submit_dict = yaml.load(f, yaml.FullLoader)
 
-    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict)
+    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, args.check_root)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
