@@ -275,6 +275,7 @@ def writeJobFile(
     # job file name
     foutname = f"submitJob_{sample}_{'_'.join(subcampaigns)}.sh"
     foutname = os.path.join(submit_dir, foutname)
+    foutname = os.path.realpath(foutname)
 
     # write job file
     if site == 'flashy':

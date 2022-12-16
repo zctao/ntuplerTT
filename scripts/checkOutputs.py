@@ -132,7 +132,7 @@ def prepareResub(fname_orig, indices_resub):
             else:
                 fresub.write(line)
 
-    return fname_resub
+    return os.path.realpath(fname_resub)
 
 def checkOutputs(jDict, sDict, check_root=False):
     oDict = {}
