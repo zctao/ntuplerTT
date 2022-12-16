@@ -16,38 +16,36 @@ def checkNumInputs(dirname):
     # return the number of indices
     return len(indices)
 
-def checkJobLogs(dirname):
-    # Get the expected number of files from the number of input lists
+def checkJobLogs(dirname, bad_job_indices):
+    # Get the expected number of jobs from the number of input lists
     njobs_exp = checkNumInputs(dirname)
     njobs_success = 0
 
-    jobid = None
+    jobids = [None] * njobs_exp
 
-    # Check the job logs
+    # Check job logs
     for fname in os.listdir(dirname):
         # expect log extension '.out'
-        fext = os.path.splitext(fname)[-1]
-        if fext != '.out':
+        if os.path.splitext(fname)[-1] != '.out':
             continue
 
-        # log name is the job id: 1234_5.out
-        jid = os.path.splitext(fname)[0]
-        jid = int(jid.split('_')[0])
-        if jobid is None:
-            jobid = jid
-        else:
-            if jid > jobid:
-                # This is a newer job log with larger id.
-                jobid = jid
-                # reset previous counts
-                njobs_success = 0
-            elif jid < jobid:
-                # This is an old job log. Skip
-                continue
+        # expect the log name is the job id: 1234_5.out
+        fullid = os.path.splitext(fname)[0]
+        jid, arrayid = fullid.split('_')
+        jid = int(jid)
+        arrayid = int(arrayid)
 
-        # open the log file and read the last line
-        # exit code
-        logname = os.path.join(dirname, fname)
+        if jobids[arrayid] is None or jid > jobids[arrayid]:
+            # assume newer jobs have larger ids
+            jobids[arrayid] = jid
+
+    # Read the latest logs for all jobs
+    for arrayid, jobid in enumerate(jobids):
+        if jobid is None:
+            bad_job_indices.add(arrayid)
+            continue
+
+        logname = os.path.join(dirname, f"{jobid}_{arrayid}.out")
         with open(logname, 'r') as flog:
             last_line = flog.readlines()[-1]
 
@@ -58,6 +56,8 @@ def checkJobLogs(dirname):
             exit_code = int(last_line.split('exit code ')[1])
             if exit_code == 0:
                 njobs_success += 1
+            else:
+                bad_job_indices.add(arrayid)
 
     return str(njobs_success)+'/'+str(njobs_exp)
 
@@ -107,12 +107,33 @@ def checkROOTinDir(dirname):
 
     return str(ngood)+'/'+str(nfiles)
 
+def prepareResub(fname_orig, indices_resub):
+    dirname = os.path.dirname(fname_orig)
+    basename = os.path.basename(fname_orig)
+    fname_resub = os.path.join(dirname, 're'+basename)
+
+    # Read the original submit script
+    with open(fname_orig, 'r') as forig:
+        lines = forig.readlines()
+
+    # modify the line that sets job arrays and write to a new file fname_resub
+    with open(fname_resub, 'w') as fresub:
+        for line in lines:
+            if "#SBATCH --array=" in line:
+                fresub.write("#SBATCH --array=" + ",".join([str(x) for x in indices_resub]) + "\n")
+            else:
+                fresub.write(line+'\n')
+
+    return fname_resub
+
 def checkOutputs(jDict, sDict):
     oDict = {}
+    flist_resub = []
 
     for k in jDict:
         if isinstance(jDict[k], dict):
-            oDict[k] = checkOutputs(jDict[k], sDict[k])
+            oDict[k], flist = checkOutputs(jDict[k], sDict[k])
+            flist_resub += flist
         else:
             if not sDict[k]: # skip if the job is not yet submitted
                 continue
@@ -120,16 +141,26 @@ def checkOutputs(jDict, sDict):
             # get directory name
             dirname = os.path.dirname(jDict[k])
 
+            # indices of jobs to be resubmitted
+            jobarray_index_resubmit = set()
+
             # check files
             res = checkROOTinDir(dirname)
 
             # check logs
-            logs = checkJobLogs(dirname)
+            logs = checkJobLogs(dirname, jobarray_index_resubmit)
 
             # write to the result dictionary
             oDict[k] = f"{res} (files) {logs} (jobs)"
 
-    return oDict
+            if len(jobarray_index_resubmit) > 0:
+                oDict[k] += f" failed: {sorted(jobarray_index_resubmit)}"
+
+                # prepare job files to be resubmitted
+                fpath_resub = prepareResub(jDict[k], sorted(jobarray_index_resubmit))
+                flist_resub.append(fpath_resub)
+
+    return oDict, flist_resub
 
 if __name__ == "__main__":
 
@@ -158,10 +189,14 @@ if __name__ == "__main__":
     with open(args.submit_config) as f:
         submit_dict = yaml.load(f, yaml.FullLoader)
 
-    result_dict = checkOutputs(jobs_dict, submit_dict)
+    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
     print(f"Write results to {args.output}")
     with open(args.output, 'w') as outfile:
         yaml.dump(result_dict, outfile)
+
+    print(f"Write list of scripts for resubmitting jobs")
+    with open(os.path.join(os.path.dirname(args.output), "resubmit_list.txt"), 'w') as f_resub:
+        f_resub.writelines('\n'.join(fresub_list))
