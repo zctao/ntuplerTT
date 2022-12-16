@@ -51,6 +51,7 @@ def checkJobLogs(dirname, bad_job_indices):
 
         if not "exit code " in last_line:
             print(f"ERROR: cannot find the exit code in the last line of the log {logname}")
+            bad_job_indices.add(arrayid)
         else:
             # extract the exit code
             exit_code = int(last_line.split('exit code ')[1])
