@@ -110,4 +110,6 @@ ntupler(
 )
 
 mcurrent, mpeak = tracemalloc.get_traced_memory()
-logger.debug(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
+logger.info(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
+
+tracemalloc.stop()
