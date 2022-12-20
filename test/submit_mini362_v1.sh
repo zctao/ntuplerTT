@@ -45,3 +45,5 @@ python scripts/submitJobs.py ${jobcfg} -c mcWAlt -s ttbar_hdamp ttbar_mt169 ttba
 python scripts/submitJobs.py ${jobcfg} -c mcWAlt -s VV VV_syst
 python scripts/submitJobs.py ${jobcfg} -c mcWAlt -s singleTop singleTop_DS singleTop_amc singleTop_hw
 python scripts/submitJobs.py ${jobcfg} -c mcWAlt -s ttH ttV ttV_syst
+# ttbar AFII
+python scripts/submitJobs.py ${jobcfg} -c mcWAlt -s ttbar_AFII
