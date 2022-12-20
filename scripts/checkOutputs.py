@@ -134,13 +134,13 @@ def prepareResub(fname_orig, indices_resub):
 
     return os.path.realpath(fname_resub)
 
-def checkOutputs(jDict, sDict, check_root=False):
+def checkOutputs(jDict, sDict, check_root, verify):
     oDict = {}
     flist_resub = []
 
     for k in jDict:
         if isinstance(jDict[k], dict):
-            oDict[k], flist = checkOutputs(jDict[k], sDict[k])
+            oDict[k], flist = checkOutputs(jDict[k], sDict[k], check_root, verify)
             flist_resub += flist
         else:
             if not sDict[k]: # skip if the job is not yet submitted
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         submit_dict = yaml.load(f, yaml.FullLoader)
 
     logger.info(f"Start checking jobs")
-    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, args.check_root)
+    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, check_root=args.check_root, verify=args.check_log)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
