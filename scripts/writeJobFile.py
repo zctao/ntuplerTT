@@ -7,7 +7,7 @@ template_header_pbs = """#!/bin/bash
 #PBS -t 0-{njobarray}%{max_task}
 #PBS -o {outdir}
 #PBS -j oe
-#PBS -m abe
+### #PBS -m abe
 ### #PBS -M
 #PBS -l nodes=1
 
@@ -21,7 +21,7 @@ if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 template_header_slurm = """#!/bin/bash
 #SBATCH --array=0-{njobarray}%{max_task}
 #SBATCH --output={outdir}/%A_%a.out
-#SBATCH --mail-type=ALL
+### #SBATCH --mail-type=ALL
 ### #SBATCH --mail-user=
 #SBATCH --mem=4G
 #SBATCH --export=NONE
@@ -187,8 +187,12 @@ def writeJobFile(
     if email:
         if job_manager == 'torque':
             template_header_pbs = template_header_pbs.replace(
+                "### #PBS -m abe", "#PBS -m abe")
+            template_header_pbs = template_header_pbs.replace(
                 "### #PBS -M", f"#PBS -M {email}")
         elif job_manager == 'slurm':
+            template_header_slurm = template_header_slurm.replace(
+                "### #SBATCH --mail-type=ALL", "#SBATCH --mail-type=ALL")
             template_header_slurm = template_header_slurm.replace(
                 "### #SBATCH --mail-user=", f"#SBATCH --mail-user={email}")
 
