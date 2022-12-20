@@ -1,38 +1,38 @@
 #!/usr/bin/env python3
 import os
-import sys
 import yaml
 import time
 
 from datasets import read_config
 from writeJobFile import writeJobFile
 
-# Usage
-def printHelp():
-    print("Usage: python generate_jobfiles_mini362_v1.py [site]")
+import argparse
 
-site = 'atlasserv' # default, options: atlasserv, flashy, cedar
-if len(sys.argv) == 1:
-    pass
-elif len(sys.argv) == 2:
-    if sys.argv[1] in ['-h', '-?', 'help']:
-        printHelp()
-        sys.exit()
-    else:
-        site = sys.argv[1]
-else:
-    printHelp()
-    sys.exit()
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-s", "--site", choices=["atlasserv", "flashy", "cedar"],
+                    default="atlasserv",
+                    help="Site to run jobs on")
+parser.add_argument("-i", "--input-dir", type=str,
+                    default="~/data/ttbarDiffXs13TeV/MINI362_v1",
+                    help="Local directory where input sample files are stored")
+parser.add_argument("-o", "--output-dir", type=str,
+                    default="~/data/NtupleTT/latest",
+                    help="Output directory")
+parser.add_argument("-e", "--email", type=str,
+                    help="Email for slurm to send notification")
+
+args = parser.parse_args()
 
 ##
-# local directory where input sample files are stored
-local_sample_dir = os.path.join(
-    os.getenv("HOME"), 'data/ttbarDiffXs13TeV/MINI362_v1')
+# input sample directory
+local_sample_dir = os.path.expanduser(args.input_dir)
+if not os.path.isdir(local_sample_dir):
+    sys.exit(f"Found no input directory: {local_sample_dir}")
 
 ##
 # output directory
-topoutdir = os.path.join(os.getenv("HOME"), 'data/NtupleTT/latest')
-
+topoutdir = os.path.expanduser(args.output_dir)
 if not os.path.isdir(topoutdir):
     os.makedirs(topoutdir)
 
@@ -64,8 +64,8 @@ t_start = time.time()
 
 # Common arguments for writeJobFile
 common_args = {
-    'email': os.getenv('USER')+'@phas.ubc.ca',
-    'site': site,
+    'email': args.email,
+    'site': args.site,
     'local_dir': local_sample_dir,
     #'max_task': 8,
     'verbosity': 0
