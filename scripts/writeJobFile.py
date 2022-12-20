@@ -23,7 +23,7 @@ template_header_slurm = """#!/bin/bash
 #SBATCH --output={outdir}/%A_%a.out
 ### #SBATCH --mail-type=ALL
 ### #SBATCH --mail-user=
-#SBATCH --mem=4G
+#SBATCH --mem=8G
 #SBATCH --export=NONE
 """
 
