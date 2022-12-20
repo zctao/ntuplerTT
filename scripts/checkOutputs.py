@@ -23,7 +23,21 @@ def checkNumInputs(dirname):
     # return the number of indices
     return len(indices)
 
-def checkJobLogs(dirname, bad_job_indices):
+def verifyLogs(file_log):
+    nevents = 0
+    for line in file_log:
+        if "processing event #" in line:
+            nevt_cur = int(line.split("processing event #")[-1].strip())
+            if nevt_cur == 0:
+                nevents = 0
+
+            if nevt_cur < nevents:
+                # something is wrong
+                return False
+
+    return True
+
+def checkJobLogs(dirname, bad_job_indices, verify=False):
     # Get the expected number of jobs from the number of input lists
     njobs_exp = checkNumInputs(dirname)
     njobs_success = 0
@@ -55,6 +69,10 @@ def checkJobLogs(dirname, bad_job_indices):
         logname = os.path.join(dirname, f"{jobid}_{arrayid}.out")
         with open(logname, 'r') as flog:
             last_line = flog.readlines()[-1]
+            if verify:
+                logOk = verifyLogs(flog)
+                if not logOk:
+                    logger.critical(f"Something is wrong. Check {logname}")
 
         if not "exit code " in last_line:
             logger.debug(f"ERROR: cannot find the exit code in the last line of the log {logname}")
@@ -160,7 +178,7 @@ def checkOutputs(jDict, sDict, check_root, verify):
                 res = 'n/a'
 
             # check logs
-            logs = checkJobLogs(dirname, jobarray_index_resubmit)
+            logs = checkJobLogs(dirname, jobarray_index_resubmit, verify=verify)
 
             # write to the result dictionary
             res_str = f"{res} (files) {logs} (jobs)"
@@ -191,6 +209,8 @@ if __name__ == "__main__":
                         help="Config file for outputs")
     parser.add_argument("-r", "--check-root", action='store_true',
                         help="If True, check the output ROOT files too")
+    parser.add_argument("-c", "--check-log", action="store_true",
+                        help="If True, check the job logs more carefully")
     parser.add_argument("-v", "--verbose", action='store_true',
                         help="If True, set logging level to DEBUG, else INFO")
 
