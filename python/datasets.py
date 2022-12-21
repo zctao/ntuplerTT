@@ -223,10 +223,10 @@ def writeDataFileLists(dataset_config,
             findex_s = os.path.basename(f_s).split('.')[-3]
             assert(findex_s == findex_reco)
 
-        if current_size >= total_size / njobs:
+        if current_size + filesizes['tt'][ifile] > total_size / njobs:
+            # close the current output files and create new ones
             ijob += 1
             current_size = 0
-            # close the current output files and create new ones
             for s in foutputs:
                 foutputs[s].close()
                 fnames[s].append(fnames_template[s].format(ijob))
