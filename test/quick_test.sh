@@ -5,13 +5,13 @@ findex=${1:-000030}
 # a larger sample
 #findex=000002
 
-rootfiles_reco=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt.root/user.mromano.25781090._${findex}.tt.root
+rootfiles_reco=/mnt/xrootdh/ztao/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt.root/user.mromano.25781090._${findex}.tt.root
 
-rootfiles_truth=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt_truth.root/user.mromano.25781090._${findex}.tt_truth.root
+rootfiles_truth=/mnt/xrootdh/ztao/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt_truth.root/user.mromano.25781090._${findex}.tt_truth.root
 
-rootfiles_PL=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt_PL.root/user.mromano.25781090._${findex}.tt_PL.root
+rootfiles_PL=/mnt/xrootdh/ztao/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_tt_PL.root/user.mromano.25781090._${findex}.tt_PL.root
 
-#rootfiles_sumw=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_sumWeights.root/user.mromano.25781090._${findex}.sumWeights.root
+#rootfiles_sumw=/mnt/xrootdh/ztao/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16e/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4346.TTDIFFXS361_v05.MINI362_v1_sumWeights.root/user.mromano.25781090._${findex}.sumWeights.root
 
 sumw_config=${SourceDIR}/configs/datasets/ttdiffxs361/sumWeights_detNP.yaml
 
