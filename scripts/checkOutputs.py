@@ -133,7 +133,7 @@ def checkROOTinDir(dirname):
 
     return str(ngood)+'/'+str(nfiles)
 
-def prepareResub(fname_orig, indices_resub):
+def prepareResub(fname_orig, indices_resub, extra_mem=0):
     dirname = os.path.dirname(fname_orig)
     basename = os.path.basename(fname_orig)
     fname_resub = os.path.join(dirname, 're'+basename)
@@ -147,18 +147,25 @@ def prepareResub(fname_orig, indices_resub):
         for line in lines:
             if "#SBATCH --array=" in line:
                 fresub.write("#SBATCH --array=" + ",".join([str(x) for x in indices_resub]) + "\n")
+            elif '#SBATCH --mem=' in line and extra_mem > 0:
+                mem_str = line.split("=")[-1].strip()
+                # It is assumed the mem_str is in the unit of GB
+                assert(len(mem_str.split('G'))==2)
+                mem_cur = int(mem_str.split('G')[0].strip())
+                mem_new = mem_cur + extra_mem
+                fresub.write(f"#SBATCH --mem={mem_new}G\n")
             else:
                 fresub.write(line)
 
     return os.path.realpath(fname_resub)
 
-def checkOutputs(jDict, sDict, check_root, verify):
+def checkOutputs(jDict, sDict, check_root, verify, extra_mem=0):
     oDict = {}
     flist_resub = []
 
     for k in jDict:
         if isinstance(jDict[k], dict):
-            oDict[k], flist = checkOutputs(jDict[k], sDict[k], check_root, verify)
+            oDict[k], flist = checkOutputs(jDict[k], sDict[k], check_root, verify, extra_mem)
             flist_resub += flist
         else:
             if not sDict[k]: # skip if the job is not yet submitted
@@ -187,7 +194,7 @@ def checkOutputs(jDict, sDict, check_root, verify):
                 res_str += f" failed: {sorted(jobarray_index_resubmit)}"
 
                 # prepare job files to be resubmitted
-                fpath_resub = prepareResub(jDict[k], sorted(jobarray_index_resubmit))
+                fpath_resub = prepareResub(jDict[k], sorted(jobarray_index_resubmit), extra_mem)
                 flist_resub.append(fpath_resub)
 
             oDict[k] = res_str
@@ -211,6 +218,8 @@ if __name__ == "__main__":
                         help="If True, check the output ROOT files too")
     parser.add_argument("-c", "--check-log", action="store_true",
                         help="If True, check the job logs more carefully")
+    parser.add_argument("-m", "--increase-mem", type=int, default=0,
+                        help="Amount of extra memory (GB) to request for he failed jobs")
     parser.add_argument("-v", "--verbose", action='store_true',
                         help="If True, set logging level to DEBUG, else INFO")
 
@@ -233,7 +242,7 @@ if __name__ == "__main__":
         submit_dict = yaml.load(f, yaml.FullLoader)
 
     logger.info(f"Start checking jobs")
-    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, check_root=args.check_root, verify=args.check_log)
+    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, check_root=args.check_root, verify=args.check_log, extra_mem=args.increase_mem)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
