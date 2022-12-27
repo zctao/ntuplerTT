@@ -224,15 +224,18 @@ def writeDataFileLists(dataset_config,
             assert(findex_s == findex_reco)
 
         if current_size + filesizes['tt'][ifile] > total_size / njobs:
-            # close the current output files and create new ones
-            ijob += 1
-            current_size = 0
-            for s in foutputs:
-                foutputs[s].close()
-                fnames[s].append(fnames_template[s].format(ijob))
-                foutputs[s] = open( fnames[s][-1], 'w')
-                if not quiet:
-                    print(f"Create file {fnames[s][-1]}")
+            if current_size == 0:
+                print(f"WARNING: Empty input file list: {sample_name} {subcampaigns} {ifile}")
+            else:
+                ijob += 1
+                current_size = 0
+                # close the current output files and create new ones
+                for s in foutputs:
+                    foutputs[s].close()
+                    fnames[s].append(fnames_template[s].format(ijob))
+                    foutputs[s] = open( fnames[s][-1], 'w')
+                    if not quiet:
+                        print(f"Create file {fnames[s][-1]}")
 
         # write to the output files
         for s in suffix:
