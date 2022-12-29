@@ -189,14 +189,12 @@ class Ntupler():
         ######
         # Loop over truth tree
         if saveUnmatchedTruth or self.histograms is not None:
-            self._iterate_truth_tree(maxevents)
+            self._iterate_truth_tree(maxevents, saveEvents=saveUnmatchedTruth)
 
         ###
         # new reco and truth trees should be of the same length
-        #if self.newtree_truth_ej is not None:
-        #    assert(self.newtree_reco_ej.GetEntries() == self.newtree_truth_ej.GetEntries())
-        #if self.newtree_truth_mj is not None:
-        #    assert(self.newtree_reco_mj.GetEntries() == self.newtree_truth_mj.GetEntries())
+        #if self.newtree_truth is not None:
+        #    assert(self.newtree_reco.GetEntries() == self.newtree_truth.GetEntries())
 
         if self.histograms:
             self.histograms.computeCorrections()
@@ -388,7 +386,7 @@ class Ntupler():
         tdone = time.time()
         logger.info(f"Processing all reco events took {tdone-tstart:.2f} seconds ({(tdone-tstart)/nevents_reco:.5f} seconds/event)")
 
-    def _iterate_truth_tree(self, maxevents=None, truthLevel='parton', saveEvents=False):
+    def _iterate_truth_tree(self, maxevents=None, saveEvents=False):
 
         logger.info("Iterate through events in truth trees")
 
@@ -424,9 +422,12 @@ class Ntupler():
             if not passTruthSel:
                 continue
 
+            # compute some extra variables that are not in the input tree
+            self.extra_variables_truth.write_event(self.tree_truth)
+
             # fill the histograms
             if self.histograms:
-                self.histograms.fillTruth(self.tree_truth)
+                self.histograms.fillTruth(self.tree_truth, self.extra_variables_truth)
 
             if not saveEvents:
                 continue
@@ -445,7 +446,6 @@ class Ntupler():
                     # skip
                     continue
 
-            self.extra_variables_truth.write_event(self.tree_truth)
             self.extra_variables_truth.set_match_flag(0)
             self.extra_variables_truth.set_dummy_flag(0)
 

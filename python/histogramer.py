@@ -108,8 +108,8 @@ class HistogramManager():
             ]
 
         # event weight names
-        self.wname = "totalWeight_nominal"
-        self.wname_mc = "weight_mc"
+        self.wname = "normalized_weight"
+        self.wname_mc = "normalized_weight_mc"
 
         # file to save the histograms
         self.outfile = TFile(outputname, "recreate")
@@ -166,12 +166,20 @@ class HistogramManager():
 
             self.hists_d[ob]['reco'].Fill(value, w)
 
-    def fillTruth(self, event):
-        w = getattr(event, self.wname_mc)
+    def fillTruth(self, event, extra_vars):
+        try:
+            w = getattr(event, self.wname_mc)
+        except AttributeError:
+            # get the normalized weight from extra_vars
+            w = extra_vars.normalized_weight[0]
 
         for ob in self.hists_d:
             vname = obsConfig_dict[ob]['truth']
-            value = getattr(event, vname)
+            try:
+                value = getattr(event, vname)
+            except AttributeError:
+                # try getting the variable from extra_vars
+                value = getattr(extra_vars, ob)
 
             if ob.endswith('_abs'):
                 value = abs(value)
