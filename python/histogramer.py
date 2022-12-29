@@ -215,42 +215,42 @@ class HistogramManager():
             self.hists_d[ob]['acceptance'] = getAcceptanceCorrection(
                 h2d_response = self.hists_d[ob]['response'],
                 h_reco = self.hists_d[ob]['reco'],
-                hname = "Acceptance",
+                hname = f"Acceptance_{ob}",
                 flow = True
             )
 
             self.hists_d[ob]['acceptance_noflow'] = getAcceptanceCorrection(
                 h2d_response = self.hists_d[ob]['response'],
                 h_reco = self.hists_d[ob]['reco'],
-                hname = "Acceptance_noflow",
+                hname = f"Acceptance_noflow_{ob}",
                 flow = False
             )
 
             self.hists_d[ob]['efficiency'] = getEfficiencyCorrection(
                 h2d_response = self.hists_d[ob]['response_mcweight'],
                 h_mctruth = self.hists_d[ob]['truth'],
-                hname = "Efficiency",
+                hname = f"Efficiency_{ob}",
                 flow = True
             )
 
             self.hists_d[ob]['efficiency_noflow'] = getEfficiencyCorrection(
                 h2d_response = self.hists_d[ob]['response_mcweight'],
                 h_mctruth = self.hists_d[ob]['truth'],
-                hname = "Efficiency_noflow",
+                hname = f"Efficiency_noflow_{ob}",
                 flow = False
             )
 
             self.hists_d[ob]['efficiency_wreco'] = getEfficiencyCorrection(
                 h2d_response = self.hists_d[ob]['response'],
                 h_mctruth = self.hists_d[ob]['truth'],
-                hname = "Efficiency_wreco",
+                hname = f"Efficiency_wreco_{ob}",
                 flow = True
             )
 
             self.hists_d[ob]['efficiency_wreco_noflow'] = getEfficiencyCorrection(
                 h2d_response = self.hists_d[ob]['response'],
                 h_mctruth = self.hists_d[ob]['truth'],
-                hname = "Efficiency_wreco_noflow",
+                hname = f"Efficiency_wreco_noflow_{ob}",
                 flow = False
             )
 
