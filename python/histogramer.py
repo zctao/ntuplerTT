@@ -1,4 +1,5 @@
 from array import array
+import json
 
 from ROOT import TH1D, TH2D, TFile
 
@@ -14,53 +15,59 @@ logger.setLevel(logging.INFO)
 obsConfig_dict = {
     "th_pt" : {
         "reco" : "PseudoTop_Reco_top_had_pt",
-        "truth" : "MC_thad_afterFSR_pt",
-        "bins" : [0,50,100,160,225,300,360,475,1000]
+        "truth" : "MC_thad_afterFSR_pt"
     },
     "th_y" : {
         "reco" :  "PseudoTop_Reco_top_had_y",
-        "truth" : "MC_thad_afterFSR_y",
-        "bins" : [-2.5,-1.7,-1.2,-0.8,-0.4,0.0,0.4,0.8,1.2,1.7,2.5]
+        "truth" : "MC_thad_afterFSR_y"
     },
     "th_y_abs" : {
         "reco" :  "PseudoTop_Reco_top_had_y",
-        "truth" : "MC_thad_afterFSR_y",
-        "bins" : [0.0,0.4,0.8,1.2,1.7,2.5]
+        "truth" : "MC_thad_afterFSR_y"
+    },
+    "th_phi" : {
+        "reco" :  "PseudoTop_Reco_top_had_phi",
+        "truth" : "MC_thad_afterFSR_phi"
+    },
+    "th_e" : {
+        "reco" :  "PseudoTop_Reco_top_had_E",
+        "truth" : "MC_thad_afterFSR_E"
     },
     "tl_pt" : {
         "reco" : "PseudoTop_Reco_top_lep_pt",
-        "truth" : "MC_tlep_afterFSR_pt",
-        "bins" : [0,50,100,160,225,300,360,475,1000]
+        "truth" : "MC_tlep_afterFSR_pt"
     },
     "tl_y" : {
         "reco" :  "PseudoTop_Reco_top_lep_y",
-        "truth" : "MC_tlep_afterFSR_y",
-        "bins" : [-2.5,-1.7,-1.2,-0.8,-0.4,0.0,0.4,0.8,1.2,1.7,2.5]
+        "truth" : "MC_tlep_afterFSR_y"
     },
     "tl_y_abs" : {
         "reco" :  "PseudoTop_Reco_top_lep_y",
-        "truth" : "MC_tlep_afterFSR_y",
-        "bins" : [0.0,0.4,0.8,1.2,1.7,2.5]
+        "truth" : "MC_tlep_afterFSR_y"
+    },
+    "tl_phi" : {
+        "reco" :  "PseudoTop_Reco_top_lep_phi",
+        "truth" : "MC_tlep_afterFSR_phi"
+    },
+    "tl_e" : {
+        "reco" :  "PseudoTop_Reco_top_lep_E",
+        "truth" : "MC_tlep_afterFSR_E"
     },
     "mtt": {
         "reco" : "PseudoTop_Reco_ttbar_m",
-        "truth" : "MC_ttbar_afterFSR_m",
-        "bins" : [325.00,400.00,480.00,580.00,700.00,860.00,1020.00,1250.00,1500.00,2000.00]
+        "truth" : "MC_ttbar_afterFSR_m"
     },
     "ptt": {
         "reco" : "PseudoTop_Reco_ttbar_pt",
-        "truth" : "MC_ttbar_afterFSR_pt",
-        "bins" : [0,40,90,150,230,310,390,470,550,800]
+        "truth" : "MC_ttbar_afterFSR_pt"
     },
     "ytt": {
         "reco" : "PseudoTop_Reco_ttbar_y",
-        "truth" : "MC_ttbar_afterFSR_y",
-        "bins" : [-2.5,-1.80,-1.40,-1.10,-0.80,-0.50,-0.25,0.00,0.25,0.50,0.80,1.10,1.40,1.80,2.5]
+        "truth" : "MC_ttbar_afterFSR_y"
     },
     "ytt_abs": {
         "reco" : "PseudoTop_Reco_ttbar_y",
-        "truth" : "MC_ttbar_afterFSR_y",
-        "bins" : [0.00,0.25,0.50,0.80,1.10,1.40,1.80,2.5]
+        "truth" : "MC_ttbar_afterFSR_y"
     },
 }
 
@@ -99,13 +106,15 @@ def getEfficiencyCorrection(h2d_response, h_mctruth, hname="Efficiency", flow=Tr
     return h_eff
 
 class HistogramManager():
-    def __init__(self, outputname='histograms.root'):
+    def __init__(
+        self,
+        outputname='histograms.root',
+        binning_config='configs/binning/bins_ttdiffxs_run2_ljets.json'
+        ):
 
-        observables = [
-            'th_pt', 'th_y', 'th_y_abs',
-            'tl_pt', 'tl_y', 'tl_y_abs',
-            'mtt', 'ptt', 'ytt', 'ytt_abs'
-            ]
+        # binning
+        with open(binning_config, 'r') as f_bins:
+            self.bins_d = json.load(f_bins)
 
         # event weight names
         self.wname = "normalized_weight"
@@ -126,7 +135,7 @@ class HistogramManager():
 
             self.hists_d[ob] = {}
 
-            bins_reco = array('f', obCfg['bins'])
+            bins_reco = array('f', self.bins_d[ob])
             nbins_reco = len(bins_reco) - 1
             var_reco = obCfg['reco']
             if ob.endswith('_abs'):
@@ -136,7 +145,7 @@ class HistogramManager():
             self.hists_d[ob]['reco'].GetXaxis().SetTitle(var_reco)
 
             # same reco and truth bins for now
-            bins_truth = array('f', obCfg['bins'])
+            bins_truth = array('f', self.bins_d[ob])
             nbins_truth = len(bins_truth) - 1
             var_truth = obCfg['truth']
             if ob.endswith('_abs'):
