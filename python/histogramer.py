@@ -1,7 +1,10 @@
 from array import array
 import json
 
-from ROOT import TH1D, TH2D, TFile
+from ROOT import TH1, TH1D, TH2D, TFile
+TH1.SetDefaultSumw2()
+
+import FlattenedHistogram as fh
 
 import logging
 logging.basicConfig(
@@ -126,6 +129,17 @@ class HistogramManager():
 
         # initialize histograms
         self.hists_d = {}
+        self._init_hists()
+        self._init_hists_multidim()
+
+    def _init_hists(
+        self,
+        observables = [
+            'th_pt', 'th_y', 'th_y_abs',# 'th_phi', 'th_e',
+            'tl_pt', 'tl_y', 'tl_y_abs',# 'tl_phi', 'tl_e'
+            'mtt', 'ptt', 'ytt', 'ytt_abs'
+            ]
+        ):
 
         for ob in observables:
             obCfg = obsConfig_dict.get(ob)
@@ -163,17 +177,75 @@ class HistogramManager():
             self.hists_d[ob]['response_mcweight'].GetXaxis().SetTitle(var_reco)
             self.hists_d[ob]['response_mcweight'].GetYaxis().SetTitle(var_truth)
 
+    def _init_hists_multidim(
+        self,
+        observables=[
+        "ptt_vs_mtt", "th_pt_vs_mtt", "th_pt_vs_ytt_abs", "mtt_vs_ytt_abs",
+        "mtt_vs_ptt_vs_ytt_abs", "mtt_vs_th_pt_vs_th_y_abs", "mtt_vs_th_pt_vs_ytt_abs", "mtt_vs_th_y_abs_vs_ytt_abs"]
+        ):
+
+        for obs in observables:
+            self.hists_d[obs] = {}
+
+            obs_list = obs.split("_vs_")
+
+            varnames_reco = [
+                obsConfig_dict[ob]['reco']+'_abs' if ob.endswith('_abs') else obsConfig_dict[ob]['reco'] for ob in obs_list
+                ]
+
+            varnames_truth = [
+                obsConfig_dict[ob]['truth']+'_abs' if ob.endswith('_abs') else obsConfig_dict[ob]['truth'] for ob in obs_list
+                ]
+
+            # same reco and truth bins for now
+            binning_reco_d = self.bins_d[obs]
+            binning_truth_d = self.bins_d[obs]
+
+            if len(obs_list) == 2:
+                FHist = fh.FlattenedHistogram2D
+                hname_pre = 'fh2d'
+            elif len(obs_list) == 3:
+                FHist = fh.FlattenedHistogram3D
+                hname_pre = 'fh3d'
+            else:
+                raise RuntimeError(f"Cannot make histograms for {obs}")
+
+            self.hists_d[obs]['reco'] = FHist(
+                f"{hname_pre}_{obs}_reco",
+                binning_reco_d,
+                *varnames_reco
+            )
+
+            self.hists_d[obs]['truth'] = FHist(
+                f"{hname_pre}_{obs}_truth",
+                binning_truth_d,
+                *varnames_truth
+            )
+
+            self.hists_d[obs]['response'] = fh.FlattenedResponse(
+                f"{hname_pre}_{obs}_response",
+                self.hists_d[obs]['reco'],
+                self.hists_d[obs]['truth']
+            )
+
+            self.hists_d[obs]['response_mcweight'] = fh.FlattenedResponse(
+                f"{hname_pre}_{obs}_response_mcWeight",
+                self.hists_d[obs]['reco'],
+                self.hists_d[obs]['truth']
+            )
+
     def fillReco(self, event):
         w = getattr(event, self.wname)
 
-        for ob in self.hists_d:
-            vname = obsConfig_dict[ob]['reco']
-            value = getattr(event, vname)
+        for obs in self.hists_d:
+            obs_list = obs.split('_vs_')
 
-            if ob.endswith('_abs'):
-                value = abs(value)
+            vnames = [obsConfig_dict[ob]['reco'] for ob in obs_list]
 
-            self.hists_d[ob]['reco'].Fill(value, w)
+            values = [getattr(event, vname) for vname in vnames]
+            values = [abs(val) if ob.endswith('_abs') else val for val, ob in zip(values, obs_list)]
+
+            self.hists_d[obs]['reco'].Fill(*values, w=w)
 
     def fillTruth(self, event, extra_vars):
         try:
@@ -182,45 +254,60 @@ class HistogramManager():
             # get the normalized weight from extra_vars
             w = extra_vars.normalized_weight[0]
 
-        for ob in self.hists_d:
-            vname = obsConfig_dict[ob]['truth']
+        for obs in self.hists_d:
+            obs_list = obs.split('_vs_')
+
+            vnames = [obsConfig_dict[ob]['truth'] for ob in obs_list]
+
             try:
-                value = getattr(event, vname)
+                values = [getattr(event, vname) for vname in vnames]
             except AttributeError:
                 # try getting the variable from extra_vars
-                value = getattr(extra_vars, ob)
+                values = [getattr(extra_vars, ob) for ob in obs_list]
 
-            if ob.endswith('_abs'):
-                value = abs(value)
+            for i in range(len(obs_list)):
+                if obs_list[i].endswith('_abs'):
+                    values[i] = abs(values[i])
+                if hasUnitMeV(vnames[i]):
+                    values[i] /= 1000. # convert from MeV to GeV
 
-            if hasUnitMeV(vname):
-                value = value / 1000. # convert from MeV to GeV
-
-            self.hists_d[ob]['truth'].Fill(value, w)
+            self.hists_d[obs]['truth'].Fill(*values, w=w)
 
     def fillResponse(self, event_reco, event_truth):
+
         w_reco = getattr(event_reco, self.wname)
         w_truth = getattr(event_truth, self.wname_mc)
 
-        for ob in self.hists_d:
-            vname_reco = obsConfig_dict[ob]['reco']
-            value_reco = getattr(event_reco, vname_reco)
+        for obs in self.hists_d:
+            obs_list = obs.split('_vs_')
+            vnames_reco = [obsConfig_dict[ob]['reco'] for ob in obs_list]
+            values_reco = [getattr(event_reco, vname) for vname in vnames_reco]
 
-            vname_truth = obsConfig_dict[ob]['truth']
-            value_truth = getattr(event_truth, vname_truth)
+            vnames_truth = [obsConfig_dict[ob]['truth'] for ob in obs_list]
+            values_truth = [getattr(event_truth, vname) for vname in vnames_truth]
 
-            if ob.endswith('_abs'):
-                value_reco = abs(value_reco)
-                value_truth = abs(value_truth)
+            for i in range(len(obs_list)):
+                if obs_list[i].endswith('_abs'):
+                    values_reco[i] = abs(values_reco[i])
+                    values_truth[i] = abs(values_truth[i])
 
-            if hasUnitMeV(vname_truth):
-                value_truth = value_truth / 1000. # convert from MeV to GeV
+                if hasUnitMeV(vnames_truth[i]):
+                    values_truth[i] /= 1000. # convert from MeV to GeV
 
-            self.hists_d[ob]['response'].Fill(value_reco, value_truth, w_reco)
-            self.hists_d[ob]['response_mcweight'].Fill(value_reco, value_truth, w_truth)
+            if not 'response' in self.hists_d[obs]:
+                continue
+
+            if len(values_reco) == 1:
+                values_reco = values_reco[0]
+            if len(values_truth) == 1:
+                values_truth = values_truth[0]
+
+            self.hists_d[obs]['response'].Fill(values_reco, values_truth, w=w_reco)
+            self.hists_d[obs]['response_mcweight'].Fill(values_reco, values_truth, w_truth)
 
     def computeCorrections(self):
         for ob in self.hists_d:
+
             self.hists_d[ob]['acceptance'] = getAcceptanceCorrection(
                 h2d_response = self.hists_d[ob]['response'],
                 h_reco = self.hists_d[ob]['reco'],
