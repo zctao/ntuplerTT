@@ -141,7 +141,7 @@ class HistogramManager():
             if ob.endswith('_abs'):
                 var_reco = var_reco+'_abs'
 
-            self.hists_d[ob]['reco'] = TH1D(f"h_{var_reco}", "", nbins_reco, bins_reco)
+            self.hists_d[ob]['reco'] = TH1D(f"h_{ob}_reco", "", nbins_reco, bins_reco)
             self.hists_d[ob]['reco'].GetXaxis().SetTitle(var_reco)
 
             # same reco and truth bins for now
@@ -151,15 +151,15 @@ class HistogramManager():
             if ob.endswith('_abs'):
                 var_truth = var_truth+'_abs'
 
-            self.hists_d[ob]['truth'] = TH1D(f"h_{var_truth}", "", nbins_truth, bins_truth)
+            self.hists_d[ob]['truth'] = TH1D(f"h_{ob}_truth", "", nbins_truth, bins_truth)
             self.hists_d[ob]['truth'].GetXaxis().SetTitle(var_truth)
 
-            self.hists_d[ob]['response'] = TH2D(f"h_{var_truth}_vs_{var_reco}", "", nbins_reco, bins_reco, nbins_truth, bins_truth)
+            self.hists_d[ob]['response'] = TH2D(f"h2d_{ob}_response", "", nbins_reco, bins_reco, nbins_truth, bins_truth)
             self.hists_d[ob]['response'].GetXaxis().SetTitle(var_reco)
             self.hists_d[ob]['response'].GetYaxis().SetTitle(var_truth)
 
             # response but with mc weights
-            self.hists_d[ob]['response_mcweight'] = TH2D(f"h_{var_truth}_vs_{var_reco}_mcWeight", "", nbins_reco, bins_reco, nbins_truth, bins_truth)
+            self.hists_d[ob]['response_mcweight'] = TH2D(f"h2d_{ob}_response_mcWeight", "", nbins_reco, bins_reco, nbins_truth, bins_truth)
             self.hists_d[ob]['response_mcweight'].GetXaxis().SetTitle(var_reco)
             self.hists_d[ob]['response_mcweight'].GetYaxis().SetTitle(var_truth)
 
