@@ -24,14 +24,14 @@ run_test() {
     fi
 
     # parton level
-    python3 scripts/processMiniNtuples.py -n ttbar \
+    python scripts/processMiniNtuples.py -n ttbar \
             -r ${rootfiles_reco} \
             -t ${rootfiles_truth} \
             -w ${sumw_config} \
             -o outputs/${label} -c
 
     # particle level
-    #python3 scripts/processMiniNtuples.py -n ttbar \
+    #python scripts/processMiniNtuples.py -n ttbar \
     #        -r ${rootfiles_reco} \
     #        -p ${rootfiles_PL} \
     #        -w ${sumw_config} \

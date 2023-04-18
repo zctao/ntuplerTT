@@ -1,5 +1,5 @@
 #!/bin/bash
-lcgVersion=${1:-LCG_97apython3}
+lcgVersion=${1:-LCG_103}
 
 hostname=$(uname -n)
 echo $hostname
@@ -8,7 +8,7 @@ echo $hostname
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
 
-arch=x86_64-centos7-gcc8-opt
+arch=x86_64-centos7-gcc11-opt
 lsetup "views $lcgVersion $arch"
 #source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh ${lcgVersion} ${arch}
 
@@ -19,7 +19,7 @@ lsetup "views $lcgVersion $arch"
 # DO NOT set up rucio during actual running
 # unless all inputs are on local storage and xrootd is not needed
 
-lsetup xcache xrootd
+#lsetup xcache xrootd
 
 export SourceDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # cf. https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself
