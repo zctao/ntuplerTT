@@ -180,7 +180,7 @@ class HistogramManager():
     def _init_hists_multidim(
         self,
         observables=[
-        "ptt_vs_mtt", "th_pt_vs_mtt", "th_pt_vs_ytt_abs", "mtt_vs_ytt_abs",
+        "ptt_vs_mtt", "th_pt_vs_mtt", "ptt_vs_ytt_abs", "mtt_vs_ytt_abs",
         "mtt_vs_ptt_vs_ytt_abs", "mtt_vs_th_pt_vs_th_y_abs", "mtt_vs_th_pt_vs_ytt_abs", "mtt_vs_th_y_abs_vs_ytt_abs"]
         ):
 
