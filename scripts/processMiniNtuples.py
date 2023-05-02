@@ -44,6 +44,9 @@ parser.add_argument('-d', '--duplicate-removal', action='store_true',
                     help="If True, check for events with duplicated event IDs and remove them")
 parser.add_argument('--treename', type=str, default='nominal',
                     help="Tree name of reco level input")
+parser.add_argument('-b', '--binning-config', type=str,
+                    default='configs/binning/bins_ttdiffxs_run2_ljets.json',
+                    help="File path to binning configuration file")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="If True, set logging level to DEBUG, otherwise INFO")
 
@@ -98,7 +101,8 @@ ntupler = Ntupler(
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
     treename = args.treename,
-    makeHistograms = args.compute_corrections
+    makeHistograms = args.compute_corrections,
+    binning_config = args.binning_config
 )
 
 # run

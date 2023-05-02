@@ -129,7 +129,8 @@ class Ntupler():
         recoAlgo = 'klfitter', # ttbar reconstruction algorithm
         truthLevel ='parton',
         treename = 'nominal',
-        makeHistograms = False
+        makeHistograms = False,
+        binning_config = 'configs/binning/bins_ttdiffxs_run2_ljets.json'
         ):
 
         self.recoAlgo = recoAlgo
@@ -158,7 +159,13 @@ class Ntupler():
 
         ######
         # Histograms
-        self.histograms = HistogramManager(outputName+'_histograms.root') if makeHistograms else None
+        if makeHistograms:
+            self.histograms = HistogramManager(
+            outputName+'_histograms.root',
+            binning_config = binning_config
+            )
+        else:
+            self.histograms = None
 
     def __call__(
         self,
