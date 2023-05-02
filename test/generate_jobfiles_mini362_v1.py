@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import yaml
 import time
 
@@ -14,13 +15,15 @@ parser.add_argument("-s", "--site", choices=["atlasserv", "flashy", "cedar"],
                     default="atlasserv",
                     help="Site to run jobs on")
 parser.add_argument("-i", "--input-dir", type=str,
-                    default="~/data/ttbarDiffXs13TeV/MINI362_v1",
+                    default="~/datah/ttbarDiffXs13TeV/MINI362_v1",
                     help="Local directory where input sample files are stored")
 parser.add_argument("-o", "--output-dir", type=str,
                     default="~/data/NtupleTT/latest",
                     help="Output directory")
 parser.add_argument("-e", "--email", type=str,
                     help="Email for slurm to send notification")
+parser.add_argument("-f", "--filters", type=str, nargs='+',
+                    help="Key words to filter job files to generate. If multiple key words are provided, only jobs ")
 
 args = parser.parse_args()
 
@@ -71,6 +74,20 @@ common_args = {
     'verbosity': 0
 }
 
+def matchFilterKeys(keywords, filters):
+    all_matched = True
+
+    for kw_filter in filters:
+        amatch = False
+        for kw in keywords:
+            if kw_filter in kw:
+                amatch = True
+                break
+
+        all_matched &= amatch
+
+    return all_matched
+
 jobfiles_dict = {}
 
 ######
@@ -85,31 +102,35 @@ jobfiles_dict['fakes'] = {}
 for year in ['2015', '2016', '2017', '2018']:
     print(f"Year {year}")
 
-    print("  Observed data")
-    fname_obs = writeJobFile(
-        'data',
-        dataset_obs_config,
-        outdir = os.path.join(topoutdir,'obs',f'{year}'),
-        subcampaigns = [year],
-        njobs = njobs_dict.get('data', 1),
-        **common_args
-    )
+    if matchFilterKeys(keywords=['obs', year], filters=args.filters):
 
-    jobfiles_dict['obs'][year] = fname_obs
+        print("  Observed data")
+        fname_obs = writeJobFile(
+            'data',
+            dataset_obs_config,
+            outdir = os.path.join(topoutdir,'obs',f'{year}'),
+            subcampaigns = [year],
+            njobs = njobs_dict.get('data', 1),
+            **common_args
+        )
 
-    # data-driven fakes background
-    print("  Fake estimation")
-    fname_fakes = writeJobFile(
-        'data',
-        dataset_obs_config,
-        outdir = os.path.join(topoutdir,'fakes',f'{year}'),
-        subcampaigns = [year],
-        njobs = njobs_dict.get('data', 1),
-        extra_args = "--treename nominal_Loose",
-        **common_args
-    )
+        jobfiles_dict['obs'][year] = fname_obs
 
-    jobfiles_dict['fakes'][year] = fname_fakes
+    if matchFilterKeys(keywords=['fakes', year], filters=args.filters):
+
+        # data-driven fakes background
+        print("  Fake estimation")
+        fname_fakes = writeJobFile(
+            'data',
+            dataset_obs_config,
+            outdir = os.path.join(topoutdir,'fakes',f'{year}'),
+            subcampaigns = [year],
+            njobs = njobs_dict.get('data', 1),
+            extra_args = "--treename nominal_Loose",
+            **common_args
+        )
+
+        jobfiles_dict['fakes'][year] = fname_fakes
 
 ######
 # With detector systematic NP
@@ -134,7 +155,11 @@ for tname in treenames:
         extra_args = f"--treename {tname}"
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
+
         print(f"    {era}")
+
+        if not matchFilterKeys(keywords=['detNP','ttbar',tname,era], filters=args.filters):
+            continue
 
         fname_tt = writeJobFile(
             'ttbar',
@@ -162,6 +187,9 @@ for bkg in ['VV', 'singleTop', 'ttH', 'ttV']:
 
         for era in ['mc16a', 'mc16d', 'mc16e']:
             print(f"    {era}")
+
+            if not matchFilterKeys(keywords=['detNP',bkg,tname,era], filters=args.filters):
+                continue
 
             fname_bkg = writeJobFile(
                 bkg,
@@ -193,6 +221,9 @@ for sample in ['ttbar', 'VV', 'Wjets', 'Zjets', 'singleTop', 'ttH', 'ttV']:
     for era in ['mc16a', 'mc16d', 'mc16e']:
         print(f"  {era}")
 
+        if not matchFilterKeys(keywords=['systCRL',sample,era], filters=args.filters):
+            continue
+
         fname_mc = writeJobFile(
             sample,
             dataset_systCRL_config,
@@ -223,6 +254,9 @@ for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', '
     for era in ['mc16a', 'mc16d', 'mc16e']:
         print(f"  {era}")
 
+        if not matchFilterKeys(keywords=['mcWAlt',signal,era], filters=args.filters):
+            continue
+
         fname_tt = writeJobFile(
             signal,
             dataset_mcWAlt_config,
@@ -246,6 +280,9 @@ sumw_config_afii = os.path.join(os.path.dirname(dataset_mcWAlt_config), "sumWeig
 for era in ['mc16a', 'mc16d', 'mc16e']:
     print(f"  {era}")
 
+    if not matchFilterKeys(keywords=['mcWAlt',sample_name,era], filters=args.filters):
+        continue
+
     fname_tt = writeJobFile(
         sample_name,
         dataset_mcWAlt_config,
@@ -267,6 +304,9 @@ for bkg in ['VV', 'VV_syst', 'singleTop', 'singleTop_DS', 'singleTop_amc', 'sing
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
         print(f"  {era}")
+
+        if not matchFilterKeys(keywords=['mcWAlt',bkg,era], filters=args.filters):
+            continue
 
         fname_bkg = writeJobFile(
             bkg,
