@@ -165,10 +165,10 @@ def checkOutputs(jDict, sDict, check_root, verify, extra_mem=0):
 
     for k in jDict:
         if isinstance(jDict[k], dict):
-            oDict[k], flist = checkOutputs(jDict[k], sDict[k], check_root, verify, extra_mem)
+            oDict[k], flist = checkOutputs(jDict[k], sDict.get(k, {}), check_root, verify, extra_mem)
             flist_resub += flist
         else:
-            if not sDict[k]: # skip if the job is not yet submitted
+            if sDict and not sDict[k]: # skip if the job is not yet submitted
                 continue
 
             # get directory name
@@ -237,9 +237,12 @@ if __name__ == "__main__":
 
     if args.submit_config is None:
         args.submit_config = jcfg_names[0] + '_submitted' + jcfg_names[1]
-    logger.info(f"Read job submission status from {args.submit_config}")
-    with open(args.submit_config) as f:
-        submit_dict = yaml.load(f, yaml.FullLoader)
+    try:
+        logger.info(f"Read job submission status from {args.submit_config}")
+        with open(args.submit_config) as f:
+            submit_dict = yaml.load(f, yaml.FullLoader)
+    except:
+        submit_dict = {}
 
     logger.info(f"Start checking jobs")
     result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, check_root=args.check_root, verify=args.check_log, extra_mem=args.increase_mem)
