@@ -291,3 +291,33 @@ def getMC16SubCampaign(run_number):
         return "mc16e"
     else:
         return "unknown"
+
+def getSystNames(
+    syst_config,
+    syst_type = 'all' # 'Branch' or 'ScaleFactor' or 'all'
+    ):
+    # load config
+    if isinstance(syst_config, str):
+        syst_config = read_config(syst_config)
+
+    assert(isinstance(syst_config, dict))
+
+    # loop over the config dict
+    syst_name = []
+    for key in syst_config:
+        if syst_type != 'all' and syst_config[key]['type'] != syst_type:
+            continue
+
+        prefix = syst_config[key]['prefix']
+
+        for syst in syst_config[key]['uncertainties']:
+            for va in syst_config[key]['variations']:
+                syst_name.append(f"{prefix}_{syst}_{va}")
+
+    return syst_name
+
+def getSystTreeNames(syst_config):
+    return getSystNames(syst_config, syst_type='Branch')
+
+def getSystWeightNames(syst_config):
+    return getSystNames(syst_config, syst_type='ScaleFactor')

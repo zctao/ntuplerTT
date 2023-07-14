@@ -4,7 +4,7 @@ import sys
 import yaml
 import time
 
-from datasets import read_config
+from datasets import getSystTreeNames
 from writeJobFile import writeJobFile
 
 import argparse
@@ -43,25 +43,11 @@ if not os.path.isdir(topoutdir):
 # systematics config
 syst_config = os.path.join(
     os.getenv('SourceDIR'), 'configs/datasets/systematics.yaml')
-syst_dict = read_config(syst_config)
 
 ##
 # number of jobs for each sample
 # TODO: update this
 njobs_dict = {'ttbar': 10, 'ttbar_amc': 15, 'ttbar_hdamp': 10, 'ttbar_hw': 15, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10, 'ttbar_AFII': 10}
-
-def getSystTreeNames():
-    trees = []
-    for key in syst_dict:
-        if syst_dict[key]['type'] != 'Branch':
-            continue
-
-        prefix = syst_dict[key]['prefix']
-
-        for syst in syst_dict[key]['uncertainties']:
-            for va in syst_dict[key]['variations']:
-                trees.append(f"{prefix}_{syst}_{va}")
-    return trees
 
 t_start = time.time()
 
@@ -140,7 +126,7 @@ print(f"Generate job files from {dataset_detNP_config}")
 
 jobfiles_dict['detNP'] = {}
 
-treenames = ['nominal'] + getSystTreeNames()
+treenames = ['nominal'] + getSystTreeNames(syst_config)
 
 # ttbar
 print("ttbar")
