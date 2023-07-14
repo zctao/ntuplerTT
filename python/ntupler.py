@@ -1,8 +1,6 @@
-import os
 import time
-import numpy as np
 
-from ROOT import TChain, TTree, TFile
+from ROOT import TChain, TFile
 
 from extra_variables import varsExtra
 import selections as sel

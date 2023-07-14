@@ -4,7 +4,6 @@ import tracemalloc
 
 from ntupler import Ntupler
 from datasets import getInputFileNames, read_config
-from acceptance import computeAccEffCorrections
 
 import logging
 logging.basicConfig(

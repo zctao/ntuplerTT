@@ -1,10 +1,10 @@
 #!/bin/bash
-lcgVersion=${1:-LCG_100}
+lcgVersion=${1:-LCG_103}
 
 hostname=$(uname -n)
 echo $hostname
 
-arch=x86_64-centos7-gcc8-opt
+arch=x86_64-centos7-gcc11-opt
 
 if command -v lsetup &> /dev/null
 then
