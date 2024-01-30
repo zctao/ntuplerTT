@@ -1,6 +1,6 @@
 #!/bin/bash
 config_dir=${1:-configs/datasets/ttdiffxs361}
-data_dir=${2:-${HOME}/data/ttbarDiffXs13TeV/MINI362_v1}
+data_dir=${2:-${HOME}/dataf/ttbarDiffXs13TeV/MINI362_v1}
 
 dataset_configs=$(ls ${config_dir}/datasets_*.yaml)
 for fconfig in ${dataset_configs[@]}; do
