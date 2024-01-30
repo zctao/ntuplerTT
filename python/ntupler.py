@@ -85,6 +85,34 @@ def getSumWeights(infiles_sumw):
 
     return sumw
 
+def getSumWeightsVariations(infiles_sumw):
+    tree_sumw = TChain('sumWeights')
+    for fsumw in infiles_sumw:
+        tree_sumw.Add(fsumw)
+
+    # names of the generator weights
+    names_mc_gen_weights = []
+
+    # an array of total weights
+    mc_gen_weights = []
+
+    for evt in tree_sumw:
+
+        if hasattr(evt, 'names_mc_generator_weights') and not names_mc_gen_weights:
+            names_mc_gen_weights = [str(name) for name in evt.names_mc_generator_weights]
+
+        if hasattr(evt, 'totalEventsWeighted_mc_generator_weights'):
+            if len(mc_gen_weights) == 0:
+                mc_gen_weights = [wsum for wsum in evt.totalEventsWeighted_mc_generator_weights]
+            else:
+                for iw in range(len(evt.totalEventsWeighted_mc_generator_weights)):
+                    mc_gen_weights[iw] += evt.totalEventsWeighted_mc_generator_weights[iw]
+
+    if not isinstance(mc_gen_weights, list):
+        mc_gen_weights = mc_gen_weights.tolist()
+
+    return mc_gen_weights, names_mc_gen_weights
+
 def getPrefixReco(recoAlgo):
     # prefix of variable names
     if recoAlgo.lower() == 'klfitter':

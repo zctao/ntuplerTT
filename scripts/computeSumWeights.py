@@ -2,7 +2,7 @@ import os
 import yaml
 
 from datasets import read_config, listDataFiles
-from ntupler import getSumWeights
+from ntupler import getSumWeights, getSumWeightsVariations
 
 def computeSumWeights(
     dataset_config,
@@ -14,9 +14,11 @@ def computeSumWeights(
     ):
 
     sumw_map = dict()
+    sumw_vars_map = dict() # mc generator weight variations
 
-    # Another map for ttbar fast sim samples
+    # maps for fast sim samples
     sumw_afii_map = dict()
+    sumw_vars_afii_map = dict()
 
     if verbosity:
         print(f"Read dataset config from {dataset_config}")
@@ -32,8 +34,10 @@ def computeSumWeights(
 
         if sample_name == 'ttbar_AFII':
             sumw_map_tofill = sumw_afii_map
+            sumw_vars_map_tofill = sumw_vars_afii_map
         else:
             sumw_map_tofill = sumw_map
+            sumw_vars_map_tofill = sumw_vars_map
 
         if verbosity:
             print(f"sample {sample_name}")
@@ -72,6 +76,20 @@ def computeSumWeights(
                 sumw = getSumWeights(flist_sumw)
                 sumw_map_tofill[dsid][era] = sumw
 
+                # compute sum weight variations if signal samples
+                if sample_name in ['ttbar', 'ttbar_AFII']:
+                    if not dsid in sumw_vars_map_tofill:
+                        sumw_vars_map_tofill[dsid] = {}
+
+                    sumw_variations, sumw_names = getSumWeightsVariations(flist_sumw)
+                    print("File list sum weights:")
+                    print(flist_sumw)
+                    if sumw_variations:
+                        sumw_vars_map_tofill[dsid][era] = sumw_variations
+
+                    if sumw_names and "names" not in sumw_vars_map_tofill[dsid]:
+                        sumw_vars_map_tofill[dsid]["names"] = sumw_names
+
     # save the sum weight dict to disk
     if not sumw_map or not sumw_afii_map:
         return
@@ -102,6 +120,24 @@ def computeSumWeights(
 
         with open(fname_wcfg_afii, 'w') as outfile:
             yaml.dump(sumw_afii_map, outfile)
+
+    # write sum weight variations to files
+    if sumw_vars_map:
+        fname_wvars_cfg = fname_wcfg.replace("sumWeights", "sumWeights_variations")
+        if verbosity:
+            print (f"Write sum weight variations to file {fname_wvars_cfg}")
+
+        with open(fname_wvars_cfg, 'w') as outfile:
+            yaml.dump(sumw_vars_map, outfile)
+
+    if sumw_vars_afii_map:
+        fname_wvars_afii_cfg = fname_wcfg_afii.replace("sumWeights", "sumWeights_variations")
+
+        if verbosity:
+            print (f"Write sum weight variations to file {fname_wvars_afii_cfg}")
+
+        with open(fname_wvars_afii_cfg, 'w') as outfile:
+            yaml.dump(sumw_vars_afii_map, outfile)
 
 if __name__ == "__main__":
 
