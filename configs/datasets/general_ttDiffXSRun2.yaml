@@ -11,13 +11,13 @@ dsid:
 
     ttbar:         # PhPy8EG (nominal) mt = 172.5 GeV, hdamp = 1.5*mt 
         - 410470
-    ttbar_hw:      # PowhegHerwig7EvtGen
+    ttbar_hw:      # PowhegHerwig7EvtGen #- PWGH7
         - 411233
         - 411234
-    ttbar_amc:     # aMcAtNloPy8EvtGen
+    ttbar_amc:     # aMcAtNloPy8EvtGen #- MCatNLO
         - 410464
         - 410465
-    ttbar_sh:      # Sherpa
+    ttbar_sh:      # Sherpa v.2.2.8
         - 700048
         - 700049
         - 700050
@@ -30,6 +30,18 @@ dsid:
     ttbar_hdamp:   # same as nominal but with hdamp set to 3*mt
         - 410480
         - 410482
+    ttbar_madspin: # POWHEG+Pythia8 ttbar production with MadSpin decay, Powheg hdamp equal 1.5*top mass, A14 tune
+        - 601708 # dilepton
+        - 601407 # single lepton
+    ttbar_pthard1: # POWHEG+Pythia8 ttbar production with Powheg hdamp equal 1.5*top mass, A14 tune, pTHard=1, ME NNPDF30 NLO, A14 NNPDF23 LO from DSID 410450 LHE files with Shower Weights added
+        - 601491 # dilepton
+        - 601497 # one lepton
+    tthar_sh2212: # Sherpa v.2.2.12 ttbar + 0,1j@NLO + 2,3,4j@LO
+        - 700660 # dilepton.
+        - 700661 # single lepton (minus)
+        - 700662 # single lepton (plus)
+    ttbar_minnlops: # MiNNLOPS
+        - 950473
 
     # Backgrounds
 
@@ -62,6 +74,18 @@ dsid:
         - 412003   # tW_dilepton, but 412002 is tW_inclusive?
         - 412004
         - 412005
+    singleTop_tW_DR_dyn:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, hdamp equal 1.5*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
+        - 601619 # antitop
+        - 601623 # top
+    singleTop_tW_DR_dyn_3mthdamp:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, with Powheg hdamp equal 3*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
+        - 601618 # antitop
+        - 601622 # top
+    singleTop_tW_DS_dyn:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, hdamp equal 1.5*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
+        - 601627 # antitop
+        - 601631 # top
+    singleTop_tW_DS_dyn_3mthdamp:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, with Powheg hdamp equal 3*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
+        - 601626 # antitop
+        - 601630 # top
 
     # W+jets
     Wjets:
