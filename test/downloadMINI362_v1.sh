@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datadir=${HOME}/data/ttbarDiffXs13TeV/MINI362_v1
+datadir=${HOME}/dataf/ttbarDiffXs13TeV/MINI362_v1
 if [ ! -d ${datadir} ]; then
     echo "Create directory ${datadir}"
     mkdir -p ${datadir}
