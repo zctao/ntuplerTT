@@ -15,7 +15,7 @@ parser.add_argument("-s", "--site", choices=["atlasserv", "flashy", "cedar"],
                     default="atlasserv",
                     help="Site to run jobs on")
 parser.add_argument("-i", "--input-dir", type=str,
-                    default="~/datah/ttbarDiffXs13TeV/MINI362_v1",
+                    default="~/dataf/ttbarDiffXs13TeV/MINI362_v1",
                     help="Local directory where input sample files are stored")
 parser.add_argument("-o", "--output-dir", type=str,
                     default="~/data/NtupleTT/latest",
@@ -23,7 +23,7 @@ parser.add_argument("-o", "--output-dir", type=str,
 parser.add_argument("-e", "--email", type=str,
                     help="Email for slurm to send notification")
 parser.add_argument("-f", "--filters", type=str, nargs='+',
-                    help="Key words to filter job files to generate. If multiple key words are provided, only jobs ")
+                    help="Key words to filter job files to generate. If multiple key words are provided, only jobs that match to all key words are generated")
 
 args = parser.parse_args()
 
@@ -47,7 +47,7 @@ syst_config = os.path.join(
 ##
 # number of jobs for each sample
 # TODO: update this
-njobs_dict = {'ttbar': 10, 'ttbar_amc': 15, 'ttbar_hdamp': 10, 'ttbar_hw': 15, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10, 'ttbar_AFII': 10}
+njobs_dict = {'ttbar': 10, 'ttbar_amc': 15, 'ttbar_hdamp': 10, 'ttbar_hw': 15, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_sh': 10, 'ttbar_AFII': 10, 'ttbar_madspin': 10, 'ttbar_pthard1': 10, 'ttbar_sh2212': 10}
 
 t_start = time.time()
 
@@ -232,7 +232,7 @@ print(f"Generate job files from {dataset_mcWAlt_config}")
 jobfiles_dict['mcWAlt'] = {}
 
 # ttbar
-for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_sh']:
+for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_sh', 'ttbar_madspin', 'ttbar_pthard1', 'ttbar_sh2212']:
     print(f"{signal}")
 
     jobfiles_dict['mcWAlt'][signal] = {}
