@@ -1,5 +1,5 @@
 #!/bin/bash
-lcgVersion=${1:-LCG_105}
+lcgVersion=${1:-LCG_106}
 
 hostname=$(uname -n)
 echo $hostname
@@ -8,7 +8,7 @@ echo $hostname
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
 
-arch=x86_64-el9-gcc11-opt
+arch=x86_64-el9-gcc13-opt
 lsetup "views $lcgVersion $arch"
 #source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh ${lcgVersion} ${arch}
 
