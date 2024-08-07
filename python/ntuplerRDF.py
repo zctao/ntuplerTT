@@ -173,7 +173,7 @@ def define_generator_weights(rdf, truthLevel):
     return rdf
 
 def SelectColumns(rdf, recoAlgo, truthLevel=None, include_dR=False, include_gen_weights=False):
-    patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight'
+    patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight|^normalized_weight|sum_weights'
 
     # reco level
     if recoAlgo.lower() == 'klfitter':
@@ -318,31 +318,28 @@ class NtupleRDF():
                 df = df.Define("normalized_weight", '1.')
             df = df.Define("sum_weights", "-1")
         elif self.sumWeights_d:
-            # MC sample
-            logger.debug("MC sample")
+            # Sum weights
+            logger.debug("Sum weights")
             sumw_mc16a = self.sumWeights_d[dsid]['mc16a']
             sumw_mc16d = self.sumWeights_d[dsid]['mc16d']
             sumw_mc16e = self.sumWeights_d[dsid]['mc16e']
 
             logger.debug("Declaring function GetSumWeights...")
             # https://twiki.cern.ch/twiki/bin/view/AtlasProtected/DataMCForAnalysis
-            ROOT.gInterpreter.Declare("""
-                double GetSumWeights(int runNumber) {
-                    if (runNumber >= 276073 and runNumber <= 311481) {
-                        return double(TPython::Exec("sumw_mc16a"));
-                    } else if (runNumber >= 325713 and runNumber <= 340453) {
-                        return double(TPython::Exec("sumw_mc16d"));
-                    } else if (runNumber >= 348885 and runNumber <= 364292) {
-                        return double(TPython::Exec("sumw_mc16e"));
-                    } else {
-                        return 0;
-                    }
-                }
-            """)
+            @ROOT.Numba.Declare(['int'], 'float')
+            def GetSumWeights(runNumber):
+                if 276073 <= runNumber <= 311481:
+                    return sumw_mc16a
+                elif 325713 <= runNumber <= 340453:
+                    return sumw_mc16d
+                elif 348885 <= runNumber <= 364292:
+                    return sumw_mc16e
+                else:
+                    return 0;
             logger.debug("...done!")
 
             df = df \
-                .Define("sum_weights", "GetSumWeights(runNumber)") \
+                .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
                 .Define("normalized_weight", "totalWeight_nominal*xs_times_lumi/sum_weights")
 
         ###
@@ -424,6 +421,10 @@ class NtupleRDF():
 
             if include_gen_weights:
                 df_truth = define_generator_weights(df_truth, self.truthLevel)
+
+            df_truth = df_truth \
+                .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
+                .Define("normalized_weight_mc", "weight_mc*xs_times_lumi/sum_weights")
 
             # save as numpy arrays
             arrays_umt_d = df_truth.AsNumpy(cols)
