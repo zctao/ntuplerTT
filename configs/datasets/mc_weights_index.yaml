@@ -1,0 +1,43 @@
+# Index of MC generator weight variations
+# Taken from https://gitlab.cern.ch/ttbarDiffXs13TeV/pyTTbarDiffXs13TeV/-/blob/DM_ljets_resolved/python/MC_variations.py
+mc_generator_weights:
+  nominal: 0
+  scale_muF_up: 1
+  scale_muF_down: 2
+  scale_muR_up: 3
+  scale_muR_down: 4
+  PDF4LHC15_0: 11
+  PDF4LHC15_1: 115
+  PDF4LHC15_2: 116
+  PDF4LHC15_3: 117
+  PDF4LHC15_4: 118
+  PDF4LHC15_5: 119
+  PDF4LHC15_6: 120
+  PDF4LHC15_7: 121
+  PDF4LHC15_8: 122
+  PDF4LHC15_9: 123
+  PDF4LHC15_10: 124
+  PDF4LHC15_11: 125
+  PDF4LHC15_12: 126
+  PDF4LHC15_13: 127
+  PDF4LHC15_14: 128
+  PDF4LHC15_15: 129
+  PDF4LHC15_16: 130
+  PDF4LHC15_17: 131
+  PDF4LHC15_18: 132
+  PDF4LHC15_19: 133
+  PDF4LHC15_20: 134
+  PDF4LHC15_21: 135
+  PDF4LHC15_22: 136
+  PDF4LHC15_23: 137
+  PDF4LHC15_24: 138
+  PDF4LHC15_25: 139
+  PDF4LHC15_26: 140
+  PDF4LHC15_27: 141
+  PDF4LHC15_28: 142
+  PDF4LHC15_29: 143
+  PDF4LHC15_30: 144
+  isr_alphaS_Var3cUp: 193
+  isr_alphaS_Var3cDown: 194
+  fsr_muR_up: 198
+  fsr_muR_down: 199

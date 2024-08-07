@@ -3,6 +3,8 @@ import re
 import h5py
 import ROOT
 
+from datasets import read_config
+
 import logging
 logging.basicConfig(
     format='%(asctime)s %(levelname)-7s %(name)-10s %(message)s',
@@ -161,7 +163,16 @@ def define_dR_variables(rdf, recoAlgo, truthLevel):
 
     return rdf
 
-def SelectColumns(rdf, recoAlgo, truthLevel=None, include_dR=False):
+def define_generator_weights(rdf, truthLevel):
+    gen_weights_index_dict = read_config("configs/datasets/mc_weights_index.yaml")['mc_generator_weights']
+
+    for wtype in gen_weights_index_dict:
+        windex = gen_weights_index_dict[wtype]
+        rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"{truthLevel}.mc_generator_weights[{windex}]")
+
+    return rdf
+
+def SelectColumns(rdf, recoAlgo, truthLevel=None, include_dR=False, include_gen_weights=False):
     patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight'
 
     # reco level
@@ -174,7 +185,8 @@ def SelectColumns(rdf, recoAlgo, truthLevel=None, include_dR=False):
 
     # truth level
     if truthLevel is not None:
-        #patterns += f"|{truthLevel}.mc_generator_weights" # FIXME
+        if include_gen_weights:
+            patterns += f"|mc_generator_weights_"
     
         if truthLevel == "parton":
             patterns += "|MC_(ttbar|tlep|thad)_afterFSR"
@@ -248,7 +260,8 @@ class NtupleRDF():
         saveUnmatchedReco=True,
         saveUnmatchedTruth=True,
         checkDuplicate = False,
-        include_dR = False
+        include_dR = False,
+        include_gen_weights = False
         ):
         logger.info("Start processing mini-ntuples")
 
@@ -360,12 +373,15 @@ class NtupleRDF():
                 # compute dR between the reconstructed and truth-level top quarks
                 df = define_dR_variables(df, self.recoAlgo, self.truthLevel)
 
+            if include_gen_weights:
+                df = define_generator_weights(df, self.truthLevel)
+
             # normalized mc weights
             if df.HasColumn("sum_weights"):
                 df = df.Define("normalized_weight_mc", "weight_mc*xs_times_lumi/sum_weights")
 
         # save as numpy arrays
-        cols = SelectColumns(df, self.recoAlgo, self.truthLevel, include_dR=include_dR)
+        cols = SelectColumns(df, self.recoAlgo, self.truthLevel, include_dR=include_dR, include_gen_weights=include_gen_weights)
         logger.info("Columns to be stored:")
         logger.info(f"{cols}")
 
@@ -403,6 +419,12 @@ class NtupleRDF():
             # save only the events that pass the truth requirements but do not match to reco level by event ID
             df_truth = df_truth.Filter("pass_truth && !isMatched")
 
+            # extra variables
+            df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
+
+            if include_gen_weights:
+                df_truth = define_generator_weights(df_truth, self.truthLevel)
+
             # save as numpy arrays
             arrays_umt_d = df_truth.AsNumpy(cols)
 
@@ -418,7 +440,6 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     #
-    from datasets import read_config
     sumweight_config = "configs/datasets/ttdiffxs361/sumWeights_systCRL.yaml"
     sumw_dict = read_config(sumweight_config)
 
@@ -441,7 +462,8 @@ if __name__ == "__main__":
         maxevents = 1000,
         saveUnmatchedReco=True,
         saveUnmatchedTruth=False,
-        include_dR=True
+        include_dR=True,
+        include_gen_weights=True
     )
 
     mcurrent, mpeak = tracemalloc.get_traced_memory()
