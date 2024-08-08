@@ -286,10 +286,13 @@ class NtupleRDF():
         ######
         # Build tree index
         if self.tree_truth:
+            tstart = time.time()
             logger.info(f"Build index for {self.truthLevel}-level trees")
             self.tree_truth.BuildIndex("runNumber", "eventNumber")
             logger.info(f"Add {self.truthLevel}-level trees as friends to the reco-level trees")
             self.tree_reco.AddFriend(self.tree_truth, self.truthLevel)
+            tstop = time.time()
+            logger.info(f"Building truth tree index took {tstop-tstart:.2f} seconds")
 
         logger.info("Construct RDataFrame from TTree")
         df = ROOT.RDataFrame(self.tree_reco)
@@ -302,6 +305,7 @@ class NtupleRDF():
             df = df.Range(maxevents)
 
         ###
+        tstart = time.time()
         # Reco-level selections
         # pass either e+jets or mu+jets selections
         reco_cuts = "passed_resolved_ejets_4j2b != passed_resolved_mujets_4j2b"
@@ -397,6 +401,8 @@ class NtupleRDF():
 
         logger.info("Save as numpy arrays")
         arrays_d = df.AsNumpy(cols)
+        tstop = time.time()
+        logger.info(f"Total processing time: {tstop-tstart:.2f} seconds")
 
         logger.info(f"Create output file: {self.foutname}.h5")
         with h5py.File(f"{self.foutname}.h5", "w") as file_arr:
