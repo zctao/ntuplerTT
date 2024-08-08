@@ -215,8 +215,14 @@ class NtupleRDF():
         treename = 'nominal',
         treename_truth = 'nominal',
         makeHistograms = False,
-        binning_config = 'configs/binning/bins_ttdiffxs_run2_ljets.json'
+        binning_config = 'configs/binning/bins_ttdiffxs_run2_ljets.json',
+        verbose = False
         ):
+
+        if verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
 
         self.truthLevel = truthLevel
         self.recoAlgo = recoAlgo
@@ -268,6 +274,12 @@ class NtupleRDF():
         ):
         logger.info("Start processing mini-ntuples")
 
+        if maxevents is None:
+            ROOT.EnableImplicitMT()
+        else:
+            ROOT.DisableImplicitMT()
+            # RDataFrame.Range() does not support multi-threading
+
         if self.tree_truth is None:
             saveUnmatchedTruth = False
 
@@ -288,8 +300,6 @@ class NtupleRDF():
 
         if maxevents is not None:
             df = df.Range(maxevents)
-        else:
-            ROOT.EnableImplicitMT()
 
         ###
         # Reco-level selections
@@ -437,40 +447,3 @@ class NtupleRDF():
                 for vname in arrays_umt_d:
                     logger.debug(vname)
                     file_arr_umt.create_dataset(vname, data=arrays_umt_d[vname])
-
-if __name__ == "__main__":
-
-    #logger.setLevel(logging.INFO)
-    logger.setLevel(logging.DEBUG)
-
-    #
-    sumweight_config = "configs/datasets/ttdiffxs361/sumWeights_systCRL.yaml"
-    sumw_dict = read_config(sumweight_config)
-
-    import tracemalloc
-
-    ntupler =  NtupleRDF(
-        "test",
-        inputFiles_reco = ["/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt.root/user.mromano.40052328._000095.tt.root"],
-        inputFiles_truth = ["/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_truth.root/user.mromano.40052328._000095.tt_truth.root"],
-        sumWeights_dict = sumw_dict,
-        recoAlgo = 'pseudotop',
-        truthLevel = "parton", # or "particle"
-        treename = 'nominal',
-        treename_truth = 'nominal',
-    )
-
-    tracemalloc.start()
-
-    ntupler(
-        maxevents = 1000,
-        saveUnmatchedReco=True,
-        saveUnmatchedTruth=False,
-        include_dR=True,
-        include_gen_weights=True
-    )
-
-    mcurrent, mpeak = tracemalloc.get_traced_memory()
-    logger.info(f"Current memory usage is {mcurrent*1e-6:.1f} MB; Peak was {mpeak*1e-6:.1f} MB")
-
-    tracemalloc.stop()
