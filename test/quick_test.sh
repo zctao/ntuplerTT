@@ -1,10 +1,10 @@
 #!/bin/bash
 
-rootfiles_reco=/home/ztao/datah/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v06.MINI362_v1_tt.root/user.mromano.25781110._000023.tt.root
+rootfiles_reco=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt.root/user.mromano.40052328._000095.tt.root
 
-rootfiles_truth=/home/ztao/datah/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v06.MINI362_v1_tt_truth.root/user.mromano.25781110._000023.tt_truth.root
+rootfiles_truth=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_truth.root/user.mromano.40052328._000095.tt_truth.root
 
-rootfiles_PL=/home/ztao/datah/ttbarDiffXs13TeV/MINI362_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v06.MINI362_v1_tt_PL.root/user.mromano.25781110._000023.tt_PL.root
+rootfiles_PL=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_PL.root/user.mromano.40052328._000095.tt_PL.root
 
 sumw_config=${SourceDIR}/configs/datasets/ttdiffxs361/sumWeights_systCRL.yaml
 
@@ -28,14 +28,14 @@ run_test() {
             -r ${rootfiles_reco} \
             -t ${rootfiles_truth} \
             -w ${sumw_config} \
-            -o outputs/${label} -c
+            -o outputs/${label} -c -g -v
 
     # particle level
     #python scripts/processMiniNtuples.py -n ttbar \
     #        -r ${rootfiles_reco} \
     #        -p ${rootfiles_PL} \
     #        -w ${sumw_config} \
-    #        -o outputs/${label} -c
+    #        -o outputs/${label} -c -g -v
 }
 
 run_test
