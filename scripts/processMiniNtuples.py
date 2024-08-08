@@ -2,7 +2,8 @@
 import os
 import tracemalloc
 
-from ntupler import Ntupler
+#from ntupler import Ntupler
+from ntuplerRDF import NtupleRDF
 from datasets import getInputFileNames, read_config
 
 import logging
@@ -39,6 +40,8 @@ parser.add_argument('-c', '--compute-corrections', action='store_true',
 parser.add_argument('-a', '--algorithm-topreco',
                     choices=['pseudotop', 'klfitter'], default='pseudotop',
                     help="Top reconstruction algorithm")
+parser.add_argument('-g', '--generator-weights', action='store_true',
+                    help="If True, store the variations of MC generator weights")
 parser.add_argument('-d', '--duplicate-removal', action='store_true',
                     help="If True, check for events with duplicated event IDs and remove them")
 parser.add_argument('--treename', type=str, default='nominal',
@@ -92,7 +95,7 @@ assert(len(inputFiles_reco) > 0)
 # start processing
 tracemalloc.start()
 
-ntupler = Ntupler(
+ntupler = NtupleRDF(
     os.path.join(args.outdir, args.name),
     inputFiles_reco,
     inputFiles_mctruth,
@@ -100,8 +103,10 @@ ntupler = Ntupler(
     recoAlgo = args.algorithm_topreco,
     truthLevel = truth_level,
     treename = args.treename,
+    treename_truth = args.treename,
     makeHistograms = args.compute_corrections,
-    binning_config = args.binning_config
+    binning_config = args.binning_config,
+    verbose = args.verbose
 )
 
 # run
@@ -109,7 +114,9 @@ ntupler(
     maxevents = args.maxevents,
     saveUnmatchedReco = True,
     saveUnmatchedTruth = truth_level=='particle', # TODO: check this
-    checkDuplicate = args.duplicate_removal
+    checkDuplicate = args.duplicate_removal,
+    include_dR = True,
+    include_gen_weights = args.generator_weights
 )
 
 mcurrent, mpeak = tracemalloc.get_traced_memory()

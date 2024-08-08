@@ -250,6 +250,7 @@ for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', '
             subcampaigns = [era],
             truth_level = 'parton',
             njobs = njobs_dict.get(signal, 1),
+            extra_args = "-g", # include MC generator weight variations
             **common_args
         )
 
@@ -300,6 +301,7 @@ for bkg in ['VV', 'VV_syst', 'singleTop', 'singleTop_DS', 'singleTop_amc', 'sing
             outdir = os.path.join(topoutdir, 'mcWAlt', f'{bkg}_nominal',f'{era}'),
             subcampaigns = [era],
             njobs = njobs_dict.get(bkg, 1),
+            extra_args = "-g", # include MC generator weight variations
             **common_args
         )
 
