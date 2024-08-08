@@ -163,12 +163,15 @@ def define_dR_variables(rdf, recoAlgo, truthLevel):
 
     return rdf
 
-def define_generator_weights(rdf, truthLevel):
-    gen_weights_index_dict = read_config("configs/datasets/mc_weights_index.yaml")['mc_generator_weights']
+def define_generator_weights(rdf):
+    if rdf.HasColumn("mc_generator_weights"):
+        gen_weights_index_dict = read_config("configs/datasets/mc_weights_index.yaml")['mc_generator_weights']
 
-    for wtype in gen_weights_index_dict:
-        windex = gen_weights_index_dict[wtype]
-        rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"{truthLevel}.mc_generator_weights[{windex}]")
+        for wtype in gen_weights_index_dict:
+            windex = gen_weights_index_dict[wtype]
+            rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"mc_generator_weights[{windex}]")
+    else:
+        logger.warning("Cannot store MC generator weight variations: found no branch 'mc_generator_weights'")
 
     return rdf
 
@@ -342,6 +345,9 @@ class NtupleRDF():
                 .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
                 .Define("normalized_weight", "totalWeight_nominal*xs_times_lumi/sum_weights")
 
+        if include_gen_weights:
+            df = define_generator_weights(df)
+
         ###
         # truth tree
         if self.tree_truth:
@@ -369,9 +375,6 @@ class NtupleRDF():
             if include_dR:
                 # compute dR between the reconstructed and truth-level top quarks
                 df = define_dR_variables(df, self.recoAlgo, self.truthLevel)
-
-            if include_gen_weights:
-                df = define_generator_weights(df, self.truthLevel)
 
             # normalized mc weights
             if df.HasColumn("sum_weights"):
@@ -420,7 +423,7 @@ class NtupleRDF():
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
 
             if include_gen_weights:
-                df_truth = define_generator_weights(df_truth, self.truthLevel)
+                df_truth = define_generator_weights(df_truth)
 
             df_truth = df_truth \
                 .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
