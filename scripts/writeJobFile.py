@@ -154,7 +154,7 @@ def writeJobFile(
     submit_dir = None,
     grid_proxy = None, #'$HOME/x509up_u$(id -u)',
     email = None, #"os.getenv('USER')+@phas.ubc.ca",
-    site = 'flashy',
+    site = 'atlasserv',
     truth_level = '',
     local_dir = None,
     max_task = None,
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--email', type=str,
                         default="os.getenv('USER')+'@phas.ubc.ca'")
     parser.add_argument('-s', '--site', choices=['flashy', 'cedar', 'atlasserv'],
-                        default='flashy',
+                        default='atlasserv',
                         help="Host to run batch jobs")
     parser.add_argument('-t', '--truth-level',
                         choices=['parton', 'particle', ''], default='',
