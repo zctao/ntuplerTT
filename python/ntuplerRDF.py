@@ -330,9 +330,9 @@ class NtupleRDF():
         elif self.sumWeights_d:
             # Sum weights
             logger.debug("Sum weights")
-            sumw_mc16a = self.sumWeights_d[dsid]['mc16a']
-            sumw_mc16d = self.sumWeights_d[dsid]['mc16d']
-            sumw_mc16e = self.sumWeights_d[dsid]['mc16e']
+            sumw_mc16a = self.sumWeights_d[dsid].get('mc16a', 0.)
+            sumw_mc16d = self.sumWeights_d[dsid].get('mc16d', 0.)
+            sumw_mc16e = self.sumWeights_d[dsid].get('mc16e', 0.)
 
             logger.debug("Declaring function GetSumWeights...")
             # https://twiki.cern.ch/twiki/bin/view/AtlasProtected/DataMCForAnalysis
