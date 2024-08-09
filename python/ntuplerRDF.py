@@ -163,23 +163,27 @@ def define_dR_variables(rdf, recoAlgo, truthLevel):
 
     return rdf
 
-def define_generator_weights(rdf):
-    if rdf.HasColumn("mc_generator_weights"):
+def define_generator_weights(rdf, treename=None):
+    weight_name = "mc_generator_weights" if treename is None else f"{treename}.mc_generator_weights"
+
+    if rdf.HasColumn(weight_name):
         gen_weights_index_dict = read_config("configs/datasets/mc_weights_index.yaml")['mc_generator_weights']
 
         for wtype in gen_weights_index_dict:
             windex = gen_weights_index_dict[wtype]
-            rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"mc_generator_weights[{windex}]")
+            rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"{weight_name}[{windex}]")
     else:
-        logger.warning("Cannot store MC generator weight variations: found no branch 'mc_generator_weights'")
+        logger.warning(f"Cannot store MC generator weight variations: found no branch '{weight_name}'")
 
     return rdf
 
-def SelectColumns(rdf, recoAlgo, truthLevel=None, include_dR=False, include_gen_weights=False):
+def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include_gen_weights=False):
     patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight|^normalized_weight|sum_weights'
 
     # reco level
-    if recoAlgo.lower() == 'klfitter':
+    if recoAlgo is None:
+        pass
+    elif recoAlgo.lower() == 'klfitter':
         patterns += "|^klfitter_bestPerm_(?!NoFit)(?!.*eta).*$" # exclude NoFit and eta
     elif recoAlgo.lower() == 'pseudotop':
         patterns += "|^PseudoTop_Reco_(?!.*eta)(?!.*jetIndex).*$" # exclude eta and jetIndex
@@ -214,8 +218,6 @@ class NtupleRDF():
         truthLevel ='parton',
         treename = 'nominal',
         treename_truth = 'nominal',
-        makeHistograms = False,
-        binning_config = 'configs/binning/bins_ttdiffxs_run2_ljets.json',
         verbose = False
         ):
 
@@ -251,24 +253,15 @@ class NtupleRDF():
 
         # output file name
         if self.tree_truth:
-            self.foutname = f"{outputName}_{recoAlgo}_truthLevel_ljets"
+            self.foutname = f"{outputName}_{recoAlgo}_{truthLevel}_ljets"
         else:
             self.outname = f"{outputName}_{recoAlgo}_ljets"
-
-
-
-
-        if makeHistograms:
-            pass
-        else:
-            self.histograms = None
 
     def __call__(
         self,
         maxevents=None,
         saveUnmatchedReco=True,
         saveUnmatchedTruth=True,
-        checkDuplicate = False,
         include_dR = False,
         include_gen_weights = False
         ):
@@ -377,7 +370,7 @@ class NtupleRDF():
 
             df = df.Define("pass_truth", f"{truth_cuts}")
 
-            df = df.Define("isMatched", "runNumber==parton.runNumber && eventNumber==parton.eventNumber")
+            df = df.Define("isMatched", f"runNumber=={self.truthLevel}.runNumber && eventNumber=={self.truthLevel}.eventNumber")
 
             if not saveUnmatchedReco:
                 df = df.Filter("isMatched&&pass_truth")
@@ -411,7 +404,10 @@ class NtupleRDF():
                 file_arr.create_dataset(vname, data=arrays_d[vname])
 
         ####
-        if saveUnmatchedTruth:
+        if saveUnmatchedTruth and self.tree_truth:
+            # unfriend trees first
+            self.tree_reco.RemoveFriend(self.tree_truth)
+
             logger.info("Build index for reco-level trees")
             self.tree_reco.BuildIndex("runNumber", "eventNumber")
             logger.info(f"Add reco-level trees as friends to the {self.truthLevel}-level trees")
@@ -419,7 +415,7 @@ class NtupleRDF():
 
             logger.info(f"Construct RDataFrame from {self.truthLevel}-level TTree")
             df_truth = ROOT.RDataFrame(self.tree_truth)
-            logger.info(f"Total number of events: {self.df_truth.Count().GetValue()}")
+            logger.info(f"Total number of events: {df_truth.Count().GetValue()}")
 
             # Add progress bar
             ROOT.RDF.Experimental.AddProgressBar(df_truth)
@@ -432,8 +428,8 @@ class NtupleRDF():
                 .Define("pass_truth", f"{truth_cuts}")\
                 .Define("isMatched", "runNumber==reco.runNumber && eventNumber==reco.eventNumber")
 
-            # save only the events that pass the truth requirements but do not match to reco level by event ID
-            df_truth = df_truth.Filter("pass_truth && !isMatched")
+            # save only the events that do not match to reco level by event ID
+            df_truth = df_truth.Filter("!isMatched")
 
             # extra variables
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
@@ -446,7 +442,10 @@ class NtupleRDF():
                 .Define("normalized_weight_mc", "weight_mc*xs_times_lumi/sum_weights")
 
             # save as numpy arrays
-            arrays_umt_d = df_truth.AsNumpy(cols)
+            cols_truth = SelectColumns(df_truth, truthLevel=self.truthLevel, include_gen_weights=include_gen_weights)
+            logger.info("Columns to be stored:")
+            logger.info(f"{cols_truth}")
+            arrays_umt_d = df_truth.AsNumpy(cols_truth)
 
             logger.info(f"Create output file: {self.foutname}_unmatched_truth.h5")
             with h5py.File(f"{self.foutname}_unmatched_truth.h5", "w")as file_arr_umt:

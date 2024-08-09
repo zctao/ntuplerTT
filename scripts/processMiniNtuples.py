@@ -35,20 +35,15 @@ parser.add_argument('-n', '--name', type=str, default='ntuple',
                     help="Prefix of the output file names")
 parser.add_argument('-m', '--maxevents', type=int,
                     help="Max number of events to process")
-parser.add_argument('-c', '--compute-corrections', action='store_true',
-                    help="Compute acceptance and efficiency correction factors")
 parser.add_argument('-a', '--algorithm-topreco',
                     choices=['pseudotop', 'klfitter'], default='pseudotop',
                     help="Top reconstruction algorithm")
 parser.add_argument('-g', '--generator-weights', action='store_true',
                     help="If True, store the variations of MC generator weights")
-parser.add_argument('-d', '--duplicate-removal', action='store_true',
-                    help="If True, check for events with duplicated event IDs and remove them")
 parser.add_argument('--treename', type=str, default='nominal',
                     help="Tree name of reco level input")
-parser.add_argument('-b', '--binning-config', type=str,
-                    default='configs/binning/bins_ttdiffxs_run2_ljets.json',
-                    help="File path to binning configuration file")
+parser.add_argument('-u', '--save-unmatched', action='store_true', 
+                    help="If True, save the unmatched truth events")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="If True, set logging level to DEBUG, otherwise INFO")
 
@@ -104,17 +99,14 @@ ntupler = NtupleRDF(
     truthLevel = truth_level,
     treename = args.treename,
     treename_truth = args.treename,
-    makeHistograms = args.compute_corrections,
-    binning_config = args.binning_config,
     verbose = args.verbose
 )
 
 # run
 ntupler(
     maxevents = args.maxevents,
-    saveUnmatchedReco = True,
-    saveUnmatchedTruth = truth_level=='particle', # TODO: check this
-    checkDuplicate = args.duplicate_removal,
+    saveUnmatchedReco = True, # always true
+    saveUnmatchedTruth = args.save_unmatched,
     include_dR = True,
     include_gen_weights = args.generator_weights
 )

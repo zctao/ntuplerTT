@@ -135,10 +135,8 @@ for tname in treenames:
     print(f"  Tree: {tname}")
 
     jobfiles_dict['detNP']['ttbar'][tname] = {}
-    if tname == 'nominal':
-        extra_args = "-c"
-    else:
-        extra_args = f"--treename {tname}"
+
+    extra_args = f"--treename {tname}"
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
 
@@ -200,8 +198,6 @@ jobfiles_dict['systCRL'] = {}
 for sample in ['ttbar', 'VV', 'Wjets', 'Zjets', 'singleTop', 'ttH', 'ttV']:
     print(f"{sample}")
 
-    extra_args = "-c" if sample=='ttbar' else ""
-
     jobfiles_dict['systCRL'][sample] = {}
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
@@ -235,6 +231,10 @@ jobfiles_dict['mcWAlt'] = {}
 for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_sh', 'ttbar_madspin', 'ttbar_pthard1', 'ttbar_sh2212']:
     print(f"{signal}")
 
+    # include MC generator weight variations
+    # also save the unmatched truth events for efficiency calculation later if signal sample
+    extra_args = "-g -u" if sample=='ttbar' else "-g"
+
     jobfiles_dict['mcWAlt'][signal] = {}
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
@@ -250,7 +250,7 @@ for signal in ['ttbar', 'ttbar_amc', 'ttbar_hdamp', 'ttbar_hw', 'ttbar_mt169', '
             subcampaigns = [era],
             truth_level = 'parton',
             njobs = njobs_dict.get(signal, 1),
-            extra_args = "-g", # include MC generator weight variations
+            extra_args = extra_args,
             **common_args
         )
 
@@ -278,6 +278,7 @@ for era in ['mc16a', 'mc16d', 'mc16e']:
         truth_level = 'parton',
         njobs = njobs_dict.get(sample_name, 1),
         sumw_config = sumw_config_afii,
+        extra_args = "-g",
         **common_args
     )
 

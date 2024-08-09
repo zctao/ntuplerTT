@@ -28,14 +28,14 @@ run_test() {
             -r ${rootfiles_reco} \
             -t ${rootfiles_truth} \
             -w ${sumw_config} \
-            -o outputs/${label} -c -g -v
+            -o outputs/${label} -g -v -u
 
     # particle level
     #python scripts/processMiniNtuples.py -n ttbar \
     #        -r ${rootfiles_reco} \
     #        -p ${rootfiles_PL} \
     #        -w ${sumw_config} \
-    #        -o outputs/${label} -c -g -v
+    #        -o outputs/${label} -g -v -u
 }
 
 run_test
