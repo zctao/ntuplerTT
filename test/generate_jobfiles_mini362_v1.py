@@ -213,7 +213,6 @@ for sample in ['ttbar', 'VV', 'Wjets', 'Zjets', 'singleTop', 'ttH', 'ttV']:
             subcampaigns = [era],
             truth_level = 'parton' if sample=='ttbar' else '',
             njobs = njobs_dict.get(sample, 1),
-            extra_args = extra_args,
             **common_args
         )
 
