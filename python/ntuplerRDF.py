@@ -271,7 +271,7 @@ class NtupleRDF():
         if self.tree_truth:
             self.foutname = f"{outputName}_{recoAlgo}_{truthLevel}_ljets"
         else:
-            self.outname = f"{outputName}_{recoAlgo}_ljets"
+            self.foutname = f"{outputName}_{recoAlgo}_ljets"
 
     def __call__(
         self,
