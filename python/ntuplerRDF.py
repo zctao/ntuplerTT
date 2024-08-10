@@ -3,7 +3,7 @@ import re
 import h5py
 import ROOT
 
-from datasets import read_config
+from mc_weight_variations import dict_systname_varindex
 
 import logging
 logging.basicConfig(
@@ -163,17 +163,33 @@ def define_dR_variables(rdf, recoAlgo, truthLevel):
 
     return rdf
 
-def define_generator_weights(rdf, treename=None):
-    weight_name = "mc_generator_weights" if treename is None else f"{treename}.mc_generator_weights"
+def define_generator_weights(rdf, dsid, treename=None):
+    branch_name = "mc_generator_weights" if treename is None else f"{treename}.mc_generator_weights"
 
-    if rdf.HasColumn(weight_name):
-        gen_weights_index_dict = read_config("configs/datasets/mc_weights_index.yaml")['mc_generator_weights']
+    if not rdf.HasColumn(branch_name):
+        logger.warning(f"Cannot store MC generator weight variations: no branch '{branch_name}'")
+        return rdf
 
-        for wtype in gen_weights_index_dict:
-            windex = gen_weights_index_dict[wtype]
-            rdf = rdf.Define(f"mc_generator_weights_{wtype}", f"{weight_name}[{windex}]")
-    else:
-        logger.warning(f"Cannot store MC generator weight variations: found no branch '{weight_name}'")
+    # check if dsid is available in dict_systname_varindex
+    if not dsid in dict_systname_varindex:
+        raise RuntimeError(f"DSID {dsid} not in the weight variation dictionary!")
+
+    varindex_dsid_d = dict_systname_varindex[dsid]
+
+    for varname, wname in varindex_dsid_d.items():
+        # skip if PLACEHOLDER
+        if "PLACEHOLDER" in varname:
+            continue
+
+        if isinstance(wname, int):
+            # Skip for now if wname is an integer
+            # In this canse varname is the string extracted from the sumWeight files and may not be a valid c++ variable name for calling RDataFrame::Define
+            continue
+        else:
+            # Use wname to look up the weight index
+            windex = varindex_dsid_d[wname]
+
+            rdf = rdf.Define(f"mc_generator_weights_{varname}", f"{branch_name}[{windex}]")
 
     return rdf
 
@@ -353,7 +369,7 @@ class NtupleRDF():
                 .Define("normalized_weight", "totalWeight_nominal*xs_times_lumi/sum_weights")
 
         if include_gen_weights:
-            df = define_generator_weights(df)
+            df = define_generator_weights(df, dsid)
 
         ###
         # truth tree
@@ -435,7 +451,7 @@ class NtupleRDF():
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
 
             if include_gen_weights:
-                df_truth = define_generator_weights(df_truth)
+                df_truth = define_generator_weights(df_truth, dsid)
 
             df_truth = df_truth \
                 .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
