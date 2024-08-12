@@ -443,6 +443,8 @@ class NtupleRDF():
             if maxevents is not None:
                 df_truth = df_truth.Range(maxevents)
 
+            tstart_t = time.time()
+
             # event selection flags
             df_truth = df_truth\
                 .Define("pass_truth", f"{truth_cuts}")\
@@ -466,6 +468,8 @@ class NtupleRDF():
             logger.info("Columns to be stored:")
             logger.info(f"{cols_truth}")
             arrays_umt_d = df_truth.AsNumpy(cols_truth)
+            tstop_t= time.time()
+            logger.info(f"Total processing time: {tstop_t-tstart_t:.2f} seconds")
 
             logger.info(f"Create output file: {self.foutname}_unmatched_truth.h5")
             with h5py.File(f"{self.foutname}_unmatched_truth.h5", "w")as file_arr_umt:
