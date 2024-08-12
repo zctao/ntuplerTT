@@ -321,3 +321,6 @@ def getSystTreeNames(syst_config):
 
 def getSystWeightNames(syst_config):
     return getSystNames(syst_config, syst_type='ScaleFactor')
+
+def getSystGenWeightNames(syst_config):
+    return getSystNames(syst_config, syst_type='GenWeight')
