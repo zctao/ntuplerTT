@@ -284,7 +284,11 @@ class NtupleRDF():
         logger.info("Start processing mini-ntuples")
 
         if maxevents is None:
-            ROOT.EnableImplicitMT()
+            #ROOT.EnableImplicitMT()
+            # Currently the code crashes with multiple TTrees if enabling multi-threading :(
+            # Due to Numba::GetSumWeights?
+            # Running single thread for now
+            ROOT.DisableImplicitMT()
         else:
             ROOT.DisableImplicitMT()
             # RDataFrame.Range() does not support multi-threading
