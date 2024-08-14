@@ -6,7 +6,7 @@ rootfiles_truth=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e
 
 rootfiles_PL=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_PL.root/user.mromano.40052328._000095.tt_PL.root
 
-sumw_config=${SourceDIR}/configs/datasets/ttdiffxs361/sumWeights_systCRL.yaml
+sumw_config=${SourceDIR}/configs/datasets/ttdiffxs381_test/sumWeights_systCRL.yaml
 
 run_test() {
     local suffix="$1"
