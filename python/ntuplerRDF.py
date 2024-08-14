@@ -163,6 +163,29 @@ def define_dR_variables(rdf, recoAlgo, truthLevel):
 
     return rdf
 
+def define_weight_variations(rdf, weight_component):
+    # match columns with the prefix
+    weight_prefix = f"^{weight_component}_"
+    p = re.compile(weight_prefix)
+    weight_variations_list = [str(col) for col in rdf.GetColumnNames() if p.search(str(col))]
+
+    for weight_var in weight_variations_list:
+        # check column type
+        if 'ROOT::VecOps::RVec' in rdf.GetColumnType(weight_var):
+            # need to flatten the branch
+            # get the size of the vector
+            nvec = rdf.Define("nsize", f"{weight_var}.size()").Min("nsize").GetValue()
+            # assume the weight variation branches are of the same length for each event
+            # TODO check Max and Min is the same?
+
+            for i in range(int(nvec)):
+                rdf = rdf.Define(f"{weight_var}_{i}", f"{weight_var}[{i}]")
+        else:
+            # no action required
+            pass
+
+    return rdf
+
 def define_generator_weights(rdf, dsid, treename=None):
     branch_name = "mc_generator_weights" if treename is None else f"{treename}.mc_generator_weights"
 
@@ -193,7 +216,7 @@ def define_generator_weights(rdf, dsid, treename=None):
 
     return rdf
 
-def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include_gen_weights=False):
+def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include_gen_weights=False, flat_only=True):
     patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight|^normalized_weight|sum_weights'
 
     # reco level
@@ -221,7 +244,17 @@ def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include
 
     p = re.compile(patterns)
 
-    return [str(col) for col in rdf.GetColumnNames() if p.search(str(col))] 
+    columns = [str(col) for col in rdf.GetColumnNames() if p.search(str(col))]
+
+    # check columns type if needed
+    if flat_only:
+        flat_columns = []
+        for col in columns:
+            if not 'ROOT::VecOps::RVec' in rdf.GetColumnType(col):
+                flat_columns.append(col)
+        return flat_columns
+    else:
+        return columns
 
 class NtupleRDF():
     def __init__(
@@ -371,6 +404,12 @@ class NtupleRDF():
             df = df \
                 .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
                 .Define("normalized_weight", "totalWeight_nominal*xs_times_lumi/sum_weights")
+
+        # event weight systematic variations
+        df = define_weight_variations(df, "weight_bTagSF_DL1r_70")
+        df = define_weight_variations(df, "weight_jvt")
+        df = define_weight_variations(df, "weight_leptonSF")
+        df = define_weight_variations(df, "weight_pileup")
 
         if include_gen_weights:
             df = define_generator_weights(df, dsid)
