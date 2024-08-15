@@ -428,7 +428,7 @@ class NtupleRDF():
                 isSemiLeptonic = "(abs(MC_Wdecay1_from_t_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_t_afterFSR_pdgid) < 7) != (abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) < 7)"
                 df = df.Define("isSemiLeptonic", isSemiLeptonic)
 
-                df = df.Define("pass_truth", "isSemiLeptonic && isMatched")
+                df = df.Define("pass_truth", "isSemiLeptonic && isMatched && !TMath::IsNaN(MC_thad_afterFSR_y)")
 
             elif self.truthLevel == "particle":
                 #df = df.Define("passesPL", "passedPL")
@@ -492,13 +492,14 @@ class NtupleRDF():
             # event selection flags
             df_truth = df_truth.Define("isMatched", "runNumber==reco.runNumber && eventNumber==reco.eventNumber")
 
-            if self.truthLevel == "parton":
-                df_truth = df_truth.Define("pass_truth", isSemiLeptonic)
-            else:
-                df_truth = df_truth.Define("pass_truth", "passedPL")
-
             # save only the events that do not match to reco level by event ID
             df_truth = df_truth.Filter("!isMatched")
+
+            if self.truthLevel == "parton":
+                df_truth = df_truth.Define("isSemiLeptonic", isSemiLeptonic)
+                df_truth = df_truth.Define("pass_truth", f"isSemiLeptonic && !TMath::IsNaN(MC_thad_afterFSR_y)")
+            else:
+                df_truth = df_truth.Define("pass_truth", "passedPL")
 
             # extra variables
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
