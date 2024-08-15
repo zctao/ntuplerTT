@@ -231,6 +231,8 @@ def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include
 
     # truth level
     if truthLevel is not None:
+        patterns += "|isSemiLeptonic|passesPL"
+
         if include_gen_weights:
             patterns += f"|mc_generator_weights_"
     
@@ -420,19 +422,22 @@ class NtupleRDF():
             logger.debug("Handling the truth tree")
             ###
             # Truth-level selections
+            df = df.Define("isMatched", f"runNumber=={self.truthLevel}.runNumber && eventNumber=={self.truthLevel}.eventNumber")
+
             if self.truthLevel == "parton":
-                truth_cuts = "(abs(MC_Wdecay1_from_t_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_t_afterFSR_pdgid) < 7) != (abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) < 7)"
+                isSemiLeptonic = "(abs(MC_Wdecay1_from_t_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_t_afterFSR_pdgid) < 7) != (abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) > 0 && abs(MC_Wdecay1_from_tbar_afterFSR_pdgid) < 7)"
+                df = df.Define("isSemiLeptonic", isSemiLeptonic)
+
+                df = df.Define("pass_truth", "isSemiLeptonic && isMatched")
+
             elif self.truthLevel == "particle":
-                truth_cuts = "passedPL"
+                #df = df.Define("passesPL", "passedPL")
+                df = df.Define("pass_truth", "passesPL && isMatched}")
             else:
                 raise RuntimeError(f"Unknown truth level: {self.truthLevel}")
 
-            df = df.Define("pass_truth", f"{truth_cuts}")
-
-            df = df.Define("isMatched", f"runNumber=={self.truthLevel}.runNumber && eventNumber=={self.truthLevel}.eventNumber")
-
             if not saveUnmatchedReco:
-                df = df.Filter("isMatched&&pass_truth")
+                df = df.Filter("isMatched")
                 logger.info(f"Number of truth matched events: {df.Count().GetValue()}")
 
             # compute extra variableas for truth level
@@ -485,9 +490,12 @@ class NtupleRDF():
             tstart_t = time.time()
 
             # event selection flags
-            df_truth = df_truth\
-                .Define("pass_truth", f"{truth_cuts}")\
-                .Define("isMatched", "runNumber==reco.runNumber && eventNumber==reco.eventNumber")
+            df_truth = df_truth.Define("isMatched", "runNumber==reco.runNumber && eventNumber==reco.eventNumber")
+
+            if self.truthLevel == "parton":
+                df_truth = df_truth.Define("pass_truth", isSemiLeptonic)
+            else:
+                df_truth = df_truth.Define("pass_truth", "passedPL")
 
             # save only the events that do not match to reco level by event ID
             df_truth = df_truth.Filter("!isMatched")
