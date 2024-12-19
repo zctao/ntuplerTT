@@ -1,6 +1,7 @@
 import os
 import subprocess
 from datasets import writeDataFileLists
+from computeSumWeights import getSumWeightsConfigName
 
 template_header_pbs = """#!/bin/bash
 #PBS -t 0-{njobarray}%{max_task}
@@ -261,8 +262,7 @@ def writeJobFile(
     if sumw_config is None:
         # infer the sum weights config file name based on dataset_config
         # replace the prefix of the dataset config file name with 'sumWeights'
-        sumw_config = os.path.basename(dataset_config)
-        sumw_config = 'sumWeights'+sumw_config[sumw_config.find('_'):]
+        sumw_config = getSumWeightsConfigName(dataset_config)
         sumw_config = os.path.join(os.path.dirname(dataset_config), sumw_config)
 
     if sample != 'data':

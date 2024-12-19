@@ -37,6 +37,13 @@ def getSumWeightsVariations(infiles_sumw, treename='sumWeights'):
 
     return mc_gen_weights, names_mc_gen_weights
 
+def getSumWeightsConfigName(fname):
+    # replace the prefix of the dataset config file name with 'sumWeights'
+    fname_wcfg = os.path.basename(fname)
+    fname, fext = os.path.splitext(fname_wcfg)
+    fname_wcfg = fname.replace(fname.split('_')[0],'sumWeights') + fext
+    return fname_wcfg
+
 def computeSumWeights(
     dataset_config,
     local_dir,
@@ -63,7 +70,7 @@ def computeSumWeights(
     logger.info(f"Read dataset config from {dataset_config}")
     datasets_dict = read_config(dataset_config)
 
-    for sample_name in datasets_dict:        
+    for sample_name in datasets_dict:
         # skip data
         if sample_name == 'data':
             continue
@@ -138,14 +145,10 @@ def computeSumWeights(
         logger.warning("No sum weight map produced!")
         return
 
-    # replace the prefix of the dataset config file name with 'sumWeights'
-    fname_wcfg = os.path.basename(dataset_config)
-    fname_wcfg = 'sumWeights'+fname_wcfg[fname_wcfg.find('_'):]
-
+    fname_wcfg = getSumWeightsConfigName(dataset_config)
     if outdir is None:
         # save the sum weight file to the same directory as the dataset_config
         outdir = os.path.dirname(dataset_config)
-
     fname_wcfg = os.path.join(outdir, fname_wcfg)
 
     if sumw_map:
