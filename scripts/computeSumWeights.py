@@ -39,7 +39,7 @@ def getSumWeightsVariations(infiles_sumw, treename='sumWeights'):
 
 def computeSumWeights(
     dataset_config,
-    local_directory,
+    local_dir,
     host = '',
     subcampaigns = ['mc16a', 'mc16d', 'mc16e'],
     outdir = None,
@@ -92,7 +92,12 @@ def computeSumWeights(
                 dsname = [dsname]
 
             for dn in dsname:
-                # e.g. user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4346.TTDIFFXS361_v05.MINI362_v1
+                # check if dn is None
+                if dn is None:
+                    logger.warning(f"  No dataset name specified")
+                    continue
+
+                # e.g. user.mromano.410658.PhPy8EG.e6671_s3126_r9364_p4514.274_SINGLETOP_vv02.MINI382_v1
                 dsid = dn.split('.')[2]
                 # try cast dsid to int, otherwise skip
                 try:
@@ -109,7 +114,7 @@ def computeSumWeights(
                 fname_sumw = dn.rstrip('_')+'_sumWeights.root'
                 logger.debug(f"    Get sum weights from file {fname_sumw}")
 
-                flist_sumw = listDataFiles(fname_sumw, local_directory, host)[0]
+                flist_sumw = listDataFiles(fname_sumw, local_dir, host)[0]
 
                 # compute sum weights
                 sumw = getSumWeights(flist_sumw)

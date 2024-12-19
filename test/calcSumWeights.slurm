@@ -12,11 +12,9 @@ source ${HOME}/ntuplerTT/setup_atlas.sh
 
 echo "SourceDIR = $SourceDIR"
 
-data_dir=${HOME}/dataf/ttbarDiffXs13TeV/MINI362_v1
+DataDir=${HOME}/data/ttbarDiffXs13TeV/MINI382_v1
+Config=${SourceDIR}/configs/datasets/ttdiffxs382/datasets.yaml
 
-python ${SourceDIR}/scripts/computeSumWeights.py -h
-
-
-python ${SourceDIR}/scripts/computeSumWeights.py ${SourceDIR}/configs/datasets/ttdiffxs361/datasets_mcWAlt.yaml -l ${data_dir} -v
+python ${SourceDIR}/scripts/computeSumWeights.py ${Config} -l ${DataDir} -v
 
 echo exit code $?

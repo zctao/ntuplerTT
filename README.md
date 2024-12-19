@@ -42,9 +42,9 @@ Sample DSIDs are listed in YAML files under `configs/datasets/<verson>/`.
 
       python scripts/computeSumWeights.py <dataset_config.yaml> [-l <local_directory>] [-o <output_dir>]
 
-  An example to calculate and produce all sample sum weights map:
+  An example slurm job script to compute all sample sum of weights is provided. To submit a slurm job:
 
-      source test/calc_sumweights_mini362_v1.sh
+      sbatch test/calcSumWeights.slurm
 
   The sum weights are saved as yaml files in the same directory as the dataset config files.
 
