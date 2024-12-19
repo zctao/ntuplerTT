@@ -7,11 +7,11 @@
 
 config="$1"
 sample="$2"
-localdir=${3:-${HOME}/data/ttbarDiffXs13TeV/MINI362_v1}
+localdir=${3:-${HOME}/data/ttbarDiffXs13TeV/MINI382_v1}
 shift
 shift
 shift
-subcampaigns=("$@")
+subcampaigns=("${@}")
 
 if [ -z "$subcampaigns" ]; then
     if [[ "$sample" == "data" ]]; then
@@ -47,7 +47,7 @@ for sub in "${subcampaigns[@]}"; do
 
     for s in "${suffix[@]}"; do
         for d in ${dids}; do
-            rucio download --dir ${outdir} ${d}_${s}.root
+            rucio download --dir ${outdir} "${d}_${s}.root"
         done
     done
 done

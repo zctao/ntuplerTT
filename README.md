@@ -10,12 +10,6 @@ CVMFS
 
       source setup_atlas.sh
 
-- On CC Cedar:
-
-      setupATLAS -c centos7 -b
-      cd <ntuplerTT directory>
-      source setup_lcg.sh LCG_97apython3
-
 - For scripts that require Rucio, need to set up rucio as well:
 
       lsetup rucio
@@ -24,15 +18,7 @@ CVMFS
 
 ### Sample management
 
-- To grab sample lists (.yaml) from gitlab repo pyTTbarDiffXs13TeV:
-
-      python scripts/getSampleListsFromGitlab.py <gitlab token> -s <sample_tag> -f <filters> -o <output_name>
-
-  An example to run this script and produce sample lists of version MINI362_v1:
-
-      source test/produceSampleLists_ttdiffxs361.sh
-
-  It produces a collection of dataset config yaml files in configs/datasets/ttdiffxs361/
+Sample DSIDs are listed in YAML files under `configs/datasets/<verson>/`.
 
 - To get the file sizes of samples (require rucio):
 
@@ -46,11 +32,9 @@ CVMFS
 
       source scripts/downloadSamples.sh <dataset_config.yaml> <sample_name> <local_directory> [<subcampaign> ...]
 
-  An example to download all MINI362_v1 samples:
+  An example to download all MINI382_v1 samples:
 
-      source test/downloadMINI362_v1.sh
-
-  This script uses the dataset configs generated earlier and downloads data files to ${HOME}/data/ttbarDiffXs13TeV/MINI362_v1/
+      source test/downloadMINI382_v1.sh
 
 ### Ntuple processing
 
