@@ -68,12 +68,12 @@ Sample DSIDs are listed in YAML files under `configs/datasets/<verson>/`.
 
       python scripts/writeJobFile.py -h
 
-  A script to generate all job files using mini-ntuple MINI362_v1 including all systematics:
+  A script is provided to generate all job files using mini-ntuple MINI382_v1 including all systematics:
   
-      python test/generate_jobfiles_mini362_v1.py
+      python test/generate_jobfiles_mini382_v1.py
 
-  It writes job files, which can be submitted using qsub later, to ${HOME}/data/batch_output/NtupleTT/latest/ by default. 
-  A summary of these job files is also written to configs/jobs_mini362_v1/jobfiles.yaml.
+  Slurm job files are written to `${HOME}/data/ntupleTT/latest/` by default.
+  The generated jobs are summarized in a YAML file: `${HOME}/data/ntupleTT/latest/jobs_mini382_v1/jobfiles.yaml`.
 
 - To submit the jobs:
 
