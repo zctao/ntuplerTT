@@ -1,14 +1,12 @@
 ---
 # systematic uncertainties
-
 # Tree name: <prefix>_<uncertainty>_<variation>
 jet:
     type:
         Branch
     prefix:
-        CategoryReduction_JET
+        JET
     uncertainties:
-        - BJES_Response
         - EffectiveNP_Detector1
         - EffectiveNP_Detector2
         - EffectiveNP_Mixed1
@@ -30,8 +28,14 @@ jet:
         - EtaIntercalibration_NonClosure_negEta
         - EtaIntercalibration_NonClosure_posEta
         - EtaIntercalibration_TotalStat
-        - Flavor_Composition
-        - Flavor_Response
+        - Flavor_Composition_prop
+        - Flavor_Response_prop
+        - Flavour_PerJet_GenShower_HF
+        - Flavour_PerJet_GenShower
+        - Flavour_PerJet_Hadronization_HF
+        - Flavour_PerJet_Hadronization
+        - Flavour_PerJet_Shower_HF
+        - Flavour_PerJet_Shower
         - JER_DataVsMC_MC16
         - JER_EffectiveNP_1
         - JER_EffectiveNP_2
@@ -39,7 +43,12 @@ jet:
         - JER_EffectiveNP_4
         - JER_EffectiveNP_5
         - JER_EffectiveNP_6
-        - JER_EffectiveNP_7restTerm
+        - JER_EffectiveNP_7
+        - JER_EffectiveNP_8
+        - JER_EffectiveNP_9
+        - JER_EffectiveNP_10
+        - JER_EffectiveNP_11
+        - JER_EffectiveNP_12restTerm
         - Pileup_OffsetMu
         - Pileup_OffsetNPV
         - Pileup_PtTerm
@@ -49,6 +58,29 @@ jet:
     variations:
         - _1down
         - _1up
+
+jet_pseudodata:
+    type:
+        Branch
+    prefix:
+        JET
+    uncertainties:
+        - JER_DataVsMC_MC16
+        - JER_EffectiveNP_1
+        - JER_EffectiveNP_2
+        - JER_EffectiveNP_3
+        - JER_EffectiveNP_4
+        - JER_EffectiveNP_5
+        - JER_EffectiveNP_6
+        - JER_EffectiveNP_7
+        - JER_EffectiveNP_8
+        - JER_EffectiveNP_9
+        - JER_EffectiveNP_10
+        - JER_EffectiveNP_11
+        - JER_EffectiveNP_12restTerm
+    variations:
+        - _1down_PseudoData
+        - _1up_PseudoData
 
 egamma:
     type:
@@ -90,10 +122,9 @@ muon:
     prefix:
         MUON
     uncertainties:
-        - ID
-        - MS
+        - CB
+        - SAGITTA_DATASTAT
         - SAGITTA_RESBIAS
-        - SAGITTA_RHO
         - SCALE
     variations:
         - _1down
@@ -112,7 +143,7 @@ btag:
         - extrapolation_from_charm
         - eigenvars_B: 9
         - eigenvars_C: 4
-        - eigenvars_Light: 4 
+        - eigenvars_Light: 5
     variations:
         - down
         - up
@@ -146,6 +177,8 @@ leptonSF:
         - EL_SF_Reco
         - EL_SF_Trigger
         - MU_SF_Trigger_STAT
+        - MU_SF_Trigger_SYST
+        - MU_SF_ID_STAT
         - MU_SF_ID_STAT_LOWPT
         - MU_SF_ID_SYST
         - MU_SF_ID_SYST_LOWPT
