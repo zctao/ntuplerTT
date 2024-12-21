@@ -13,6 +13,9 @@ def init_dict(job_file_dict, val=False):
     return sub_dict
 
 def submit(fname_job, args='', dry_run=False, batch_system='flashy'):
+    if not os.path.isfile(fname_job):
+        print(f"ERROR: job file {fname_job} does not exist. Abort...")
+        return
 
     commands = []
 
@@ -32,9 +35,8 @@ def submit(fname_job, args='', dry_run=False, batch_system='flashy'):
 
 def submitJobs(
     jobs_config, # yaml config of jobs that are ready to be submitted
-    category, # detNP, systCRL, mcWAlt, obs, fakes
-    samples=['ttbar','singleTop','VV','ttH','ttV','Wjets','Zjets'],
-    systematics=['nominal'],
+    samples=[],
+    systematics=[],
     eras=['mc16a', 'mc16d', 'mc16e'],
     args_string='', # command line arguments to be passed to qsub
     jobs_submitted=None, # yaml files to keep track of the submitted jobs
@@ -73,55 +75,58 @@ def submitJobs(
         submitted_dict = init_dict(jobs_dict)
 
     #####
-    if category in ['obs', 'fakes']:
-        years = []
-        if 'mc16a' in eras:
-            years += ['2015', '2016']
-        if 'mc16d' in eras:
-            years += ['2017']
-        if 'mc16e' in eras:
-            years += ['2018']
-        eras = years
+    if not samples:
+        samples = list(jobs_dict.keys())
 
-    # Submit
-    if category in ['obs', 'fakes']:
-        for e in eras:
-            if submitted_dict[category][e] and not resubmit:
-                print(f"WARNING: [{category}][{e}] has already been submitted")
-                continue
-            submit(jobs_dict[category][e], args_string, dry_run, batch_system)
-            submitted_dict[category][e] = True
-    elif category == 'detNP':
-        for s in samples:
-            if not s in jobs_dict[category]:
-                print(f"WARNING: {s} not in [{category}]")
-                continue
+    # loop over samples
+    for sample in samples:
+        if not sample in jobs_dict:
+            print(f"WARNING: {sample} not in the job config file")
+            continue
 
+        if sample in ['obs', 'fakes']:
+            years = []
+            if 'mc16a' in eras:
+                years += ['2015', '2016']
+            if 'mc16d' in eras:
+                years += ['2017']
+            if 'mc16e' in eras:
+                years += ['2018']
+
+            for year in years:
+                if submitted_dict[sample][year] and not resubmit:
+                    print(f"WARNING: [{sample}][{year}] has already been submitted")
+                    continue
+
+                fname_job = jobs_dict[sample][year]
+                if fname_job is None:
+                    print(f"WARNING: job file for [{sample}][{year}] is None. Abort...")
+                    continue
+
+                submit(fname_job, args_string, dry_run, batch_system)
+                submitted_dict[sample][year] = not dry_run
+
+        else:
             # all available systematics
-            systematics_cfg = list(jobs_dict[category][s].keys())
+            all_systematics = list(jobs_dict[sample].keys())
 
-            for syst in systematics_cfg:
+            for syst in all_systematics:
                 # filter syst based on the systematics argument
                 if not any(keyword in syst for keyword in systematics):
                     continue
 
                 for e in eras:
-                    if submitted_dict[category][s][syst][e] and not resubmit:
-                        print(f"WARNING: [{category}][{s}][{syst}][{e}] has already been submitted")
+                    if submitted_dict[sample][syst][e] and not resubmit:
+                        print(f"WARNING: [{sample}][{syst}][{e}] has already been submitted")
                         continue
-                    submit(jobs_dict[category][s][syst][e], args_string, dry_run, batch_system)
-                    submitted_dict[category][s][syst][e] = True
-    else:
-        for s in samples:
-            if not s in jobs_dict[category]:
-                print(f"WARNING: {s} not in [{category}]")
-                continue
-            for e in eras:
-                if submitted_dict[category][s][e] and not resubmit:
-                    print(f"WARNING: {[category]}{[s]}{[e]} has already been submitted")
-                    continue
-                submit(jobs_dict[category][s][e], args_string, dry_run, batch_system)
-                submitted_dict[category][s][e] = True
+
+                    fname_job = jobs_dict[sample][syst][e]
+                    if fname_job is None:
+                        print(f"WARNING: job file for [{sample}][{syst}][{e}] is None. Abort...")
+                        continue
+
+                    submit(fname_job, args_string, dry_run, batch_system)
+                    submitted_dict[sample][syst][e] = not dry_run
 
     # Save job submission status to file, replace the old one if it exists
     print(f"Update job submission status in {jobs_submitted}")
@@ -136,18 +141,14 @@ if __name__ == "__main__":
 
     parser.add_argument("job_config", type=str,
                         help="Config file of jobs that are read to be submitted")
-    parser.add_argument("-c", "--categories", nargs="+", required=True,
-                        choices=["detNP", "mcWAlt", "systCRL", "obs", "fakes"],
-                        help="Type of datasets to submit")
-    parser.add_argument("-s", "--samples", nargs="+",
-                        default=["ttbar","singleTop","VV","ttV","ttH","Wjets","Zjets"],
+    parser.add_argument("-s", "--samples", nargs="+", default=[],
                         help="List of samples")
     parser.add_argument("-u", "--systematics", nargs="+", default=["nominal"],
                         help="List of systematic uncertainties")
     parser.add_argument("-e", "--eras", nargs="+", default=["mc16a", "mc16d", "mc16e"],
                         help="List of subcampaigns/years of datasets")
     parser.add_argument("-a", "--arguments", type=str, default="",
-                        help="Arguments to be passed to qsub")
+                        help="Arguments to be passed to job submission command")
     parser.add_argument("-b", "--batch-system", choices=['pbs','slurm'],
                         default='slurm', help="Batch system")
     parser.add_argument("-r", "--resubmit", action="store_true",
@@ -157,15 +158,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    for c in args.categories:
-        submitJobs(
-            jobs_config = args.job_config,
-            category = c,
-            samples = args.samples,
-            systematics = args.systematics,
-            eras = args.eras,
-            args_string = args.arguments,
-            resubmit = args.resubmit,
-            dry_run = args.dry_run,
-            batch_system = args.batch_system
-        )
+    submitJobs(
+        jobs_config = args.job_config,
+        samples = args.samples,
+        systematics = args.systematics,
+        eras = args.eras,
+        args_string = args.arguments,
+        resubmit = args.resubmit,
+        dry_run = args.dry_run,
+        batch_system = args.batch_system
+    )

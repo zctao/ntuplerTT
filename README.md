@@ -77,15 +77,11 @@ Sample DSIDs are listed in YAML files under `configs/datasets/<verson>/`.
 
 - To submit the jobs:
 
-      python scripts/submitJobs.py <job_summary.yaml> -c <sample_category> -s <list_of_sample_names> -u <list_of_systematics>
+      python scripts/submitJobs.py <job_summary.yaml> -s <list_of_sample_names> -u <list_of_systematics>
 
-  It generates a job submission status file with suffix "_submitted" based on the `<job_summary.yaml>` (configs/jobs_mini362_v1/jobfiles.yaml).
+  It generates a job submission status file with suffix "_submitted" based on the `<job_summary.yaml>` (`${HOME}/data/ntupleTT/latest/jobs_mini382_v1/jobfiles_submitted.yaml`).
 
   Any systematic uncertainty in `<job_summary.yaml>` is included if its name contains one of the elements in `<list_of_systematics>`.
-
-  A example script to submit all jobs generated in the previous step:
-
-      source test/submit_mini362_v1.sh
       
 - To check job outputs:
 
