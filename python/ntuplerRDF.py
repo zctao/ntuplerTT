@@ -356,7 +356,8 @@ class NtupleRDF():
         tstart = time.time()
         # Reco-level selections
         # pass either e+jets or mu+jets selections
-        reco_cuts = "passed_resolved_ejets_4j2b != passed_resolved_mujets_4j2b"
+        #reco_cuts = "passed_resolved_ejets_4j2b != passed_resolved_mujets_4j2b"
+        reco_cuts = "el_n+mu_n==1 && jet_n>=4 && bjet_n>=2"
 
         df = df.Define("pass_reco", reco_cuts)
         df = df.Filter('pass_reco')
