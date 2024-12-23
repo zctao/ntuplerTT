@@ -320,8 +320,7 @@ class NtupleRDF():
 
         if maxevents is None:
             #ROOT.EnableImplicitMT()
-            # Currently the code crashes with multiple TTrees if enabling multi-threading :(
-            # Due to Numba::GetSumWeights?
+            # Currently the code crashes with multiple TTrees if enabling multi-threading
             # Running single thread for now
             ROOT.DisableImplicitMT()
         else:
@@ -369,12 +368,7 @@ class NtupleRDF():
 
         ###
         # normalized event weights
-        # Get dsid
-        dsid = df.Min('mcChannelNumber').GetValue()
-        # check if all events have the same dsid
-        if dsid != df.Max('mcChannelNumber').GetValue():
-            logger.warning("Events in the samples are of mixed DSIDs! Cannot compute the normalized weights at the moment.")
-        elif dsid < 1:
+        if df.Max('mcChannelNumber').GetValue() < 1:
             # data sample mcChannelNumber is 0
             if df.HasColumn("ASM_weight"): # data driven fake estimation
                 logger.debug("Data-driven fake estimation")
@@ -386,26 +380,40 @@ class NtupleRDF():
         elif self.sumWeights_d:
             # Sum weights
             logger.debug("Sum weights")
-            sumw_mc16a = self.sumWeights_d[dsid].get('mc16a', 0.)
-            sumw_mc16d = self.sumWeights_d[dsid].get('mc16d', 0.)
-            sumw_mc16e = self.sumWeights_d[dsid].get('mc16e', 0.)
 
             logger.debug("Declaring function GetSumWeights...")
+            # declare the sum weights map
+            ROOT.gInterpreter.Declare('''
+                auto &GetSumWeightsMap() {
+                    static std::unordered_map<int, std::unordered_map<std::string, double>> sumwMap;
+                    return sumwMap;
+                };
+            ''')
+            # fill the sum weights map from self.sumWeights_d
+            sumwMap = ROOT.GetSumWeightsMap()
+            for dsid in self.sumWeights_d:
+                sumwMap[dsid] = self.sumWeights_d[dsid]
+
             # https://twiki.cern.ch/twiki/bin/view/AtlasProtected/DataMCForAnalysis
-            @ROOT.Numba.Declare(['int'], 'float')
-            def GetSumWeights(runNumber):
-                if 276073 <= runNumber <= 311481:
-                    return sumw_mc16a
-                elif 325713 <= runNumber <= 340453:
-                    return sumw_mc16d
-                elif 348885 <= runNumber <= 364292:
-                    return sumw_mc16e
-                else:
-                    return 0;
+            ROOT.gInterpreter.Declare('''
+                double GetSumWeights(int mcChannelNumber, int runNumber) {
+                    auto subcamp = "";
+                    if (276073 <= runNumber and runNumber <= 311481) {
+                        subcamp = "mc16a";
+                    } else if (325713 <= runNumber and runNumber <= 340453) {
+                        subcamp = "mc16d";
+                    } else if (348885 <= runNumber and runNumber <= 364292) {
+                        subcamp = "mc16e";
+                    }
+
+                    auto &sumwMap = GetSumWeightsMap();
+                    return sumwMap[mcChannelNumber][subcamp];
+                }
+            ''')
             logger.debug("...done!")
 
             df = df \
-                .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
+                .Define("sum_weights", "GetSumWeights(mcChannelNumber,runNumber)") \
                 .Define("normalized_weight", "totalWeight_nominal*xs_times_lumi/sum_weights")
 
         # event weight systematic variations
@@ -509,7 +517,7 @@ class NtupleRDF():
                 df_truth = define_generator_weights(df_truth, dsid)
 
             df_truth = df_truth \
-                .Define("sum_weights", "Numba::GetSumWeights(runNumber)") \
+                .Define("sum_weights", "GetSumWeights(mcChannelNumber,runNumber)") \
                 .Define("normalized_weight_mc", "weight_mc*xs_times_lumi/sum_weights")
 
             # save as numpy arrays
