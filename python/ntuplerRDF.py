@@ -217,7 +217,7 @@ def define_generator_weights(rdf, dsid, treename=None):
     return rdf
 
 def SelectColumns(rdf, recoAlgo=None, truthLevel=None, include_dR=False, include_gen_weights=False, flat_only=True):
-    patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight|^normalized_weight|sum_weights'
+    patterns = '^pass_|isMatched|runNumber|eventNumber|^weight_|totalWeight|^normalized_weight|sum_weights|mcChannelNumber'
 
     # reco level
     if recoAlgo is None:
