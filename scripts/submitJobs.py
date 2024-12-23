@@ -112,7 +112,7 @@ def submitJobs(
 
             for syst in all_systematics:
                 # filter syst based on the systematics argument
-                if not any(keyword in syst for keyword in systematics):
+                if systematics and not any(keyword in syst for keyword in systematics):
                     continue
 
                 for e in eras:
@@ -143,7 +143,7 @@ if __name__ == "__main__":
                         help="Config file of jobs that are read to be submitted")
     parser.add_argument("-s", "--samples", nargs="+", default=[],
                         help="List of samples")
-    parser.add_argument("-u", "--systematics", nargs="+", default=["nominal"],
+    parser.add_argument("-u", "--systematics", nargs="+", default=[],
                         help="List of systematic uncertainties")
     parser.add_argument("-e", "--eras", nargs="+", default=["mc16a", "mc16d", "mc16e"],
                         help="List of subcampaigns/years of datasets")
