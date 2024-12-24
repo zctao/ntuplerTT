@@ -1,6 +1,7 @@
 import os
 import yaml
 import ROOT
+import h5py
 
 import logging
 logging.basicConfig(
@@ -133,6 +134,48 @@ def checkROOTinDir(dirname):
 
     return str(ngood)+'/'+str(nfiles)
 
+def checkHDF5inDir(dirname):
+    logger.debug(f"Check HDF5 files in {dirname}")
+    nfiles = 0
+    ngood = 0
+
+    for fname in os.listdir(dirname):
+        if not fname.endswith(".h5"):
+            continue
+
+        # found a HDF5 file
+        nfiles += 1
+        fullname = os.path.join(dirname, fname)
+
+        # try to open it
+        try:
+            with h5py.File(fullname, 'r') as f:
+                goodfile = True
+
+                arraynames = list(f.keys())
+                if len(arraynames) == 0:
+                    logger.debug(f"No arrays in {fullname}")
+                    goodfile = False
+
+                # check if 'normalized_weight' is in the file
+                if not 'normalized_weight' in arraynames:
+                    logger.debug(f"normalized_weight is not in {fullname}")
+                    goodfile = False
+
+                # check if all arrays are of the same length
+                for aname in arraynames:
+                    if len(f[aname]) != len(f[arraynames[0]]):
+                        logger.debug(f"Array {aname} has different length from the first array")
+                        goodfile = False
+
+            if goodfile:
+                ngood += 1
+
+        except  Exception as e:
+            logger.debug(f"Failed to open HDF5 file {fullname}: {e}")
+
+    return str(ngood)+'/'+str(nfiles)
+
 def prepareResub(fname_orig, indices_resub, extra_mem=0):
     dirname = os.path.dirname(fname_orig)
     basename = os.path.basename(fname_orig)
@@ -159,13 +202,13 @@ def prepareResub(fname_orig, indices_resub, extra_mem=0):
 
     return os.path.realpath(fname_resub)
 
-def checkOutputs(jDict, sDict, check_root, verify, extra_mem=0):
+def checkOutputs(jDict, sDict, output_format, verify, extra_mem=0):
     oDict = {}
     flist_resub = []
 
     for k in jDict:
         if isinstance(jDict[k], dict):
-            oDict[k], flist = checkOutputs(jDict[k], sDict.get(k, {}), check_root, verify, extra_mem)
+            oDict[k], flist = checkOutputs(jDict[k], sDict.get(k, {}), output_format, verify, extra_mem)
             flist_resub += flist
         else:
             if sDict and not sDict[k]: # skip if the job is not yet submitted
@@ -179,8 +222,10 @@ def checkOutputs(jDict, sDict, check_root, verify, extra_mem=0):
             jobarray_index_resubmit = set()
 
             # check files
-            if check_root:
+            if output_format == 'root':
                 res = checkROOTinDir(dirname)
+            elif output_format == 'h5':
+                res = checkHDF5inDir(dirname)
             else:
                 res = 'n/a'
 
@@ -214,8 +259,8 @@ if __name__ == "__main__":
                         help="Config file of job submission status")
     parser.add_argument("-o", "--output", type=str,
                         help="Config file for outputs")
-    parser.add_argument("-r", "--check-root", action='store_true',
-                        help="If True, check the output ROOT files too")
+    parser.add_argument("-f", "--output-format", choices=['root','h5'], default='',
+                        help="Output format of the files to check. If not specified, only check the job logs")
     parser.add_argument("-c", "--check-log", action="store_true",
                         help="If True, check the job logs more carefully")
     parser.add_argument("-m", "--increase-mem", type=int, default=0,
@@ -245,7 +290,7 @@ if __name__ == "__main__":
         submit_dict = {}
 
     logger.info(f"Start checking jobs")
-    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, check_root=args.check_root, verify=args.check_log, extra_mem=args.increase_mem)
+    result_dict, fresub_list = checkOutputs(jobs_dict, submit_dict, output_format=args.output_format, verify=args.check_log, extra_mem=args.increase_mem)
 
     if args.output is None:
         args.output = jcfg_names[0] + '_results' + jcfg_names[1]
