@@ -16,57 +16,74 @@ samples_data = ['obs', 'fakes']
 # Simulated samples
 samples_MC = ['ttbar', 'singleTop_sch', 'singleTop_tch', 'singleTop_tW_DR_dyn', 'Wjets', 'Zjets', 'ttV', 'VV', 'ttH']
 
-# Alternative signal samples
+# Alternative samples
 samples_alt_ttbar = ['ttbar_hw', 'ttbar_amchw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_hdamp', 'ttbar_madspin', 'ttbar_sh2212', 'ttbar_pthard1', 'ttbar_pthard2', 'ttbar_recoil']
 
-subcampaigns = ['mc16a', 'mc16d', 'mc16e']
+samples_alt_bkg = ['singleTop_tW_DS_dyn']
 
-def makeTarballsSyst(
+subcampaigns = ['mc16a', 'mc16d', 'mc16e']
+years = ['2015', '2016', '2017', '2018']
+
+def makeTarballMC(
+    sample_names,
     syst_name,
     sample_top_dir,
-    tarfile_name
+    tarfile_name,
+    mode = 'w' # or 'a' to append to the existing file
     ):
     logger.info(syst_name)
 
-    with tarfile.open(tarfile_name, "w") as tar:
-        # Loop over MC samples
-        for sample in samples_MC + samples_alt_ttbar:
-            # Check if the systematic directory exists
-            syst_dir = os.path.join(sample_top_dir, sample, syst_name)
-            if not os.path.isdir(syst_dir):
-                logger.debug(f" Directory not found: {syst_dir}")
+    with tarfile.open(tarfile_name, mode) as tar:
+        # loop over samples
+        for sample in sample_names:
+            # check if sample directory exists
+            sample_dir = os.path.join(sample_top_dir, sample, syst_name)
+            if not os.path.isdir(sample_dir):
+                logger.debug(f" Directory not found: {sample_dir}")
                 continue
 
             logger.info(f" adding {sample}")
 
             for era in subcampaigns:
-                for f in os.listdir(os.path.join(syst_dir, era)):
+                for f in os.listdir(os.path.join(sample_dir, era)):
                     arcname = os.path.join(sample, syst_name, era, f)
                     fullname = os.path.join(sample_top_dir, arcname)
 
-                    # only tar h5 files
+                    # only include h5 files
                     if not os.path.isfile(fullname) or os.path.splitext(f)[-1]!=".h5":
                         continue
 
                     logger.debug(f" {fullname} --> {arcname}")
                     tar.add(fullname, arcname=arcname)
 
-        # Special case: add data and data-driven background in case of 'nominal'
-        if syst_name == 'nominal':
-            for dname in samples_data:
-                logger.info(f" adding {dname}")
+def makeTarballData(
+    sample_names,
+    sample_top_dir,
+    tarfile_name,
+    mode = 'w' # or 'a' to append to the existing file
+    ):
 
-                for year in ['2015', '2016', '2017', '2018']:
-                    for f in os.listdir(os.path.join(sample_top_dir, dname, year)):
-                        arcname = os.path.join(dname, year, f)
-                        fullname = os.path.join(sample_top_dir, arcname)
+    with tarfile.open(tarfile_name, mode) as tar:
+        for sample in sample_names:
+            # check if sample directory exists
+            sample_dir = os.path.join(sample_top_dir, sample)
+            if not os.path.isdir(sample_dir):
+                logger.debug(f" Directory not found: {sample_dir}")
+                continue
 
-                        # only tar h5 files
-                        if not os.path.isfile(fullname) or os.path.splitext(f)[-1]!=".h5":
-                            continue
+            logger.info(f" adding {sample}")
 
-                        logger.debug(f" {fullname} --> {arcname}")
-                        tar.add(fullname, arcname)
+            for year in years:
+                for f in os.listdir(os.path.join(sample_dir, year)):
+                    arcname = os.path.join(sample, year, f)
+                    fullname = os.path.join(sample_top_dir, arcname)
+
+                    # only include h5 files
+                    if not os.path.isfile(fullname) or os.path.splitext(f)[-1]!=".h5":
+                        continue
+
+                    logger.debug(f" {fullname} --> {arcname}")
+                    tar.add(fullname, arcname)
 
 def makeTarballs(
     data_dir,
@@ -101,10 +118,39 @@ def makeTarballs(
         # Take all possible ones if no systematics are provided
         systematics = ['nominal'] + getSystTreeNames(syst_config)
 
-    for sname in systematics:
-        makeTarballsSyst(
-            sname, top_sample_dir,
-            tarfile_name = os.path.join(output_dir, f"{sname}.tar")
+    for syst in systematics:
+        makeTarballMC(
+            samples_MC,
+            syst,
+            top_sample_dir,
+            tarfile_name = os.path.join(output_dir, f"{syst}.tar"),
+        )
+
+        # add alternative background samples here too
+        makeTarballMC(
+            samples_alt_bkg,
+            syst,
+            top_sample_dir,
+            tarfile_name = os.path.join(output_dir, f"{syst}.tar"),
+            mode = 'a' # append
+        )
+
+        if syst == 'nominal':
+            # add data samples
+            makeTarballData(
+                samples_data,
+                top_sample_dir,
+                tarfile_name = os.path.join(output_dir, f"nominal.tar"),
+                mode = 'a' # append
+            )
+
+    # alternative ttbar samples
+    for ttbar_alt in samples_alt_ttbar:
+        makeTarballMC(
+            [ttbar_alt],
+            "nominal",
+            top_sample_dir,
+            tarfile_name = os.path.join(output_dir, f"{ttbar_alt}.tar")
         )
 
 if __name__ == "__main__":
