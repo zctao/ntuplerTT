@@ -200,7 +200,8 @@ for sample in samples_alt_ttbar:
     jobfiles_dict[sample] = {}
 
     print("  Tree: nominal")
-    jobfiles_dict[sample]['nominal'] = {}
+    tname = 'nominal'
+    jobfiles_dict[sample][tname] = {}
 
     for era in ['mc16a', 'mc16d', 'mc16e']:
         print(f"    {era}")
@@ -208,7 +209,7 @@ for sample in samples_alt_ttbar:
         if not matchFilterKeys(keywords=[sample,tname,era], filters=args.filters):
             continue
 
-        extra_args = f"--treename nominal -g"
+        extra_args = f"--treename {tname} -g"
 
         try:
             fname_mc = writeJobFile(
@@ -225,7 +226,7 @@ for sample in samples_alt_ttbar:
             print(f"Failed to generate job file: {e}")
             fname_mc = None
 
-        jobfiles_dict[sample]['nominal'][era] = fname_mc
+        jobfiles_dict[sample][tname][era] = fname_mc
 
 # A special case: FastSim ttbar
 dataset_afii_config = os.path.join(source_dir, 'configs/datasets/ttdiffxs382/datasets_afii.yaml')
