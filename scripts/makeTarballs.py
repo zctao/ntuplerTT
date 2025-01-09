@@ -45,7 +45,12 @@ def makeTarballMC(
             logger.info(f" adding {sample}")
 
             for era in subcampaigns:
-                for f in os.listdir(os.path.join(sample_dir, era)):
+                era_dir = os.path.join(sample_dir, era)
+                if not os.path.isdir(era_dir):
+                    logger.warning(f"Found no directory {era_dir}! Skipping")
+                    continue
+
+                for f in os.listdir(era_dir):
                     arcname = os.path.join(sample, syst_name, era, f)
                     fullname = os.path.join(sample_top_dir, arcname)
 
@@ -74,7 +79,12 @@ def makeTarballData(
             logger.info(f" adding {sample}")
 
             for year in years:
-                for f in os.listdir(os.path.join(sample_dir, year)):
+                year_dir = os.path.join(sample_dir, year)
+                if not os.path.isdir(year_dir):
+                    logger.warning(f"Found no directory: {year_dir}! Skipping")
+                    continue
+
+                for f in os.listdir(year_dir):
                     arcname = os.path.join(sample, year, f)
                     fullname = os.path.join(sample_top_dir, arcname)
 
