@@ -9,18 +9,14 @@ subcampaign_tag:
 dsid:
     # Signal
 
-    ttbar:         # PhPy8EG (nominal) mt = 172.5 GeV, hdamp = 1.5*mt 
+    ttbar:        # PhPy8EG (nominal) mt = 172.5 GeV, hdamp = 1.5*mt
         - 410470
-    ttbar_hw:      # PowhegHerwig7EvtGen #- PWGH7
-        - 411233
-        - 411234
-    ttbar_amc:     # aMcAtNloPy8EvtGen #- MCatNLO
-        - 410464
-        - 410465
-    ttbar_sh:      # Sherpa v.2.2.8
-        - 700048
-        - 700049
-        - 700050
+    ttbar_hw:     # PowhegHerwig7EvtGen
+        - 411233  # PowhegHerwig7EvtGen_tt_hdamp258p75_713_SingleLep
+        - 411234  # PowhegHerwig7EvtGen_tt_hdamp258p75_713_dil
+    ttbar_amchw:  # aMCAtNLOHerwig7
+        - 412116  # aMcAtNloHerwig7EvtGen_MEN30NLO_ttbar_SingleLep
+        - 412117  #aMcAtNloHerwig7EvtGen_MEN30NLO_ttbar_dil
     ttbar_mt169:   # Same as nominal but with mt = 169 GeV
         - 411044
         - 411052
@@ -30,102 +26,94 @@ dsid:
     ttbar_hdamp:   # same as nominal but with hdamp set to 3*mt
         - 410480
         - 410482
+    tthar_sh2212: # Sherpa v.2.2.12 ttbar + 0,1j@NLO + 2,3,4j@LO
+        - 700660 # dilepton.
+        - 700661 # single lepton (minus)
+        - 700662 # single lepton (plus)
     ttbar_madspin: # POWHEG+Pythia8 ttbar production with MadSpin decay, Powheg hdamp equal 1.5*top mass, A14 tune
         - 601708 # dilepton
         - 601407 # single lepton
     ttbar_pthard1: # POWHEG+Pythia8 ttbar production with Powheg hdamp equal 1.5*top mass, A14 tune, pTHard=1, ME NNPDF30 NLO, A14 NNPDF23 LO from DSID 410450 LHE files with Shower Weights added
         - 601491 # dilepton
         - 601497 # one lepton
-    tthar_sh2212: # Sherpa v.2.2.12 ttbar + 0,1j@NLO + 2,3,4j@LO
-        - 700660 # dilepton.
-        - 700661 # single lepton (minus)
-        - 700662 # single lepton (plus)
-    ttbar_minnlops: # MiNNLOPS
-        - 950473
+    ttbar_pthard2:
+        - 601492
+        - 601498
+    ttbar_recoil: # recoilToTop
+        - 601356  # PhPy8EG_A14_ttbar_hdamp258p75_Trec_ljets
+        - 601357  # PhPy8EG_A14_ttbar_hdamp258p75_Trec_dil
+    #ttbar_minnlops: # MiNNLOPS
+    #    - 950473
 
     # Backgrounds
 
     # single top
-    singleTop:     # PhPy8EG
-        # t-channel
-        - 410658
-        - 410659
-        # tW
-        - 410646
-        - 410647
+    singleTop_sch:
         # s-channel
-        - 410644
-        - 410645
-    singleTop_DS:  # PhPy8EG with DS scheme
-        - 410654
-        - 410655
-    singleTop_hw:  # PowhegHerwig7EvtGen
+        - 410644  # PowhegPythia8EvtGen_A14_singletop_schan_lept_top
+        - 410645  # PowhegPythia8EvtGen_A14_singletop_schan_lept_antitop
+    singleTop_tch:
         # t-channel
-        - 411032
-        - 411033
-        # tW
-        - 411036
-        - 411037
-        # s-channel
-        - 411034
-        - 411035
-    singleTop_amc:  # aMcAtNloPy8EG
-        - 412002
-        - 412003   # tW_dilepton, but 412002 is tW_inclusive?
-        - 412004
-        - 412005
-    singleTop_tW_DR_dyn:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, hdamp equal 1.5*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
-        - 601619 # antitop
-        - 601623 # top
-    singleTop_tW_DR_dyn_3mthdamp:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, with Powheg hdamp equal 3*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
-        - 601618 # antitop
-        - 601622 # top
-    singleTop_tW_DS_dyn:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, hdamp equal 1.5*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
-        - 601627 # antitop
-        - 601631 # top
-    singleTop_tW_DS_dyn_3mthdamp:  # POWHEG+Pythia8+EvtGen tW production, DR scheme, dynamic scale, inclusive, with Powheg hdamp equal 3*top mass, A14 tune, ME NNPDF30 NLO, A14 NNPDF23 LO
-        - 601626 # antitop
-        - 601630 # top
+        - 410658  # PhPy8EG_A14_tchan_BW50_lept_top
+        - 410659  # PhPy8EG_A14_tchan_BW50_lept_antitop
+    singleTop_tW_DR_dyn: # tW DynScale DR
+        - 601352  # PhPy8EG_tW_dyn_DR_incl_antitop
+        - 601355  # PhPy8EG_tW_dyn_DR_incl_top
+    singleTop_tW_DS_dyn: # tW DynScale DS
+        - 601627  # PhPy8EG_tW_DS_dyn_incl_antitop
+        - 601631  # PhPy8EG_tW_DS_dyn_incl_top
 
     # W+jets
     Wjets:
-        # 364156 - 364197
-        !!python/object/apply:builtins.range [364156, 364198]
+        # 700338 - 700349
+        # Sherpa 2211 Wjets_lnu
+        - 700338  # Sh_2211_Wenu_maxHTpTV2_BFilter
+        - 700339  # Sh_2211_Wenu_maxHTpTV2_CFilterBVeto
+        - 700340  # Sh_2211_Wenu_maxHTpTV2_CVetoBVeto
+        - 700341  # Sh_2211_Wmunu_maxHTpTV2_BFilter
+        - 700342  # Sh_2211_Wmunu_maxHTpTV2_CFilterBVeto
+        - 700343  # Sh_2211_Wmunu_maxHTpTV2_CVetoBVeto
+        - 700344  # Sh_2211_Wtaunu_L_maxHTpTV2_BFilter
+        - 700345  # Sh_2211_Wtaunu_L_maxHTpTV2_CFilterBVeto
+        - 700346  # Sh_2211_Wtaunu_L_maxHTpTV2_CVetoBVeto
+        - 700347  # Sh_2211_Wtaunu_H_maxHTpTV2_BFilter
+        - 700348  # Sh_2211_Wtaunu_H_maxHTpTV2_CFilterBVeto
+        - 700349  # Sh_2211_Wtaunu_H_maxHTpTV2_CVetoBVeto
 
     # Z+jets
     Zjets:
-        # 364100 - 364141
-        !!python/object/apply:builtins.range [364100, 364142]
+        # 700320 - 700325
+        - 700320  # Sh_2211_Zee_maxHTpTV2_BFilter
+        - 700321  # Sh_2211_Zee_maxHTpTV2_CFilterBVeto
+        - 700322  # Sh_2211_Zee_maxHTpTV2_CVetoBVeto
+        - 700323  # Sh_2211_Zmumu_maxHTpTV2_BFilter
+        - 700324  # Sh_2211_Zmumu_maxHTpTV2_CFilterBVeto
+        - 700325  # Sh_2211_Zmumu_maxHTpTV2_CVetoBVeto
 
     # ttV
     ttV:           # aMcAtNloPythia8EvtGen
-        - 410155   # ttW
-        - 410156   # ttZ,Z->nunu
-        - 410157   # ttZ,Z->qq
-        - 410218   # ttee
-        - 410219   # ttmumu
-        - 410220   # tttautau
-    # For background systematics
-    ttV_syst: 
-        - 410560   # MadGraph tZq
-        - 410080   # MadGraph 4topSM
-        - 410081   # MadGraph ttWW
-        - 410408   # aMcAtNloPythia8EvtGen tWZ,Z->ll
+        - 410155   # ttW (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttW)
+        # superseded
+        - 410156   # ttZ,Z->nunu (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttZnunu)
+        - 410157   # ttZ,Z->qq (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttZqq)
+        - 410218   # ttee (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttee)
+        - 410219   # ttmumu (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttmumu)
+        - 410220   # tttautau (aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_tttautau)
 
     # Di-boson
     VV:            # Sherpa
-        - 363356   # Z(qq)Z(ll)
-        - 363358   # W(qq)Z(ll)
-        - 363359   # W+(->qq)W-(->lv) with 0,1j@NLO + 2,3j@LO
-        - 363360   # W+(->lv)W-(->qq) with 0,1j@NLO + 2,3j@LO
-        - 363489   # W(lv)Z(qq)
-    # For background systematics
-    VV_syst:       # Sherpa
-        - 364250   # llll
-        - 364253   # lllnu
-        - 364254   # llnunu
-        - 364255   # lnununu
+        - 700488  # Sh_2211_WlvWqq
+        - 700489  # Sh_2211_WlvZqq
+        - 700490  # Sh_2211_WlvZbb
+        - 700491  # Sh_2211_WqqZvv
+        - 700492  # Sh_2211_WqqZll
+        - 700493  # Sh_2211_ZqqZll
+        - 700494  # Sh_2211_ZbbZll
+        - 700495  # Sh_2211_ZqqZvv
+        - 700496  # Sh_2211_ZbbZvv
 
     # ttH
-    ttH:           # PhPy8EG
-        - 346344   # ttH, mH=125, semilep
+    ttH:
+        - 346343  # PhPy8EG_A14NNPDF23_NNPDF30ME_ttH125_allhad
+        - 346344  # PhPy8EG_A14NNPDF23_NNPDF30ME_ttH125_semilep
+        - 346345  # PhPy8EG_A14NNPDF23_NNPDF30ME_ttH125_dilep

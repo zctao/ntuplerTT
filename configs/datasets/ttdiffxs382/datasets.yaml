@@ -1,0 +1,288 @@
+# Observed
+data:
+  '2015':
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp15_v01_p4513.274_vv01.MINI382
+  '2016':
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp16_v01_p4513.274_vv01.MINI382
+  '2017':
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp17_v01_p4513.274_vv01.MINI382
+  '2018':
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp18_v01_p4513.274_vv01.MINI382
+
+# Signal samples
+ttbar:
+  mc16a:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.274_vv01.MINI382
+  mc16d:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10201_p4514.274_vv01.MINI382
+  mc16e:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r10724_p4514.274_vv01.MINI382
+
+ttbar_AFII:
+  mc16a:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_hw:
+  mc16a:
+  - user.mromano.411233.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.411234.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.411233.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.411234.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.411233.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.411234.PowhegHerwig7EvtGen.DAOD_TOPQ1.e7580_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_amchw:
+  mc16a:
+  - user.mromano.412116.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.412117.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.412116.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.412117.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.412116.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.412117.aMcAtNloHerwig7EvtGen.DAOD_TOPQ1.e7620_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_mt169:
+  mc16a:
+  - user.mromano.411044.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.411052.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.411044.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.411052.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.411044.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.411052.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_mt176:
+  mc16a:
+  - user.mromano.411051.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.411059.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.411051.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.411059.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.411051.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.411059.PowhegPythia8EvtGen.DAOD_TOPQ1.e6696_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_hdamp:
+  mc16a:
+  - user.mromano.410480.PhPy8EG.DAOD_TOPQ1.e6454_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.410482.PhPy8EG.DAOD_TOPQ1.e6454_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.410480.PhPy8EG.DAOD_TOPQ1.e6454_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.410482.PhPy8EG.DAOD_TOPQ1.e6454_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.410480.PhPy8EG.DAOD_TOPQ1.e6454_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.410482.PhPy8EG.DAOD_TOPQ1.e6454_a875_r10724_p4514.274_vv01_af2.MINI382
+
+tthar_sh2212:
+  mc16a:
+  - user.mromano.700660.Sh.DAOD_TOPQ1.e8461_s3126_r9364_p6109.274_vv01_fs.MINI382
+  - user.mromano.700661.Sh.DAOD_TOPQ1.e8461_s3126_r9364_p6109.274_vv01_fs.MINI382
+  - user.mromano.700662.Sh.DAOD_TOPQ1.e8461_s3126_r9364_p6109.274_vv01_fs.MINI382
+  mc16d:
+  - user.mromano.700660.Sh.DAOD_TOPQ1.e8461_s3126_r10201_p6109.274_vv01_fs.MINI382
+  - user.mromano.700661.Sh.DAOD_TOPQ1.e8461_s3126_r10201_p6109.274_vv01_fs.MINI382
+  - user.mromano.700662.Sh.DAOD_TOPQ1.e8461_s3126_r10201_p6109.274_vv01_fs.MINI382
+  mc16e:
+  - user.mromano.700660.Sh.DAOD_TOPQ1.e8461_s3126_r10724_p6109.274_vv01_fs.MINI382
+  - user.mromano.700661.Sh.DAOD_TOPQ1.e8461_s3126_r10724_p6109.274_vv01_fs.MINI382
+  - user.mromano.700662.Sh.DAOD_TOPQ1.e8461_s3126_r10724_p6109.274_vv01_fs.MINI382
+
+ttbar_madspin:
+  mc16a:
+  - user.mromano.601407.PhPy8EG.DAOD_TOPQ1.e8494_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.601708.PhPy8EG.DAOD_TOPQ1.e8494_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.601407.PhPy8EG.DAOD_TOPQ1.e8494_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.601708.PhPy8EG.DAOD_TOPQ1.e8494_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.601407.PhPy8EG.DAOD_TOPQ1.e8494_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.601708.PhPy8EG.DAOD_TOPQ1.e8494_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_pthard1:
+  mc16a:
+  - user.mromano.601491.PhPy8EG.DAOD_TOPQ1.e8435_a875_r9364_p4514.274_vv01_af2.MINI382
+  - user.mromano.601497.PhPy8EG.DAOD_TOPQ1.e8435_a875_r9364_p5463.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.601491.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10201_p4514.274_vv01_af2.MINI382
+  - user.mromano.601497.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.601491.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10724_p4514.274_vv01_af2.MINI382
+  - user.mromano.601497.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10724_p4514.274_vv01_af2.MINI382
+
+ttbar_pthard2:
+  mc16a:
+  - user.mromano.601492.PhPy8EG.DAOD_TOPQ1.e8435_a875_r9364_p5463.274_vv01_af2.MINI382
+  - user.mromano.601498.PhPy8EG.DAOD_TOPQ1.e8435_a875_r9364_p5463.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.601492.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10201_p5463.274_vv01_af2.MINI382
+  - user.mromano.601498.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10201_p5463.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.601492.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10724_p5463.274_vv01_af2.MINI382
+  - user.mromano.601498.PhPy8EG.DAOD_TOPQ1.e8435_a875_r10724_p5463.274_vv01_af2.MINI382
+
+ttbar_recoil:
+  mc16a:
+  - user.mromano.601356.PhPy8EG.DAOD_TOPQ1.e8433_a875_r9364_p5989.274_vv01_af2.MINI382
+  - user.mromano.601357.PhPy8EG.DAOD_TOPQ1.e8433_a875_r9364_p4514.274_vv01_af2.MINI382
+  mc16d:
+  - user.mromano.601356.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10201_p5989.274_vv01_af2.MINI382
+  - user.mromano.601357.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10201_p4514.274_vv01_af2.MINI382
+  mc16e:
+  - user.mromano.601356.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10724_p5989.274_vv01_af2.MINI382
+  - user.mromano.601357.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10724_p4514.274_vv01_af2.MINI382
+
+# Background samples
+singleTop_sch:
+  mc16a:
+  - user.mromano.410644.PowhegPythia8EvtGen.e6527_s3126_r9364_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410645.PowhegPythia8EvtGen.e6527_s3126_r9364_p4514.274_SINGLETOP_vv02.MINI382_v1
+  mc16d:
+  - user.mromano.410644.PowhegPythia8EvtGen.e6527_s3126_r10201_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410645.PowhegPythia8EvtGen.e6527_s3126_r10201_p4514.274_SINGLETOP_vv02.MINI382_v1
+  mc16e:
+  - user.mromano.410644.PowhegPythia8EvtGen.e6527_s3126_r10724_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410645.PowhegPythia8EvtGen.e6527_s3126_r10724_p4514.274_SINGLETOP_vv02.MINI382_v1
+
+singleTop_tch:
+  mc16a:
+  - user.mromano.410658.PhPy8EG.e6671_s3126_r9364_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410659.PhPy8EG.e6671_s3126_r9364_p4514.274_SINGLETOP_vv02.MINI382_v1
+  mc16d:
+  - user.mromano.410658.PhPy8EG.e6671_s3126_r10201_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410659.PhPy8EG.e6671_s3126_r10201_p4514.274_SINGLETOP_vv02.MINI382_v1
+  mc16e:
+  - user.mromano.410658.PhPy8EG.e6671_s3126_r10724_p4514.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.410659.PhPy8EG.e6671_s3126_r10724_p4514.274_SINGLETOP_vv02.MINI382_v1
+
+singleTop_tW_DR_dyn:
+  mc16a:
+  - user.mromano.601352.PhPy8EG.e8547_s3889_r9364_p4514.274_SINGLETOP_vv05.MINI382_v1
+  - user.mromano.601355.PhPy8EG.e8547_s3889_r9364_p4514.274_SINGLETOP_vv05.MINI382_v1
+  mc16d:
+  - user.mromano.601352.PhPy8EG.e8547_s3889_r10201_p4514.274_SINGLETOP_vv05.MINI382_v1
+  - user.mromano.601355.PhPy8EG.e8547_s3889_r10201_p4514.274_SINGLETOP_vv05.MINI382_v1
+  mc16e:
+  - user.mromano.601352.PhPy8EG.e8547_s3889_r10724_p4514.274_SINGLETOP_vv05.MINI382_v1
+  - user.mromano.601355.PhPy8EG.e8547_s3889_r10724_p4514.274_SINGLETOP_vv05.MINI382_v1
+
+singleTop_tW_DS_dyn:
+  mc16a:
+  - user.mromano.601627.PhPy8EG.e8482_s3126_r9364_p4512.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.601631.PhPy8EG.e8482_s3126_r9364_p4512.274_SINGLETOP_vv02.MINI382_v1
+  mc16d:
+  - user.mromano.601627.PhPy8EG.e8482_s3126_r10201_p4512.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.601631.PhPy8EG.e8482_s3126_r10201_p4512.274_SINGLETOP_vv02.MINI382_v1
+  mc16e:
+  - user.mromano.601627.PhPy8EG.e8482_s3126_r10724_p4512.274_SINGLETOP_vv02.MINI382_v1
+  - user.mromano.601631.PhPy8EG.e8482_s3126_r10724_p4512.274_SINGLETOP_vv02.MINI382_v1
+
+Wjets:
+  mc16a:
+  - user.mromano.700338.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700339.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700340.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700341.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700342.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700343.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700344.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700345.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700346.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700347.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700348.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700349.Sh.e8351_s3126_r9364_p4514.274_WJETS_vv03.MINI382_v1
+  mc16d:
+  - user.mromano.700338.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700339.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700340.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700341.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700342.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700343.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700344.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700345.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700346.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700347.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700348.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700349.Sh.e8351_s3126_r10201_p4514.274_WJETS_vv03.MINI382_v1
+  mc16e:
+  - user.mromano.700338.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700339.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700340.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700341.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700342.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700343.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700344.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700345.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700346.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700347.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700348.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+  - user.mromano.700349.Sh.e8351_s3126_r10724_p4514.274_WJETS_vv03.MINI382_v1
+
+Zjets:
+  mc16a:
+  - user.mromano.700320.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700321.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700322.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700323.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700324.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700325.Sh.e8351_s3126_r9364_p4514.274_ZJETS_vv03.MINI382_v1
+  mc16d:
+  - user.mromano.700320.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700321.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700322.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700323.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700324.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700325.Sh.e8351_s3126_r10201_p4514.274_ZJETS_vv03.MINI382_v1
+  mc16e:
+  - user.mromano.700320.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700321.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700322.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700323.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700324.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+  - user.mromano.700325.Sh.e8351_s3126_r10724_p4514.274_ZJETS_vv03.MINI382_v1
+
+ttV:
+  mc16a:
+  - user.mromano.410155.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410156.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410157.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410218.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410219.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410220.aMcAtNloPythia8EvtGen.e5070_s3126_r9364_p4514.274_TTV_vv02.MINI382_v1
+  mc16d:
+  - user.mromano.410155.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410156.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410157.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410218.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410219.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410220.aMcAtNloPythia8EvtGen.e5070_s3126_r10201_p4514.274_TTV_vv02.MINI382_v1
+  mc16e:
+  - user.mromano.410155.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410156.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410157.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410218.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410219.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+  - user.mromano.410220.aMcAtNloPythia8EvtGen.e5070_s3126_r10724_p4514.274_TTV_vv02.MINI382_v1
+
+VV:
+  mc16a:
+  -
+  mc16d:
+  -
+  mc16e:
+  - 
+
+ttH:
+  mc16a:
+  -
+  mc16d:
+  -
+  mc16e:
+  - 
