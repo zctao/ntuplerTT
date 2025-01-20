@@ -31,7 +31,7 @@ def getSumWeightsVariations(infiles_sumw, treename='sumWeights'):
     branch_weights = "totalEventsWeighted_mc_generator_weights"
     if df_sumw.HasColumn(branch_weights):
         w_arr_of_vec = df_sumw.AsNumpy([branch_weights])[branch_weights]
-        mc_gen_weights = np.asarray([np.asarray(w_vec) for w_vec in w_arr_of_vec]).sum(axis=0).tolist()
+        mc_gen_weights = np.asarray([np.asarray(w_vec, dtype=np.float64) for w_vec in w_arr_of_vec]).sum(axis=0).tolist()
     else:
         mc_gen_weights = []
 
