@@ -228,14 +228,15 @@ for sample in samples_alt_ttbar:
 
         jobfiles_dict[sample][tname][era] = fname_mc
 
-# A special case: FastSim ttbar
-dataset_afii_config = os.path.join(source_dir, 'configs/datasets/ttdiffxs382/datasets_afii.yaml')
-print(f"Generate job files from {dataset_afii_config}")
+# FastSim ttbar
 samples_AFII = 'ttbar_AFII'
 print(f"{samples_AFII}")
 jobfiles_dict[samples_AFII] = {}
 print("  Tree: nominal")
 jobfiles_dict[samples_AFII]['nominal'] = {}
+
+# A special sum weights config for ttbar AFII
+sumw_config_afii = os.path.join(os.path.dirname(dataset_config), "sumWeights_AFII.yaml")
 
 for era in ['mc16a', 'mc16d', 'mc16e']:
     print(f"    {era}")
@@ -246,11 +247,12 @@ for era in ['mc16a', 'mc16d', 'mc16e']:
     try:
         fname_mc = writeJobFile(
             samples_AFII,
-            dataset_afii_config,
+            dataset_config,
             outdir = os.path.join(topoutdir, samples_AFII, 'nominal', era),
             subcampaigns = [era],
             truth_level = 'parton',
             njobs = njobs_dict.get(samples_AFII, 1),
+            sumw_config = sumw_config_afii,
             extra_args = "-g",
             **common_args
         )
