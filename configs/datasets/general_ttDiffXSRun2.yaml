@@ -26,7 +26,7 @@ dsid:
     ttbar_hdamp:   # same as nominal but with hdamp set to 3*mt
         - 410480
         - 410482
-    tthar_sh2212: # Sherpa v.2.2.12 ttbar + 0,1j@NLO + 2,3,4j@LO
+    ttbar_sh2212: # Sherpa v.2.2.12 ttbar + 0,1j@NLO + 2,3,4j@LO
         - 700660 # dilepton.
         - 700661 # single lepton (minus)
         - 700662 # single lepton (plus)
