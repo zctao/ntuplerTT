@@ -225,7 +225,9 @@ def writeDataFileLists(dataset_config,
 
         if current_size + filesizes['tt'][ifile] > total_size / njobs:
             if current_size == 0:
-                print(f"WARNING: Empty input file list: {sample_name} {subcampaigns} {ifile}")
+                # This samplefile alone is already larger than the average
+                # Just write this one to the current list
+                pass
             else:
                 ijob += 1
                 current_size = 0
