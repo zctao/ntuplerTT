@@ -1,12 +1,12 @@
 #!/bin/bash
 
-rootfiles_reco=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt.root/user.mromano.40052328._000095.tt.root
+rootfiles_reco=/data/ztao/ttbarDiffXs13TeV/MINI382_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.274_vv01.MINI382_tt.root/user.mromano.42890957._000001.tt.root
 
-rootfiles_truth=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_truth.root/user.mromano.40052328._000095.tt_truth.root
+rootfiles_truth=/data/ztao/ttbarDiffXs13TeV/MINI382_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.274_vv01.MINI382_tt_truth.root/user.mromano.42890957._000001.tt_truth.root
 
-rootfiles_PL=/data/ztao/TTDIFFXS-381/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.TTDIFFXS-381_v01.test_tt_PL.root/user.mromano.40052328._000095.tt_PL.root
+rootfiles_PL=/data/ztao/ttbarDiffXs13TeV/MINI382_v1/ttbar/mc16a/user.mromano.410470.PhPy8EG.DAOD_TOPQ1.e6337_s3126_r9364_p4514.274_vv01.MINI382_tt_PL.root/user.mromano.42890957._000001.tt_PL.root
 
-sumw_config=${SourceDIR}/configs/datasets/ttdiffxs381_test/sumWeights_systCRL.yaml
+sumw_config=${SourceDIR}/configs/datasets/ttdiffxs382/sumWeights.yaml
 
 run_test() {
     local suffix="$1"
