@@ -186,12 +186,18 @@ def define_weight_variations(rdf, weight_component):
 
     return rdf
 
-def define_generator_weights(rdf, dsid, treename=None):
+def define_generator_weights(rdf, treename=None):
     branch_name = "mc_generator_weights" if treename is None else f"{treename}.mc_generator_weights"
 
     if not rdf.HasColumn(branch_name):
         logger.warning(f"Cannot store MC generator weight variations: no branch '{branch_name}'")
         return rdf
+
+    # Get dsid
+    dsid = rdf.Min('mcChannelNumber').GetValue()
+    # check if all events have the same dsid
+    if dsid != rdf.Max('mcChannelNumber').GetValue():
+        raise RuntimeError("Events in the samples are of mixed DSIDs! Cannot make branches for the generator weight variations at the moment.")
 
     # check if dsid is available in dict_systname_varindex
     if not dsid in dict_systname_varindex:
@@ -423,7 +429,7 @@ class NtupleRDF():
         df = define_weight_variations(df, "weight_pileup")
 
         if include_gen_weights:
-            df = define_generator_weights(df, dsid)
+            df = define_generator_weights(df)
 
         ###
         # truth tree
@@ -514,7 +520,7 @@ class NtupleRDF():
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
 
             if include_gen_weights:
-                df_truth = define_generator_weights(df_truth, dsid)
+                df_truth = define_generator_weights(df_truth)
 
             df_truth = df_truth \
                 .Define("sum_weights", "GetSumWeights(mcChannelNumber,runNumber)") \
