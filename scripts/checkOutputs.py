@@ -158,9 +158,15 @@ def checkHDF5inDir(dirname):
                     goodfile = False
 
                 # check if 'normalized_weight' is in the file
-                if not 'normalized_weight' in arraynames:
-                    logger.debug(f"normalized_weight is not in {fullname}")
-                    goodfile = False
+                if '_unmatched_truth' in fname:
+                    # a special case for the unmatched truth files
+                    if not 'normalized_weight_mc' in arraynames:
+                        logger.debug(f"normalized_weight_mc is not in {fullname}")
+                        goodfile = False
+                else:
+                    if not 'normalized_weight' in arraynames:
+                        logger.debug(f"normalized_weight is not in {fullname}")
+                        goodfile = False
 
                 # check if all arrays are of the same length
                 for aname in arraynames:
