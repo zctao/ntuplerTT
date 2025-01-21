@@ -209,7 +209,7 @@ for sample in samples_alt_ttbar:
         if not matchFilterKeys(keywords=[sample,tname,era], filters=args.filters):
             continue
 
-        extra_args = f"--treename {tname} -g"
+        extra_args = f"--treename {tname}"
 
         try:
             fname_mc = writeJobFile(

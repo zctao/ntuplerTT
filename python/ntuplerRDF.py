@@ -429,7 +429,10 @@ class NtupleRDF():
         df = define_weight_variations(df, "weight_pileup")
 
         if include_gen_weights:
-            df = define_generator_weights(df)
+            try:
+                df = define_generator_weights(df)
+            except RuntimeError as e:
+                logger.warning(f"Failed to add generator weight variations: {e}")
 
         ###
         # truth tree
@@ -520,7 +523,10 @@ class NtupleRDF():
             df_truth = define_extra_variables(df_truth, *getPrefixTruth(self.truthLevel), compute_energy=self.truthLevel!='parton')
 
             if include_gen_weights:
-                df_truth = define_generator_weights(df_truth)
+                try:
+                    df_truth = define_generator_weights(df_truth)
+                except RuntimeError as e:
+                    logger.warning(f"Failed to add generator weight variations: {e}")
 
             df_truth = df_truth \
                 .Define("sum_weights", "GetSumWeights(mcChannelNumber,runNumber)") \
