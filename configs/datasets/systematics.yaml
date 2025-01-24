@@ -276,21 +276,35 @@ mtop:
         - mt169
         - mt176
 
-hard_scattering:
+matching:
     type:
         Modelling
     prefix:
-        generator
+        matching
     uncertainties:
-        - amc # aMCatNLO
+        - pthard1
 
-hadronization:
+parton_shower:
     type:
         Modelling
     prefix:
         ps
     uncertainties:
-        - hw
+        - hw # PWGH7
+
+recoil:
+    type:
+        Modelling
+    uncertainties:
+        - recoil
+
+lineshape:
+    type:
+        Modelling
+    prefix:
+        lineshape
+    uncertainties:
+        - madspin
 
 singleTop_tW:
     type:
@@ -298,7 +312,7 @@ singleTop_tW:
     prefix:
         singleTop_tW
     uncertainties:
-        - DS
+        - DS_dyn
 
 singleTop_norm:
     type:
