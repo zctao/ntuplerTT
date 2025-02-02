@@ -174,6 +174,11 @@ def checkHDF5inDir(dirname):
                         logger.debug(f"Array {aname} has different length from the first array")
                         goodfile = False
 
+                # check if arrays are empty
+                if len(f[arraynames[0]]) == 0:
+                    logger.debug(f"Arrays are empty")
+                    goodfile = False
+
             if goodfile:
                 ngood += 1
 
