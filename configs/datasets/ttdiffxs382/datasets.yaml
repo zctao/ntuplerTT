@@ -1,13 +1,13 @@
 # Observed
 data:
   '2015':
-  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp15_v01_p4513.274_vv01.MINI382
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp15_v01_p4513.274_vv01.MINI382_v1
   '2016':
-  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp16_v01_p4513.274_vv01.MINI382
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp16_v01_p4513.274_vv01.MINI382_v1
   '2017':
-  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp17_v01_p4513.274_vv01.MINI382
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp17_v01_p4513.274_vv01.MINI382_v1
   '2018':
-  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp18_v01_p4513.274_vv01.MINI382
+  - user.mromano.AllYear.physics_Main.DAOD_TOPQ1.grp18_v01_p4513.274_vv01.MINI382_v1
 
 # Signal samples
 ttbar:
