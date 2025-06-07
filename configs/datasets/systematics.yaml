@@ -314,11 +314,27 @@ singleTop_tW:
     uncertainties:
         - DS_dyn
 
-singleTop_norm:
+singleTop_tW_norm:
     type:
         BackgroundNorm
     prefix:
-        singleTop_norm
+        singleTop_tW_norm
+    uncertainties:
+        - 1.053
+
+singleTop_sch_norm:
+    type:
+        BackgroundNorm
+    prefix:
+        singleTop_sch_norm
+    uncertainties:
+        - 1.036
+
+singleTop_tch_norm:
+    type:
+        BackgroundNorm
+    prefix:
+        singleTop_tch_norm
     uncertainties:
         - 1.05
 
@@ -328,7 +344,7 @@ VV_norm:
     prefix:
         VV_norm
     uncertainties:
-        - 1.06
+        - 1.5
 
 ttV_norm:
     type:
