@@ -17,7 +17,7 @@ samples_data = ['obs', 'fakes']
 samples_MC = ['ttbar', 'singleTop_sch', 'singleTop_tch', 'singleTop_tW_DR_dyn', 'Wjets', 'Zjets', 'ttV', 'VV', 'ttH']
 
 # Alternative samples
-samples_alt_ttbar = ['ttbar_AFII', 'ttbar_hw', 'ttbar_amchw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_hdamp', 'ttbar_madspin', 'ttbar_sh2212', 'ttbar_pthard1', 'ttbar_pthard2', 'ttbar_recoil']
+samples_alt_ttbar = ['ttbar_AFII', 'ttbar_hw', 'ttbar_amchw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_hdamp', 'ttbar_madspin', 'ttbar_sh2212', 'ttbar_pthard1', 'ttbar_pthard2', 'ttbar_recoil', 'ttbar_minnlops']
 
 samples_alt_bkg = ['singleTop_tW_DS_dyn']
 
