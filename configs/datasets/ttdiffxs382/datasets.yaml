@@ -139,6 +139,17 @@ ttbar_recoil:
   - user.mromano.601356.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10724_p5989.274_vv01_af2.MINI382
   - user.mromano.601357.PhPy8EG.DAOD_TOPQ1.e8433_a875_r10724_p4514.274_vv01_af2.MINI382
 
+ttbar_minnlops:
+  mc16a:
+  - user.mromano.602647.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r9364_p4514.274_vv02_nom.MINI382
+  - user.mromano.602646.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r9364_p4514.274_vv02_nom.MINI382
+  mc16d:
+  - user.mromano.602647.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r10201_p4514.274_vv02_nom.MINI382
+  - user.mromano.602646.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r10201_p4514.274_vv02_nom.MINI382
+  mc16e:
+  - user.mromano.602647.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r10724_p4514.274_vv02_nom.MINI382
+  - user.mromano.602646.PhPy8EG.DAOD_TOPQ1.e8589_s3889_r10724_p4514.274_vv02_nom.MINI382
+
 # Background samples
 singleTop_sch:
   mc16a:

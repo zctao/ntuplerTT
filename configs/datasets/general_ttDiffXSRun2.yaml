@@ -42,8 +42,9 @@ dsid:
     ttbar_recoil: # recoilToTop
         - 601356  # PhPy8EG_A14_ttbar_hdamp258p75_Trec_ljets
         - 601357  # PhPy8EG_A14_ttbar_hdamp258p75_Trec_dil
-    #ttbar_minnlops: # MiNNLOPS
-    #    - 950473
+    ttbar_minnlops: # MiNNLOPS
+        - 602646
+        - 602647
 
     # Backgrounds
 

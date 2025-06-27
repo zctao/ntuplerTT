@@ -27,6 +27,7 @@ config_datasets='configs/datasets/ttdiffxs382/datasets.yaml'
 #./scripts/downloadSamples.sh ${config_datasets} ttbar_pthard1 ${datadir}
 #./scripts/downloadSamples.sh ${config_datasets} ttbar_pthard2 ${datadir}
 #./scripts/downloadSamples.sh ${config_datasets} ttbar_recoil ${datadir}
+#./scripts/downloadSamples.sh ${config_datasets} ttbar_minnlops ${datadir}
 
 # Background MC
 # single top

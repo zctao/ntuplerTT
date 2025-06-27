@@ -60,7 +60,7 @@ syst_config = os.path.join(source_dir, 'configs/datasets/systematics.yaml')
 ##
 # number of jobs for each sample
 # TODO: update this
-njobs_dict = {'ttbar': 10, 'ttbar_amchw': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_AFII': 10, 'ttbar_madspin': 10, 'ttbar_pthard1': 10, 'ttbar_pthard2': 10, 'ttbar_sh2212': 10, 'ttbar_recoil': 10}
+njobs_dict = {'ttbar': 10, 'ttbar_amchw': 10, 'ttbar_hdamp': 10, 'ttbar_hw': 10, 'ttbar_mt169': 10, 'ttbar_mt176': 10, 'ttbar_AFII': 10, 'ttbar_madspin': 10, 'ttbar_pthard1': 10, 'ttbar_pthard2': 10, 'ttbar_sh2212': 10, 'ttbar_recoil': 10, 'ttbar_minnlops': 10}
 
 t_start = time.time()
 
