@@ -193,7 +193,7 @@ for sample in samples_MC:
             jobfiles_dict[sample][tname][era] = fname_mc
 
 # Alternative signal samples
-samples_alt_ttbar = ['ttbar_hw', 'ttbar_amchw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_hdamp', 'ttbar_madspin', 'ttbar_sh2212', 'ttbar_pthard1', 'ttbar_pthard2', 'ttbar_recoil']
+samples_alt_ttbar = ['ttbar_hw', 'ttbar_amchw', 'ttbar_mt169', 'ttbar_mt176', 'ttbar_hdamp', 'ttbar_madspin', 'ttbar_sh2212', 'ttbar_pthard1', 'ttbar_pthard2', 'ttbar_recoil', 'ttbar_minnlops']
 
 for sample in samples_alt_ttbar:
     print(f"{sample}")
@@ -272,6 +272,25 @@ foutname = os.path.join(topoutdir, 'jobs_mini382_v1/jobfiles.yaml')
 if not os.path.isdir(os.path.dirname(foutname)):
     os.makedirs(os.path.dirname(foutname))
 
+def merge_dicts(dict1, dict2):
+    """Merge two dictionaries recursively."""
+    for key, value in dict2.items():
+        if isinstance(value, dict) and key in dict1:
+            dict1[key] = merge_dicts(dict1[key], value)
+        else:
+            dict1[key] = value
+    return dict1
+
+if os.path.isfile(foutname):
+    # read existing file
+    with open(foutname, 'r') as infile:
+        jobfiles_dict_out = yaml.safe_load(infile)
+    # update the existing dict with the new one
+    jobfiles_dict_out = merge_dicts(jobfiles_dict_out,jobfiles_dict)
+else:
+    # create a new dict
+    jobfiles_dict_out = jobfiles_dict
+
 print(f"Write job file config: {foutname}")
 with open(foutname, 'w') as outfile:
-    yaml.dump(jobfiles_dict, outfile)
+    yaml.dump(jobfiles_dict_out, outfile)
